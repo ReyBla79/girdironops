@@ -13,6 +13,8 @@ import PlayerProfile from "./pages/PlayerProfile";
 import TasksPage from "./pages/TasksPage";
 import CompliancePage from "./pages/CompliancePage";
 import UpgradePage from "./pages/UpgradePage";
+import RosterPage from "./pages/RosterPage";
+import FitLabPage from "./pages/FitLabPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -77,6 +79,22 @@ const App = () => (
             />
             <Route path="compliance" element={<CompliancePage />} />
             <Route path="upgrade" element={<UpgradePage />} />
+            <Route
+              path="roster"
+              element={
+                <ProtectedRoute requiredFlag="roster_module">
+                  <RosterPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="fit-lab"
+              element={
+                <ProtectedRoute requiredFlag="fit_lab">
+                  <FitLabPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

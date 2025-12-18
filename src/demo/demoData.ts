@@ -19,6 +19,8 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   api_licensing: false,
   film_ai: false,
   nil_engine: false,
+  roster_module: true,
+  fit_lab: true,
 };
 
 export const DEMO_USERS: DemoUser[] = [

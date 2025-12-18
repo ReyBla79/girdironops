@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup } from '@/types';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
+import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET } from '@/demo/rosterData';
 
 interface AppStore extends AppState {
   login: (role: Role, programId: string) => void;
@@ -14,6 +15,8 @@ interface AppStore extends AppState {
   markPlayerReviewed: (playerId: string) => void;
   simulatePortalEntry: () => void;
   resetDemo: () => void;
+  setSelectedNeed: (needId: string | null) => void;
+  selectProspect: (playerId: string | null) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -30,6 +33,11 @@ export const useAppStore = create<AppStore>()(
       tasks: SEED_TASKS,
       userList: DEMO_USERS,
       programDNA: DEMO_PROGRAM_DNA,
+      roster: SEED_ROSTER,
+      needs: SEED_NEEDS,
+      budget: SEED_BUDGET,
+      selectedNeedId: null,
+      selectedProspectId: null,
 
       login: (role, programId) => {
         set({ demoAuthed: true, demoRole: role, programId });
@@ -165,7 +173,20 @@ export const useAppStore = create<AppStore>()(
           players: SEED_PLAYERS,
           events: SEED_EVENTS,
           tasks: SEED_TASKS,
+          roster: SEED_ROSTER,
+          needs: SEED_NEEDS,
+          budget: SEED_BUDGET,
+          selectedNeedId: null,
+          selectedProspectId: null,
         });
+      },
+
+      setSelectedNeed: (needId) => {
+        set({ selectedNeedId: needId });
+      },
+
+      selectProspect: (playerId) => {
+        set({ selectedProspectId: playerId });
       },
     }),
     {
