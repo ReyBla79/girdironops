@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users, DollarSign, AlertTriangle, Target } from 'lucide-react';
-import { RosterPlayer, RosterNeed, PositionGroup } from '@/types';
+import { RosterPlayer, RosterNeed, PositionGroup, RosterRole, RiskColor } from '@/types';
+import { ROSTER_META } from '@/demo/rosterData';
 
 const NIL_BAND_COLORS = {
   HIGH: 'bg-chart-1 text-primary-foreground',
@@ -18,11 +19,17 @@ const PRIORITY_COLORS = {
   DEPTH: 'bg-muted text-muted-foreground',
 };
 
-const RISK_COLORS = {
-  NONE: 'text-muted-foreground',
-  LOW: 'text-chart-2',
-  MED: 'text-chart-1',
-  HIGH: 'text-destructive',
+const ROLE_VARIANTS: Record<RosterRole, 'default' | 'secondary' | 'outline'> = {
+  STARTER: 'default',
+  ROTATION: 'secondary',
+  DEPTH: 'outline',
+  DEVELOPMENTAL: 'outline',
+};
+
+const RISK_COLOR_CLASSES: Record<RiskColor, string> = {
+  GREEN: 'text-chart-1',
+  YELLOW: 'text-chart-2',
+  RED: 'text-destructive',
 };
 
 const RosterPage = () => {
@@ -31,7 +38,7 @@ const RosterPage = () => {
 
   const totalPlayers = roster.length;
   const starters = roster.filter(p => p.role === 'STARTER').length;
-  const atRisk = roster.filter(p => p.risk !== 'NONE').length;
+  const atRisk = roster.filter(p => p.riskColor !== 'GREEN').length;
   const urgentNeeds = needs.filter(n => n.priority === 'MUST_REPLACE' || n.priority === 'UPGRADE').length;
 
   const handleNeedClick = (needId: string) => {
@@ -49,7 +56,7 @@ const RosterPage = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-display font-bold">Roster Snapshot</h1>
-        <p className="text-muted-foreground mt-1">Demo roster + needs detection (no backend).</p>
+        <p className="text-muted-foreground mt-1">{ROSTER_META.disclaimer}</p>
       </div>
 
       {/* Summary Cards */}
@@ -126,7 +133,7 @@ const RosterPage = () => {
       {/* Roster Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Current Roster</CardTitle>
+          <CardTitle className="text-lg">Current Roster ({ROSTER_META.rosterSize} Players)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -134,12 +141,12 @@ const RosterPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Pos Group</TableHead>
+                  <TableHead>Pos</TableHead>
                   <TableHead>Year</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead className="text-right">Snaps %</TableHead>
+                  <TableHead className="text-right">Grade</TableHead>
                   <TableHead className="text-right">Est. Cost</TableHead>
-                  <TableHead>Grad Year</TableHead>
                   <TableHead>NIL Band</TableHead>
                   <TableHead>Risk</TableHead>
                 </TableRow>
@@ -149,23 +156,21 @@ const RosterPage = () => {
                   <TableRow key={player.id}>
                     <TableCell className="font-medium">{player.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{player.positionGroup}</Badge>
+                      <Badge variant="outline">{player.position}</Badge>
                     </TableCell>
                     <TableCell>{player.year}</TableCell>
                     <TableCell>
-                      <Badge variant={player.role === 'STARTER' ? 'default' : 'secondary'}>
-                        {player.role}
-                      </Badge>
+                      <Badge variant={ROLE_VARIANTS[player.role]}>{player.role}</Badge>
                     </TableCell>
                     <TableCell className="text-right">{player.snapsShare}%</TableCell>
+                    <TableCell className="text-right">{player.performanceGrade}</TableCell>
                     <TableCell className="text-right">${player.estimatedCost.toLocaleString()}</TableCell>
-                    <TableCell>{player.gradYear}</TableCell>
                     <TableCell>
                       <Badge className={NIL_BAND_COLORS[player.nilBand]}>{player.nilBand}</Badge>
                     </TableCell>
                     <TableCell>
-                      <span className={`text-sm font-medium ${RISK_COLORS[player.risk]}`}>
-                        {player.risk === 'NONE' ? '—' : player.risk}
+                      <span className={`text-sm font-medium ${RISK_COLOR_CLASSES[player.riskColor]}`}>
+                        {player.riskScore}
                       </span>
                     </TableCell>
                   </TableRow>

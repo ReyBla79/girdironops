@@ -107,20 +107,40 @@ export interface ProgramDNA {
   fitRules: string[];
 }
 
-export type RosterRole = "STARTER" | "ROTATIONAL" | "DEPTH" | "DEVELOPMENTAL";
-export type RosterRisk = "NONE" | "LOW" | "MED" | "HIGH";
+export type RosterRole = "STARTER" | "ROTATION" | "DEPTH" | "DEVELOPMENTAL";
+export type RiskColor = "GREEN" | "YELLOW" | "RED";
+
+export interface RiskFactors {
+  injury: number;
+  transfer: number;
+  academics: number;
+}
 
 export interface RosterPlayer {
   id: string;
   name: string;
+  position: string;
   positionGroup: PositionGroup;
   year: ClassYear;
   gradYear: number;
+  eligibilityRemaining: number;
   nilBand: NILBand;
   estimatedCost: number;
   role: RosterRole;
   snapsShare: number;
-  risk: RosterRisk;
+  performanceGrade: number;
+  risk: RiskFactors;
+  riskScore: number;
+  riskColor: RiskColor;
+}
+
+export interface RosterMeta {
+  programId: string;
+  programName: string;
+  rosterSize: number;
+  asOf: string;
+  currency: string;
+  disclaimer: string;
 }
 
 export interface RosterNeed {
@@ -192,6 +212,7 @@ export interface AppState {
   userList: DemoUser[];
   programDNA: ProgramDNA;
   roster: RosterPlayer[];
+  rosterMeta: RosterMeta;
   needs: RosterNeed[];
   budget: Budget;
   selectedNeedId: string | null;

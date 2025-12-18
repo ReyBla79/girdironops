@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog } from '@/types';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
-import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET } from '@/demo/rosterData';
+import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
 
 interface AppStore extends AppState {
@@ -37,6 +37,7 @@ export const useAppStore = create<AppStore>()(
       userList: DEMO_USERS,
       programDNA: DEMO_PROGRAM_DNA,
       roster: SEED_ROSTER,
+      rosterMeta: ROSTER_META,
       needs: SEED_NEEDS,
       budget: SEED_BUDGET,
       selectedNeedId: null,
@@ -180,6 +181,7 @@ export const useAppStore = create<AppStore>()(
           events: SEED_EVENTS,
           tasks: SEED_TASKS,
           roster: SEED_ROSTER,
+          rosterMeta: ROSTER_META,
           needs: SEED_NEEDS,
           budget: SEED_BUDGET,
           selectedNeedId: null,
