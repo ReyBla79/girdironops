@@ -17,11 +17,12 @@ export const SEED_BUDGET: Budget = {
 };
 
 export const SEED_ROSTER: RosterPlayer[] = [
-  { id: "r1", name: "Starter OT A", positionGroup: "OL", classYear: "SR", starter: true, snapsShare: 88, grade: 78, eligibilityRemaining: "0–1", nilBand: "MED", riskFlags: [] },
-  { id: "r2", name: "OT Depth B", positionGroup: "OL", classYear: "SO", starter: false, snapsShare: 22, grade: 71, eligibilityRemaining: "2–3", nilBand: "LOW", riskFlags: [] },
-  { id: "r3", name: "EDGE Starter", positionGroup: "DL", classYear: "JR", starter: true, snapsShare: 74, grade: 75, eligibilityRemaining: "1–2", nilBand: "MED", riskFlags: ["transfer_risk_demo"] },
-  { id: "r4", name: "Nickel DB", positionGroup: "DB", classYear: "SR", starter: true, snapsShare: 67, grade: 73, eligibilityRemaining: "0–1", nilBand: "LOW", riskFlags: [] },
-  { id: "r5", name: "WR1", positionGroup: "WR", classYear: "JR", starter: true, snapsShare: 81, grade: 80, eligibilityRemaining: "1–2", nilBand: "MED", riskFlags: [] }
+  { id: "r1", name: "Starter OT A", positionGroup: "OL", year: "SR", gradYear: 2025, nilBand: "MED", estimatedCost: 45000, role: "STARTER", snapsShare: 88, risk: "LOW" },
+  { id: "r2", name: "OT Depth B", positionGroup: "OL", year: "SO", gradYear: 2027, nilBand: "LOW", estimatedCost: 15000, role: "DEPTH", snapsShare: 22, risk: "NONE" },
+  { id: "r3", name: "EDGE Starter", positionGroup: "DL", year: "JR", gradYear: 2026, nilBand: "MED", estimatedCost: 55000, role: "STARTER", snapsShare: 74, risk: "MED" },
+  { id: "r4", name: "Nickel DB", positionGroup: "DB", year: "SR", gradYear: 2025, nilBand: "LOW", estimatedCost: 25000, role: "STARTER", snapsShare: 67, risk: "NONE" },
+  { id: "r5", name: "WR1", positionGroup: "WR", year: "JR", gradYear: 2026, nilBand: "MED", estimatedCost: 50000, role: "STARTER", snapsShare: 81, risk: "NONE" },
+  { id: "r12", name: "Starting OT", positionGroup: "OL", year: "SR", gradYear: 2026, nilBand: "HIGH", estimatedCost: 95000, role: "STARTER", snapsShare: 82, risk: "NONE" }
 ];
 
 export const SEED_NEEDS: RosterNeed[] = [
