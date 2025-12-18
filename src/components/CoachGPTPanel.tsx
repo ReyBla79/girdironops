@@ -1,91 +1,128 @@
 import { useAppStore } from '@/store/useAppStore';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Send, Sparkles, Lock } from 'lucide-react';
+import { MessageSquare, Send, Sparkles, Lock, ExternalLink, Plus, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  actions?: { label: string; action: () => void }[];
+  actions?: { label: string; icon?: any; action: string; data?: any }[];
 }
 
 const CoachGPTPanel = () => {
-  const { flags, players, addTask, userList, demoRole } = useAppStore();
+  const navigate = useNavigate();
+  const { flags, players, addTask, userList, demoRole, addEvent } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi Coach! I'm your AI assistant. I can help you understand player rankings, find similar prospects, or create tasks for your team. What would you like to know?",
+      content: "Hi Coach! I'm CoachGPT — your recruiting assistant. I can help you:\n\n• Understand why a player is ranked highly\n• Find similar players who entered recently\n• Create tasks for your staff\n\nWhat would you like to know?",
     },
   ]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   const isEnabled = flags.coach_agent;
 
+  const handleAction = (action: string, data?: any) => {
+    switch (action) {
+      case 'viewPlayer':
+        navigate(`/app/player/${data.playerId}`);
+        break;
+      case 'goPortalLive':
+        navigate('/app/portal');
+        break;
+      case 'viewTasks':
+        navigate('/app/tasks');
+        break;
+      case 'createTask':
+        if (data?.task) {
+          addTask(data.task);
+        }
+        break;
+    }
+  };
+
   const handleSend = () => {
-    if (!input.trim() || !isEnabled) return;
+    if (!input.trim() || !isEnabled || isTyping) return;
 
     const userMessage = input.toLowerCase().trim();
     setMessages((prev) => [...prev, { role: 'user', content: input }]);
     setInput('');
+    setIsTyping(true);
 
-    // Rule-based responses
+    // Log agent query
+    addEvent({
+      type: 'AGENT_QUERY',
+      message: `CoachGPT query: "${input}"`,
+    });
+
     setTimeout(() => {
       let response: Message;
+      const sortedPlayers = [...players].sort((a, b) => b.fitScore - a.fitScore);
+      const topPlayer = sortedPlayers[0];
 
       // Pattern 1: Why is player ranked #1?
-      if (userMessage.includes('why') && (userMessage.includes('ranked') || userMessage.includes('#1') || userMessage.includes('top'))) {
-        const topPlayer = players.sort((a, b) => b.fitScore - a.fitScore)[0];
+      if (userMessage.includes('why') && (userMessage.includes('ranked') || userMessage.includes('#1') || userMessage.includes('top') || userMessage.includes('first'))) {
         response = {
           role: 'assistant',
-          content: `**${topPlayer.name}** is ranked #1 with a **${topPlayer.fitScore}** Fit Score because:\n\n${topPlayer.reasons.map((r) => `• ${r}`).join('\n')}\n\n${topPlayer.flags.length > 0 ? `⚠️ Flags: ${topPlayer.flags.slice(0, 2).join(', ')}` : '✅ No significant concerns.'}`,
+          content: `**${topPlayer.name}** (${topPlayer.position}) is ranked #1 with a **${topPlayer.fitScore} Fit Score**.\n\n**Why:**\n${topPlayer.reasons.slice(0, 3).map((r) => `• ${r}`).join('\n')}\n\n${topPlayer.flags.length > 0 ? `**Flags:** ${topPlayer.flags[0]}` : '**No significant flags.**'}`,
           actions: [
-            { label: `View ${topPlayer.name}'s Profile`, action: () => window.location.href = `/app/player/${topPlayer.id}` },
-            { label: 'Create evaluation task', action: () => {} },
+            { label: `View ${topPlayer.name}`, icon: Eye, action: 'viewPlayer', data: { playerId: topPlayer.id } },
+            { label: 'Create Eval Task', icon: Plus, action: 'createTask', data: { 
+              task: {
+                title: `Evaluate ${topPlayer.name} (${topPlayer.position})`,
+                owner: userList.find(u => u.role === 'COORDINATOR')?.name || 'Coordinator',
+                playerId: topPlayer.id,
+                status: 'OPEN',
+                due: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()
+              }
+            }},
           ],
         };
       }
-      // Pattern 2: Who else entered today?
-      else if (userMessage.includes('who') && (userMessage.includes('entered') || userMessage.includes('today') || userMessage.includes('new'))) {
-        const newPlayers = players.filter(p => p.status === 'NEW').slice(0, 3);
+      // Pattern 2: Who else entered today / like him?
+      else if (userMessage.includes('who') && (userMessage.includes('entered') || userMessage.includes('today') || userMessage.includes('like') || userMessage.includes('similar'))) {
+        const newPlayers = players.filter(p => p.status === 'NEW' || p.status === 'UPDATED').slice(0, 3);
         response = {
           role: 'assistant',
-          content: `Here are the latest portal entries:\n\n${newPlayers.map((p, i) => `${i + 1}. **${p.name}** (${p.position}) - ${p.originSchool} - Fit: ${p.fitScore}`).join('\n')}`,
+          content: `**Recent Portal Activity:**\n\n${newPlayers.map((p, i) => `${i + 1}. **${p.name}** (${p.position}) — ${p.originSchool}\n   Fit: ${p.fitScore} | Readiness: ${p.readiness} | Risk: ${p.risk}`).join('\n\n')}`,
           actions: [
-            { label: 'View Portal Live', action: () => window.location.href = '/app/portal' },
+            { label: 'View Portal Live', icon: ExternalLink, action: 'goPortalLive' },
           ],
         };
       }
       // Pattern 3: Create a task
       else if (userMessage.includes('create') && userMessage.includes('task')) {
-        const topPlayer = players.sort((a, b) => b.fitScore - a.fitScore)[0];
         const coordinator = userList.find((u) => u.role === 'COORDINATOR');
         if (coordinator && topPlayer) {
-          addTask({
+          const newTask = {
             title: `Evaluate ${topPlayer.name} (${topPlayer.position})`,
             owner: coordinator.name,
             playerId: topPlayer.id,
-            due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'OPEN',
-          });
+            due: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'OPEN' as const,
+          };
+          addTask(newTask);
           response = {
             role: 'assistant',
-            content: `✅ Done! I've created a task:\n\n**"Evaluate ${topPlayer.name} (${topPlayer.position})"**\n\nOwner: ${coordinator.name}\nDue: 3 days from now\n\nThe task has been added to your Tasks board and logged in the audit trail.`,
+            content: `✅ **Task Created:**\n\n"${newTask.title}"\n\n• **Owner:** ${coordinator.name}\n• **Due:** 2 days\n• **Logged:** Audit trail updated`,
             actions: [
-              { label: 'View Tasks', action: () => window.location.href = '/app/tasks' },
+              { label: 'View Tasks', icon: ExternalLink, action: 'viewTasks' },
             ],
           };
         } else {
-          response = {
-            role: 'assistant',
-            content: "I couldn't create the task. Please try again.",
-          };
+          response = { role: 'assistant', content: "I couldn't create the task. Please try again." };
         }
       }
-      // Pattern 4: Contact info request (blocked)
-      else if (userMessage.includes('contact') || userMessage.includes('phone') || userMessage.includes('email')) {
+      // Pattern 4: Contact info request (BLOCKED)
+      else if (userMessage.includes('contact') || userMessage.includes('phone') || userMessage.includes('email') || userMessage.includes('number')) {
         response = {
           role: 'assistant',
-          content: '🔒 **Contact access requires approval.**\n\nI cannot reveal player contact information. This is protected by our compliance guardrails. Please submit a contact request through the player profile, which will be reviewed by your Compliance Officer.',
+          content: '🔒 **Contact access requires approval and is logged.**\n\nI cannot provide contact information directly. Per compliance guardrails, all contact requests must go through the approval workflow.\n\nI can open the contact request screen for you.',
+          actions: [
+            { label: `Request Contact for ${topPlayer.name}`, icon: Lock, action: 'viewPlayer', data: { playerId: topPlayer.id } },
+          ],
         };
       }
       // Pattern 5: Player-specific query
@@ -94,28 +131,26 @@ const CoachGPTPanel = () => {
         if (matchedPlayer) {
           response = {
             role: 'assistant',
-            content: `**${matchedPlayer.name}** (${matchedPlayer.position})\n\n• Fit Score: **${matchedPlayer.fitScore}**\n• Readiness: ${matchedPlayer.readiness}\n• Risk: ${matchedPlayer.risk}\n• From: ${matchedPlayer.originSchool}\n\n**Why he fits:**\n${matchedPlayer.reasons.slice(0, 2).map(r => `• ${r}`).join('\n')}`,
+            content: `**${matchedPlayer.name}** (${matchedPlayer.position})\n\n• **Fit Score:** ${matchedPlayer.fitScore}\n• **Readiness:** ${matchedPlayer.readiness}\n• **Risk:** ${matchedPlayer.risk}\n• **From:** ${matchedPlayer.originSchool}\n\n**Top Reasons:**\n${matchedPlayer.reasons.slice(0, 2).map(r => `• ${r}`).join('\n')}`,
             actions: [
-              { label: `View Full Profile`, action: () => window.location.href = `/app/player/${matchedPlayer.id}` },
+              { label: 'View Full Profile', icon: Eye, action: 'viewPlayer', data: { playerId: matchedPlayer.id } },
             ],
           };
         } else {
-          response = {
-            role: 'assistant',
-            content: "I couldn't find that player. Try asking about a specific player by name.",
-          };
+          response = { role: 'assistant', content: "I couldn't find that player. Try asking by name." };
         }
       }
       // Default response
       else {
         response = {
           role: 'assistant',
-          content: "I can help you with:\n\n1. **\"Why is [player] ranked #1?\"** - Understand fit scores\n2. **\"Who entered today?\"** - See recent portal activity\n3. **\"Tell me about Malik\"** - Get player details\n4. **\"Create a task\"** - Delegate evaluations\n\nWhat would you like to know?",
+          content: "I can help with:\n\n1. **\"Why is [player] ranked #1?\"**\n2. **\"Who else entered today?\"**\n3. **\"Create a task for the OC\"**\n4. **\"Tell me about Malik\"**\n\nWhat would you like to know?",
         };
       }
 
       setMessages((prev) => [...prev, response]);
-    }, 800);
+      setIsTyping(false);
+    }, 1000);
   };
 
   if (!isEnabled) {
@@ -126,11 +161,11 @@ const CoachGPTPanel = () => {
         </div>
         <h3 className="font-display font-bold text-lg mb-2">CoachGPT Locked</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Unlock AI-powered insights and task automation with the CoachGPT add-on.
+          Unlock AI-powered insights and task automation.
         </p>
-        <Button variant="hero" size="sm" onClick={() => window.location.href = '/app/upgrade'}>
+        <Button variant="hero" size="sm" onClick={() => navigate('/app/upgrade')}>
           <Sparkles className="w-4 h-4" />
-          Upgrade Now
+          Upgrade
         </Button>
       </div>
     );
@@ -144,14 +179,14 @@ const CoachGPTPanel = () => {
         </div>
         <div>
           <p className="font-semibold text-sm">CoachGPT</p>
-          <p className="text-xs text-muted-foreground">AI Assistant</p>
+          <p className="text-xs text-muted-foreground">Demo Mode</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-xl p-3 text-sm ${
+            <div className={`max-w-[90%] rounded-xl p-3 text-sm ${
               msg.role === 'user' 
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-secondary'
@@ -160,7 +195,14 @@ const CoachGPTPanel = () => {
               {msg.actions && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {msg.actions.map((action, j) => (
-                    <Button key={j} variant="outline" size="sm" onClick={action.action}>
+                    <Button 
+                      key={j} 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleAction(action.action, action.data)}
+                      className="text-xs"
+                    >
+                      {action.icon && <action.icon className="w-3 h-3 mr-1" />}
                       {action.label}
                     </Button>
                   ))}
@@ -169,6 +211,13 @@ const CoachGPTPanel = () => {
             </div>
           </div>
         ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-secondary rounded-xl p-3 text-sm">
+              <span className="animate-pulse">Thinking...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-4 border-t border-border">
@@ -180,11 +229,15 @@ const CoachGPTPanel = () => {
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask about players..."
             className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:border-primary"
+            disabled={isTyping}
           />
-          <Button size="icon" onClick={handleSend}>
+          <Button size="icon" onClick={handleSend} disabled={isTyping}>
             <Send className="w-4 h-4" />
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Demo AI • Uses only visible data • Never invents contacts
+        </p>
       </div>
     </div>
   );

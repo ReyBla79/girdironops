@@ -6,10 +6,10 @@ import { useAppStore } from '@/store/useAppStore';
 import { Role } from '@/types';
 
 const ROLES: { value: Role; label: string; description: string }[] = [
-  { value: 'HC', label: 'Head Coach', description: 'Full access to all features' },
+  { value: 'HC', label: 'Head Coach (HC)', description: 'Full access to all features' },
   { value: 'GM_RC', label: 'Recruiting Coordinator', description: 'Roster and player management' },
-  { value: 'COORDINATOR', label: 'Coordinator', description: 'Offensive/Defensive evaluation' },
-  { value: 'ANALYST_GA', label: 'Analyst/GA', description: 'Data and film analysis' },
+  { value: 'COORDINATOR', label: 'Coordinator (OC/DC)', description: 'Offensive/Defensive evaluation' },
+  { value: 'ANALYST_GA', label: 'Analyst / GA', description: 'Data and film analysis' },
   { value: 'COMPLIANCE', label: 'Compliance Officer', description: 'Audit and compliance tools' },
 ];
 
@@ -34,17 +34,17 @@ const Login = () => {
             </div>
             <span className="font-display font-bold text-3xl">WONRecruit</span>
           </div>
-          <h1 className="font-display text-2xl font-bold mb-2">Enter Demo</h1>
+          <h1 className="font-display text-2xl font-bold mb-2">Enter UNLV Live Demo</h1>
           <p className="text-muted-foreground">Select your role to explore the platform</p>
         </div>
 
         {/* Program Display */}
         <div className="p-4 rounded-xl bg-secondary border border-border flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-destructive/80 flex items-center justify-center">
-            <Building className="w-6 h-6 text-destructive-foreground" />
+          <div className="w-12 h-12 rounded-lg bg-destructive/80 flex items-center justify-center font-bold text-destructive-foreground">
+            UNLV
           </div>
           <div>
-            <p className="font-semibold">UNLV Rebels</p>
+            <p className="font-semibold">UNLV Football</p>
             <p className="text-sm text-muted-foreground">Demo Program</p>
           </div>
         </div>
