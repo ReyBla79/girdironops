@@ -90,14 +90,17 @@ export const SEED_NEEDS: RosterNeed[] = [
   { id: "n4", label: "RB Depth", positionGroup: "RB", priority: "DEPTH", reason: "Senior RB1 with high injury risk; need insurance." }
 ];
 
-// Compute forecast from roster data
-const computeForecast = (roster: RosterPlayer[]): BudgetForecast => {
-  const currentYear = 2026; // Based on rosterMeta.asOf
-  const positionGroups: PositionGroup[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "ST"];
-  
-  const computeYearForecast = (targetYear: number) => {
-    const departures: ForecastDeparture[] = roster
-      .filter(p => p.gradYear === targetYear)
+// Use predefined forecast defaults with computed departures
+export const SEED_FORECAST: BudgetForecast = {
+  inflationRate: 0.08,
+  year1: {
+    label: "Year 1 (Next Season)",
+    projectedSpend: 1609000,
+    returningCount: 36,
+    expectedDepartures: 16,
+    topDepartureDrivers: ["Graduation-heavy at SR/GR", "2 Yellow-risk starters"],
+    departures: SEED_ROSTER
+      .filter(p => p.gradYear === 2026)
       .map(p => ({
         id: p.id,
         name: p.name,
@@ -106,11 +109,22 @@ const computeForecast = (roster: RosterPlayer[]): BudgetForecast => {
         estimatedCost: p.estimatedCost,
         role: p.role,
         reason: "GRADUATION" as const
-      }));
-    
-    // Add high transfer risk players as potential departures
-    const transferRisks: ForecastDeparture[] = roster
-      .filter(p => p.gradYear > targetYear && p.risk.transfer >= 28)
+      })),
+    gapsByGroup: { OL: 2, DL: 1, DB: 2, WR: 2, LB: 1 },
+    notes: [
+      "Heavy attrition year: 10 players graduating.",
+      "8 starter(s) departing including key positions.",
+      "2 player(s) flagged as transfer risk."
+    ]
+  },
+  year2: {
+    label: "Year 2",
+    projectedSpend: 1738000,
+    returningCount: 30,
+    expectedDepartures: 22,
+    topDepartureDrivers: ["Starter turnover", "Roster churn in WR/DB/OL"],
+    departures: SEED_ROSTER
+      .filter(p => p.gradYear === 2027)
       .map(p => ({
         id: p.id,
         name: p.name,
@@ -118,51 +132,37 @@ const computeForecast = (roster: RosterPlayer[]): BudgetForecast => {
         positionGroup: p.positionGroup,
         estimatedCost: p.estimatedCost,
         role: p.role,
-        reason: "TRANSFER_RISK" as const
-      }));
-    
-    const allDepartures = [...departures, ...transferRisks];
-    const departingIds = new Set(departures.map(d => d.id));
-    const returning = roster.filter(p => p.gradYear > targetYear);
-    const projectedSpend = returning.reduce((sum, p) => sum + p.estimatedCost, 0);
-    
-    // Calculate gaps by position group
-    const gapsByGroup: Partial<Record<PositionGroup, number>> = {};
-    for (const group of positionGroups) {
-      const groupDepartures = departures.filter(d => d.positionGroup === group);
-      const startersLeaving = groupDepartures.filter(d => d.role === "STARTER").length;
-      if (startersLeaving > 0) {
-        gapsByGroup[group] = startersLeaving;
-      }
-    }
-    
-    // Generate notes
-    const notes: string[] = [];
-    if (departures.length > 5) {
-      notes.push(`Heavy attrition year: ${departures.length} players graduating.`);
-    }
-    const starterDepartures = departures.filter(d => d.role === "STARTER");
-    if (starterDepartures.length > 0) {
-      notes.push(`${starterDepartures.length} starter(s) departing: ${starterDepartures.map(d => d.name).slice(0, 3).join(", ")}${starterDepartures.length > 3 ? "..." : ""}.`);
-    }
-    if (transferRisks.length > 0) {
-      notes.push(`${transferRisks.length} player(s) flagged as transfer risk.`);
-    }
-    
-    return {
-      projectedSpend,
-      returningCount: returning.length,
-      departures: allDepartures,
-      gapsByGroup,
-      notes
-    };
-  };
-  
-  return {
-    year1: computeYearForecast(currentYear),
-    year2: computeYearForecast(currentYear + 1),
-    year3: computeYearForecast(currentYear + 2)
-  };
+        reason: "GRADUATION" as const
+      })),
+    gapsByGroup: { QB: 1, OL: 2, DL: 2, DB: 2, WR: 2, TE: 1 },
+    notes: [
+      "11 players graduating this cycle.",
+      "Starter turnover at QB, OL, and DB.",
+      "Plan replacements for WR depth."
+    ]
+  },
+  year3: {
+    label: "Year 3",
+    projectedSpend: 1877000,
+    returningCount: 24,
+    expectedDepartures: 28,
+    topDepartureDrivers: ["Eligibility cycle + transfer churn"],
+    departures: SEED_ROSTER
+      .filter(p => p.gradYear === 2028)
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        positionGroup: p.positionGroup,
+        estimatedCost: p.estimatedCost,
+        role: p.role,
+        reason: "GRADUATION" as const
+      })),
+    gapsByGroup: { QB: 1, OL: 2, DL: 2, LB: 2, DB: 2, WR: 3 },
+    notes: [
+      "14 players graduating.",
+      "Significant rebuild needed at WR and DB.",
+      "Begin recruiting pipeline investments now."
+    ]
+  }
 };
-
-export const SEED_FORECAST: BudgetForecast = computeForecast(SEED_ROSTER);
