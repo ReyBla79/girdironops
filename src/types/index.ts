@@ -169,14 +169,18 @@ export interface ForecastDeparture {
 }
 
 export interface ForecastYear {
+  label: string;
   projectedSpend: number;
   returningCount: number;
+  expectedDepartures: number;
+  topDepartureDrivers: string[];
   departures: ForecastDeparture[];
   gapsByGroup: Partial<Record<PositionGroup, number>>;
   notes: string[];
 }
 
 export interface BudgetForecast {
+  inflationRate: number;
   year1: ForecastYear;
   year2: ForecastYear;
   year3: ForecastYear;
