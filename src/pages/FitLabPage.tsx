@@ -5,15 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Slider } from '@/components/ui/slider';
-import { DollarSign, TrendingUp, Shield, Zap, Target, Info } from 'lucide-react';
+import { DollarSign, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { useState } from 'react';
 import { Player, RosterNeed } from '@/types';
 
 const PRIORITY_COLORS = {
-  CRITICAL: 'bg-destructive text-destructive-foreground',
-  HIGH: 'bg-chart-1 text-primary-foreground',
-  MEDIUM: 'bg-chart-2 text-primary-foreground',
-  LOW: 'bg-muted text-muted-foreground',
+  MUST_REPLACE: 'bg-destructive text-destructive-foreground',
+  UPGRADE: 'bg-chart-1 text-primary-foreground',
+  DEPTH: 'bg-muted text-muted-foreground',
 };
 
 const READINESS_COLORS = {
@@ -24,7 +23,7 @@ const READINESS_COLORS = {
 
 const RISK_COLORS = {
   LOW: 'text-chart-1',
-  MED: 'text-2',
+  MED: 'text-chart-2',
   HIGH: 'text-destructive',
 };
 
@@ -43,14 +42,16 @@ const computeImpact = (player: Player, need: RosterNeed | null) => {
 };
 
 // Demo budget fit computation
-const computeBudgetFit = (player: Player, budget: { available: number; positionCaps: Record<string, number> }) => {
+const computeBudgetFit = (player: Player, caps: { positionGroup: string; max: string }[]) => {
   if (!player.nilRange) return { status: 'UNKNOWN', label: 'Unknown' };
-  const cap = budget.positionCaps[player.positionGroup] || 100000;
+  
+  const cap = caps.find(c => c.positionGroup === player.positionGroup);
+  const maxValue = cap ? parseInt(cap.max.replace(/[$K,]/g, '')) * 1000 : 100000;
   const midValue = player.nilRange.mid;
   
-  if (midValue <= budget.available && midValue <= cap * 0.8) {
+  if (midValue <= maxValue * 0.8) {
     return { status: 'GOOD', label: 'Within Budget' };
-  } else if (midValue <= budget.available) {
+  } else if (midValue <= maxValue) {
     return { status: 'STRETCH', label: 'Stretch' };
   } else {
     return { status: 'OVER', label: 'Over Budget' };
@@ -64,7 +65,6 @@ const FitLabPage = () => {
   
   const { 
     players, 
-    roster, 
     needs, 
     budget, 
     programDNA, 
@@ -137,18 +137,26 @@ const FitLabPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-6 text-sm">
+          <div className="space-y-4">
             <div>
-              <p className="text-muted-foreground">Total NIL</p>
-              <p className="text-xl font-bold">${(budget.totalNIL / 1000000).toFixed(1)}M</p>
+              <p className="text-muted-foreground text-sm">Total NIL Band</p>
+              <p className="text-xl font-bold">{budget.nilTotalBand}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Committed</p>
-              <p className="text-xl font-bold">${(budget.committed / 1000000).toFixed(1)}M</p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {budget.allocations.map((alloc) => (
+                <div key={alloc.positionGroup} className="p-3 bg-secondary rounded-lg">
+                  <p className="text-xs text-muted-foreground">{alloc.positionGroup}</p>
+                  <p className="font-semibold">{alloc.band}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-muted-foreground">Available</p>
-              <p className="text-xl font-bold text-chart-1">${(budget.available / 1000).toFixed(0)}K</p>
+            <div className="flex flex-wrap gap-2 text-sm">
+              <span className="text-muted-foreground">Caps:</span>
+              {budget.caps.map((cap) => (
+                <Badge key={cap.positionGroup} variant="outline">
+                  {cap.positionGroup}: {cap.max}
+                </Badge>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -180,8 +188,8 @@ const FitLabPage = () => {
                   selectedNeedId === need.id ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-accent'
                 }`}
               >
-                {need.positionGroup}
-                <Badge className={`${PRIORITY_COLORS[need.priority]} text-xs`}>{need.priority}</Badge>
+                {need.label}
+                <Badge className={`${PRIORITY_COLORS[need.priority]} text-xs`}>{need.priority.replace('_', ' ')}</Badge>
               </button>
             ))}
           </div>
@@ -229,7 +237,7 @@ const FitLabPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredPlayers.map((player) => {
-                  const budgetFit = computeBudgetFit(player, budget);
+                  const budgetFit = computeBudgetFit(player, budget.caps);
                   const impact = computeImpact(player, selectedNeed);
                   
                   return (
