@@ -131,20 +131,17 @@ export interface RosterNeed {
   reason: string;
 }
 
-export interface BudgetAllocation {
-  positionGroup: PositionGroup;
-  band: string;
-}
+export type PositionAllocations = Record<PositionGroup, number>;
 
-export interface BudgetCap {
-  positionGroup: PositionGroup;
-  max: string;
+export interface BudgetGuardrails {
+  maxPerPlayer: number;
+  maxPerPositionPercent: number;
 }
 
 export interface Budget {
-  nilTotalBand: string;
-  allocations: BudgetAllocation[];
-  caps: BudgetCap[];
+  totalBudget: number;
+  allocations: PositionAllocations;
+  guardrails: BudgetGuardrails;
 }
 
 export interface ContactMethod {

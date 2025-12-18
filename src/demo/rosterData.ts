@@ -1,19 +1,22 @@
 import { RosterPlayer, RosterNeed, Budget } from '@/types';
 
 export const SEED_BUDGET: Budget = {
-  nilTotalBand: "$250K–$500K (demo)",
-  allocations: [
-    { positionGroup: "QB", band: "$60K–$120K" },
-    { positionGroup: "OL", band: "$70K–$140K" },
-    { positionGroup: "DL", band: "$50K–$100K" },
-    { positionGroup: "DB", band: "$40K–$80K" },
-    { positionGroup: "WR", band: "$30K–$60K" }
-  ],
-  caps: [
-    { positionGroup: "QB", max: "$150K" },
-    { positionGroup: "OL", max: "$90K" },
-    { positionGroup: "DL", max: "$75K" }
-  ]
+  totalBudget: 1800000,
+  allocations: {
+    QB: 280000,
+    OL: 320000,
+    DL: 260000,
+    LB: 190000,
+    DB: 240000,
+    WR: 210000,
+    TE: 120000,
+    RB: 120000,
+    ST: 60000
+  },
+  guardrails: {
+    maxPerPlayer: 150000,
+    maxPerPositionPercent: 25
+  }
 };
 
 export const SEED_ROSTER: RosterPlayer[] = [
