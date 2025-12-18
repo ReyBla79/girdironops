@@ -181,6 +181,9 @@ export interface RosterPlayer {
   risk: RiskFactors;
   riskScore: number;
   riskColor: RiskColor;
+  // Simulation flags
+  simRemoved?: boolean;
+  simAdded?: boolean;
 }
 
 export interface RosterMeta {

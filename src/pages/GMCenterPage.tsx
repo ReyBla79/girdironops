@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { UIMode, PositionGroup } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { GuardrailBadge } from '@/components/GuardrailBadge';
+import { calculateRemainingBudget, calculateFullForecast } from '@/lib/budgetCalculator';
 
 const GMCenterPage = () => {
   const navigate = useNavigate();
@@ -68,9 +70,9 @@ const GMCenterPage = () => {
     });
   };
 
-  // Calculate quick stats
-  const totalSpent = roster.reduce((sum, p) => sum + p.estimatedCost, 0);
-  const totalRemaining = budget.totalBudget - totalSpent;
+  // Calculate using deterministic formulas
+  const budgetCalc = calculateRemainingBudget(roster);
+  const forecastCalc = calculateFullForecast(roster);
   const yellowRisks = riskHeatmap.keyRisks.filter(r => r.riskColor === 'YELLOW').length;
   const redRisks = riskHeatmap.keyRisks.filter(r => r.riskColor === 'RED').length;
 
@@ -158,19 +160,26 @@ const GMCenterPage = () => {
           {/* Budget Summary Mini */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
-                Budget Snapshot
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  Budget Snapshot
+                </CardTitle>
+                <GuardrailBadge roster={roster} />
+              </div>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Allocated</span>
-                <span className="font-semibold">${(totalSpent / 1000000).toFixed(2)}M</span>
+                <span className="font-semibold">${(budgetCalc.allocated / 1000000).toFixed(2)}M</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Remaining</span>
-                <span className="font-semibold text-chart-1">${(totalRemaining / 1000000).toFixed(2)}M</span>
+                <span className="font-semibold text-chart-1">${(budgetCalc.remaining / 1000000).toFixed(2)}M</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Reserve (Locked)</span>
+                <span className="text-xs text-muted-foreground">${(budgetCalc.contingencyReserve / 1000).toFixed(0)}K</span>
               </div>
               <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => navigate('/app/budget')}>
                 View Full Budget <ChevronRight className="w-4 h-4 ml-1" />
@@ -216,11 +225,15 @@ const GMCenterPage = () => {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Year 1 Departures</span>
-                <span className="font-semibold">{forecast.year1.expectedDepartures}</span>
+                <span className="font-semibold">{forecastCalc.year1.expectedDepartures}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Year 2 Departures</span>
-                <span className="font-semibold">{forecast.year2.expectedDepartures}</span>
+                <span className="font-semibold">{forecastCalc.year2.expectedDepartures}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Year 1 Projected</span>
+                <span className="text-xs text-muted-foreground">${(forecastCalc.year1.projectedSpend / 1000000).toFixed(2)}M</span>
               </div>
               <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => navigate('/app/forecast')}>
                 View Forecast <ChevronRight className="w-4 h-4 ml-1" />

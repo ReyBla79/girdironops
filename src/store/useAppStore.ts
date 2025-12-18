@@ -1,10 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, BeforeAfterState, WowScenario } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, BeforeAfterState, WowScenario, RosterPlayer } from '@/types';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
-
+import { CALCULATOR_CONFIG } from '@/demo/calculatorConfig';
+import {
+  calculateRemainingBudget,
+  calculateAllocationsByGroup,
+  calculateFullForecast,
+  calculateRiskHeatmap,
+  findReplacementCandidate,
+  calculatePlayerCost,
+  generateDecisionSummary
+} from '@/lib/budgetCalculator';
 const DEFAULT_WOW_SCENARIO: WowScenario = {
   id: 'wow1',
   label: 'One-Click WOW: Fix OL Depth + Keep Budget Clean',
@@ -273,56 +282,106 @@ export const useAppStore = create<AppStore>()(
 
       runWowScenario: () => {
         const state = get();
-        const { roster, budget, players } = state;
+        const { roster, players } = state;
+        const wowConfig = CALCULATOR_CONFIG.wowScenario;
         
-        // Find the best OT prospect (first player with OL position group and high fit score)
-        const olProspect = players.find(p => p.positionGroup === 'OL' && p.fitScore >= 80);
+        // 1. Find the recruit (p1) from players
+        const recruit = players.find(p => p.id === wowConfig.recruitPlayerId);
+        if (!recruit) return;
         
-        // Find graduating or low-grade OL to replace
-        const olToReplace = roster
-          .filter(r => r.positionGroup === 'OL')
-          .sort((a, b) => {
-            // Prefer graduating seniors
-            if (a.gradYear === 2026 && b.gradYear !== 2026) return -1;
-            if (b.gradYear === 2026 && a.gradYear !== 2026) return 1;
-            // Then lowest performance grade
-            return a.performanceGrade - b.performanceGrade;
-          })[0];
+        // 2. Find replacement candidate using deterministic logic
+        const replacement = findReplacementCandidate(roster, wowConfig.targetNeedPositionGroup);
+        if (!replacement) return;
         
-        const currentSpent = roster.reduce((sum, p) => sum + p.estimatedCost, 0);
-        const prospectCost = olProspect?.nilRange?.mid || 75000;
-        const replacementSavings = olToReplace?.estimatedCost || 0;
+        // 3. Create simulation roster with simRemoved/simAdded flags
+        const simRoster: RosterPlayer[] = roster.map(p => 
+          p.id === replacement.id ? { ...p, simRemoved: true } : p
+        );
         
-        const afterSpent = currentSpent - replacementSavings + prospectCost;
-        const delta = afterSpent - currentSpent;
-
+        // 4. Create simulated recruit as roster player
+        const recruitAsRoster: RosterPlayer = {
+          id: `sim_${recruit.id}`,
+          name: recruit.name,
+          position: recruit.position,
+          positionGroup: recruit.positionGroup,
+          year: recruit.classYear,
+          gradYear: CALCULATOR_CONFIG.asOfYear + (recruit.classYear === 'SR' ? 1 : recruit.classYear === 'JR' ? 2 : recruit.classYear === 'SO' ? 3 : 4),
+          eligibilityRemaining: parseInt(recruit.eligibility) || 2,
+          nilBand: 'HIGH',
+          estimatedCost: recruit.nilRange?.mid || calculatePlayerCost({
+            nilBand: 'HIGH',
+            role: wowConfig.assumedRecruitRole,
+            positionGroup: recruit.positionGroup
+          }),
+          role: wowConfig.assumedRecruitRole,
+          snapsShare: 70,
+          performanceGrade: 80,
+          risk: { injury: 20, transfer: 25, academics: 8 },
+          riskScore: 22,
+          riskColor: 'GREEN',
+          simAdded: true
+        };
+        
+        simRoster.push(recruitAsRoster);
+        
+        // 5. Calculate BEFORE state (original roster)
+        const beforeBudget = calculateRemainingBudget(roster);
+        const beforeAllocations = calculateAllocationsByGroup(roster);
+        const beforeForecast = calculateFullForecast(roster);
+        const beforeHeatmap = calculateRiskHeatmap(roster);
+        
+        // 6. Calculate AFTER state (simulated roster)
+        const afterBudget = calculateRemainingBudget(simRoster);
+        const afterAllocations = calculateAllocationsByGroup(simRoster);
+        const afterForecast = calculateFullForecast(simRoster);
+        const afterHeatmap = calculateRiskHeatmap(simRoster);
+        
+        // 7. Calculate deltas
+        const beforeOLAlloc = beforeAllocations[wowConfig.targetNeedPositionGroup];
+        const afterOLAlloc = afterAllocations[wowConfig.targetNeedPositionGroup];
+        const beforeOLPercent = beforeOLAlloc / beforeBudget.allocated;
+        const afterOLPercent = afterOLAlloc / afterBudget.allocated;
+        
+        // 8. Generate decision summary
+        const summary = generateDecisionSummary(
+          beforeBudget.remaining,
+          afterBudget.remaining,
+          recruit.name,
+          replacement.name,
+          wowConfig.targetNeedPositionGroup,
+          beforeForecast.year1.gapsByGroup,
+          afterForecast.year1.gapsByGroup,
+          beforeOLPercent,
+          afterOLPercent
+        );
+        
+        // 9. Build BeforeAfterState
         const beforeAfterState: BeforeAfterState = {
           budget: {
-            before: { spent: currentSpent, remaining: budget.totalBudget - currentSpent },
-            after: { spent: afterSpent, remaining: budget.totalBudget - afterSpent },
-            delta
+            before: { spent: beforeBudget.allocated, remaining: beforeBudget.remaining },
+            after: { spent: afterBudget.allocated, remaining: afterBudget.remaining },
+            delta: afterBudget.allocated - beforeBudget.allocated
           },
-          allocations: [
-            {
-              positionGroup: 'OL',
-              before: roster.filter(r => r.positionGroup === 'OL').reduce((s, r) => s + r.estimatedCost, 0),
-              after: roster.filter(r => r.positionGroup === 'OL').reduce((s, r) => s + r.estimatedCost, 0) - replacementSavings + prospectCost
-            }
-          ],
+          allocations: (['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'] as PositionGroup[]).map(group => ({
+            positionGroup: group,
+            before: beforeAllocations[group],
+            after: afterAllocations[group]
+          })),
           forecast: {
-            year1Delta: -replacementSavings, // Savings from graduating player
-            year2Delta: prospectCost * 1.08, // Inflation adjusted
-            year3Delta: prospectCost * 1.16
+            year1Delta: afterForecast.year1.projectedSpend - beforeForecast.year1.projectedSpend,
+            year2Delta: afterForecast.year2.projectedSpend - beforeForecast.year2.projectedSpend,
+            year3Delta: afterForecast.year3.projectedSpend - beforeForecast.year3.projectedSpend
           },
-          riskHeatmap: [
-            { positionGroup: 'OL', beforeYellow: 0, afterYellow: 0 }
-          ],
-          summary: {
-            recruitAdded: olProspect?.name || 'Portal OT',
-            playerRemoved: olToReplace?.name || 'Graduating OL',
-            budgetImpact: delta > 0 ? `+$${(delta / 1000).toFixed(0)}K` : `-$${(Math.abs(delta) / 1000).toFixed(0)}K`,
-            forecastNote: 'Year 1 savings from graduating player offset new recruit cost.'
-          }
+          riskHeatmap: (['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'] as PositionGroup[]).map(group => {
+            const beforeRow = beforeHeatmap.find(r => r.positionGroup === group);
+            const afterRow = afterHeatmap.find(r => r.positionGroup === group);
+            return {
+              positionGroup: group,
+              beforeYellow: beforeRow?.YELLOW || 0,
+              afterYellow: afterRow?.YELLOW || 0
+            };
+          }),
+          summary
         };
 
         set({ beforeAfter: beforeAfterState });
