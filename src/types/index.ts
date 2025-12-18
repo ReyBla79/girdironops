@@ -139,6 +139,13 @@ export interface RiskFactors {
   academics: number;
 }
 
+export interface SimulationTags {
+  simRemoved?: boolean;
+  simAdded?: boolean;
+  simScenarioId?: string;
+  simRemovalReason?: string;
+}
+
 export interface RosterPlayer {
   id: string;
   name: string;
@@ -155,9 +162,11 @@ export interface RosterPlayer {
   risk: RiskFactors;
   riskScore: number;
   riskColor: RiskColor;
-  // Simulation flags
+  // Simulation tags
   simRemoved?: boolean;
   simAdded?: boolean;
+  simScenarioId?: string;
+  simRemovalReason?: string;
 }
 
 export interface RosterMeta {
