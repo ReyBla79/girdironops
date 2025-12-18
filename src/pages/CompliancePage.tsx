@@ -5,13 +5,12 @@ import { formatDistanceToNow } from 'date-fns';
 const CompliancePage = () => {
   const { events } = useAppStore();
 
-  const auditEvents = events.filter((e) => 
-    e.type === 'TASK_CREATED' || e.type === 'PLAYER_REVIEWED' || e.type === 'CONTACT_REQUESTED'
-  );
+  // Show all events for comprehensive audit log
+  const auditEvents = events.slice(0, 30);
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
+      {/* Page Header */}
       <div>
         <h1 className="font-display text-2xl font-bold flex items-center gap-2">
           <Shield className="w-6 h-6 text-success" />
@@ -27,26 +26,30 @@ const CompliancePage = () => {
             <Shield className="w-6 h-6 text-success" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-lg mb-2">Compliance Mode Active</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-success" />
-                No bulk export available
+            <h3 className="font-display font-bold text-lg mb-3">Compliance-first demo mode</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2 text-muted-foreground">
+                <Lock className="w-4 h-4 text-success shrink-0" />
+                No bulk exports
               </li>
-              <li className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-success" />
-                Contact info requires approval
+              <li className="flex items-center gap-2 text-muted-foreground">
+                <Lock className="w-4 h-4 text-success shrink-0" />
+                Locked contacts (approval required)
               </li>
-              <li className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-success" />
-                Full audit trail enabled
+              <li className="flex items-center gap-2 text-muted-foreground">
+                <Eye className="w-4 h-4 text-success shrink-0" />
+                Audit trail on every action
+              </li>
+              <li className="flex items-center gap-2 text-muted-foreground">
+                <Shield className="w-4 h-4 text-success shrink-0" />
+                AI never invents contact info
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Contact Locked Example */}
+      {/* Locked Contact Example */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
           <Lock className="w-5 h-5 text-primary" />
@@ -71,18 +74,19 @@ const CompliancePage = () => {
           <p className="text-sm flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
             <span>
-              Contact information is protected by compliance guardrails. All access requests are logged and require 
-              Compliance Officer approval. This ensures your program remains compliant with NCAA regulations.
+              Contacts are permissioned. Requests are logged. Approvals required. 
+              Demo intentionally hides real contact info.
             </span>
           </p>
         </div>
       </div>
 
-      {/* Audit Log */}
+      {/* Audit Log Table */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="p-4 border-b border-border flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
           <h3 className="font-display font-semibold">Audit Log</h3>
+          <span className="text-xs text-muted-foreground ml-auto">Last 30 events</span>
         </div>
         {auditEvents.length > 0 ? (
           <div className="divide-y divide-border">
@@ -91,13 +95,19 @@ const CompliancePage = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      event.type === 'PORTAL_NEW' ? 'bg-primary/20' :
+                      event.type === 'PORTAL_UPDATED' ? 'bg-warning/20' :
+                      event.type === 'PORTAL_WITHDRAWN' ? 'bg-destructive/20' :
                       event.type === 'TASK_CREATED' ? 'bg-primary/20' :
                       event.type === 'PLAYER_REVIEWED' ? 'bg-success/20' :
-                      'bg-warning/20'
+                      event.type === 'CONTACT_REQUESTED' ? 'bg-warning/20' :
+                      'bg-muted'
                     }`}>
+                      {event.type.startsWith('PORTAL') && <FileText className="w-4 h-4 text-primary" />}
                       {event.type === 'TASK_CREATED' && <FileText className="w-4 h-4 text-primary" />}
                       {event.type === 'PLAYER_REVIEWED' && <Eye className="w-4 h-4 text-success" />}
                       {event.type === 'CONTACT_REQUESTED' && <Lock className="w-4 h-4 text-warning" />}
+                      {event.type === 'AGENT_QUERY' && <Shield className="w-4 h-4 text-primary" />}
                     </div>
                     <div>
                       <p className="text-sm font-medium">{event.message}</p>
