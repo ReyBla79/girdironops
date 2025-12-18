@@ -1,4 +1,4 @@
-export type Role = 'HC' | 'GM_RC' | 'COORDINATOR' | 'ANALYST_GA' | 'COMPLIANCE';
+export type Role = 'HC' | 'GM_RC' | 'COORDINATOR' | 'POSITION_COACH' | 'ANALYST_GA' | 'COMPLIANCE';
 
 export type PositionGroup = "OL" | "DL" | "LB" | "DB" | "WR" | "RB" | "QB" | "TE" | "ST";
 export type ClassYear = "FR" | "SO" | "JR" | "SR" | "GR";
