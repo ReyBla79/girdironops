@@ -421,12 +421,9 @@ export function generateBeforeAfterSummary(input: WowScenarioInput): BeforeAfter
         .map(([key]) => key)
     }));
 
-  // Recruit cost
-  const recruitCost = recruit.nilRange?.mid || calculatePlayerCost({
-    nilBand: 'HIGH',
-    role: wowConfig.assumedRecruitRole,
-    positionGroup: recruit.positionGroup
-  });
+  // Recruit cost - DETERMINISTIC: Fixed at $127,000 (under $150K cap, clearly "HIGH" band, moves budget without breaking guardrails)
+  const DETERMINISTIC_RECRUIT_COST = 127000;
+  const recruitCost = DETERMINISTIC_RECRUIT_COST;
 
   // Build recommended decision
   const why: string[] = [];
