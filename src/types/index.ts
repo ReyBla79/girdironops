@@ -151,6 +151,25 @@ export interface RosterNeed {
   reason: string;
 }
 
+export interface RiskHeatmapRow {
+  positionGroup: PositionGroup;
+  GREEN: number;
+  YELLOW: number;
+  RED: number;
+}
+
+export interface KeyRisk {
+  playerId: string;
+  name: string;
+  riskColor: RiskColor;
+  drivers: ("injury" | "transfer" | "academics")[];
+}
+
+export interface RiskHeatmap {
+  byPositionGroup: RiskHeatmapRow[];
+  keyRisks: KeyRisk[];
+}
+
 export type PositionAllocations = Record<PositionGroup, number>;
 
 export interface BudgetGuardrails {
@@ -244,6 +263,7 @@ export interface AppState {
   rosterMeta: RosterMeta;
   needs: RosterNeed[];
   budget: Budget;
+  riskHeatmap: RiskHeatmap;
   selectedNeedId: string | null;
   selectedProspectId: string | null;
   coaches: Coach[];

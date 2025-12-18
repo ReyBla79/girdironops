@@ -1,4 +1,4 @@
-import { RosterPlayer, RosterNeed, Budget, RosterMeta, BudgetForecast, ForecastDeparture, PositionGroup } from '@/types';
+import { RosterPlayer, RosterNeed, Budget, RosterMeta, BudgetForecast, ForecastDeparture, PositionGroup, RiskHeatmap } from '@/types';
 
 export const ROSTER_META: RosterMeta = {
   programId: "unlv",
@@ -165,4 +165,22 @@ export const SEED_FORECAST: BudgetForecast = {
       "Begin recruiting pipeline investments now."
     ]
   }
+};
+
+export const SEED_RISK_HEATMAP: RiskHeatmap = {
+  byPositionGroup: [
+    { positionGroup: "QB", GREEN: 3, YELLOW: 0, RED: 0 },
+    { positionGroup: "RB", GREEN: 4, YELLOW: 0, RED: 0 },
+    { positionGroup: "WR", GREEN: 7, YELLOW: 0, RED: 0 },
+    { positionGroup: "TE", GREEN: 4, YELLOW: 0, RED: 0 },
+    { positionGroup: "OL", GREEN: 9, YELLOW: 0, RED: 0 },
+    { positionGroup: "DL", GREEN: 8, YELLOW: 1, RED: 0 },
+    { positionGroup: "LB", GREEN: 6, YELLOW: 0, RED: 0 },
+    { positionGroup: "DB", GREEN: 7, YELLOW: 1, RED: 0 },
+    { positionGroup: "ST", GREEN: 2, YELLOW: 0, RED: 0 }
+  ],
+  keyRisks: [
+    { playerId: "r28", name: "Jalen Cross", riskColor: "YELLOW", drivers: ["transfer"] },
+    { playerId: "r43", name: "DeAndre Vale", riskColor: "YELLOW", drivers: ["transfer"] }
+  ]
 };
