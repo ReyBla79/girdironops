@@ -107,17 +107,20 @@ export interface ProgramDNA {
   fitRules: string[];
 }
 
+export type RosterRole = "STARTER" | "ROTATIONAL" | "DEPTH" | "DEVELOPMENTAL";
+export type RosterRisk = "NONE" | "LOW" | "MED" | "HIGH";
+
 export interface RosterPlayer {
   id: string;
   name: string;
   positionGroup: PositionGroup;
-  classYear: ClassYear;
-  starter: boolean;
-  snapsShare: number;
-  grade: number;
-  eligibilityRemaining: string;
+  year: ClassYear;
+  gradYear: number;
   nilBand: NILBand;
-  riskFlags: string[];
+  estimatedCost: number;
+  role: RosterRole;
+  snapsShare: number;
+  risk: RosterRisk;
 }
 
 export interface RosterNeed {

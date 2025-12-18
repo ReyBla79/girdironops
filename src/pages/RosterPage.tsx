@@ -18,13 +18,20 @@ const PRIORITY_COLORS = {
   DEPTH: 'bg-muted text-muted-foreground',
 };
 
+const RISK_COLORS = {
+  NONE: 'text-muted-foreground',
+  LOW: 'text-chart-2',
+  MED: 'text-chart-1',
+  HIGH: 'text-destructive',
+};
+
 const RosterPage = () => {
   const navigate = useNavigate();
   const { roster, needs, budget, programDNA } = useAppStore();
 
   const totalPlayers = roster.length;
-  const starters = roster.filter(p => p.starter).length;
-  const atRisk = roster.filter(p => p.riskFlags.filter(f => f).length > 0).length;
+  const starters = roster.filter(p => p.role === 'STARTER').length;
+  const atRisk = roster.filter(p => p.risk !== 'NONE').length;
   const urgentNeeds = needs.filter(n => n.priority === 'MUST_REPLACE' || n.priority === 'UPGRADE').length;
 
   const handleNeedClick = (needId: string) => {
@@ -129,12 +136,12 @@ const RosterPage = () => {
                   <TableHead>Name</TableHead>
                   <TableHead>Pos Group</TableHead>
                   <TableHead>Year</TableHead>
-                  <TableHead className="text-center">Starter</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead className="text-right">Snaps %</TableHead>
-                  <TableHead className="text-right">Grade</TableHead>
-                  <TableHead>Elig</TableHead>
+                  <TableHead className="text-right">Est. Cost</TableHead>
+                  <TableHead>Grad Year</TableHead>
                   <TableHead>NIL Band</TableHead>
-                  <TableHead>Risk Flags</TableHead>
+                  <TableHead>Risk</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,22 +151,22 @@ const RosterPage = () => {
                     <TableCell>
                       <Badge variant="outline">{player.positionGroup}</Badge>
                     </TableCell>
-                    <TableCell>{player.classYear}</TableCell>
-                    <TableCell className="text-center">
-                      {player.starter ? '✓' : '—'}
+                    <TableCell>{player.year}</TableCell>
+                    <TableCell>
+                      <Badge variant={player.role === 'STARTER' ? 'default' : 'secondary'}>
+                        {player.role}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">{player.snapsShare}%</TableCell>
-                    <TableCell className="text-right">{player.grade}</TableCell>
-                    <TableCell>{player.eligibilityRemaining}</TableCell>
+                    <TableCell className="text-right">${player.estimatedCost.toLocaleString()}</TableCell>
+                    <TableCell>{player.gradYear}</TableCell>
                     <TableCell>
                       <Badge className={NIL_BAND_COLORS[player.nilBand]}>{player.nilBand}</Badge>
                     </TableCell>
                     <TableCell>
-                      {player.riskFlags.filter(f => f).length > 0 ? (
-                        <span className="text-sm text-destructive">{player.riskFlags.filter(f => f).join(', ')}</span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                      <span className={`text-sm font-medium ${RISK_COLORS[player.risk]}`}>
+                        {player.risk === 'NONE' ? '—' : player.risk}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}
