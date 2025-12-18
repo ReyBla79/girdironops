@@ -99,6 +99,51 @@ export interface FeatureFlags {
   budget_simulator: boolean;
   budget_forecast: boolean;
   risk_heatmaps: boolean;
+  gm_mode: boolean;
+  wow_button: boolean;
+}
+
+export type UIMode = 'COACH' | 'GM';
+
+export interface WowScenario {
+  id: string;
+  label: string;
+  recruitPlayerId: string;
+  targetNeedId: string;
+  suggestReplacementRule: {
+    positionGroup: PositionGroup;
+    prefer: string;
+    fallback: string;
+  };
+}
+
+export interface BeforeAfterState {
+  budget: {
+    before: { spent: number; remaining: number };
+    after: { spent: number; remaining: number };
+    delta: number;
+  };
+  allocations: {
+    positionGroup: PositionGroup;
+    before: number;
+    after: number;
+  }[];
+  forecast: {
+    year1Delta: number;
+    year2Delta: number;
+    year3Delta: number;
+  };
+  riskHeatmap: {
+    positionGroup: PositionGroup;
+    beforeYellow: number;
+    afterYellow: number;
+  }[];
+  summary: {
+    recruitAdded: string;
+    playerRemoved: string;
+    budgetImpact: string;
+    forecastNote: string;
+  };
 }
 
 export interface ProgramDNA {
@@ -273,4 +318,8 @@ export interface AppState {
   coaches: Coach[];
   contactAccessRequests: ContactAccessRequest[];
   outreachLogs: OutreachLog[];
+  uiMode: UIMode;
+  wowScenario: WowScenario;
+  wowModalOpen: boolean;
+  beforeAfter: BeforeAfterState | null;
 }

@@ -20,6 +20,7 @@ import CoachProfilePage from "./pages/CoachProfilePage";
 import BudgetPage from "./pages/BudgetPage";
 import BudgetSimulatorPage from "./pages/BudgetSimulatorPage";
 import ForecastPage from "./pages/ForecastPage";
+import GMCenterPage from "./pages/GMCenterPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -137,6 +138,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredFlag="budget_core">
                   <ForecastPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="gm"
+              element={
+                <ProtectedRoute requiredFlag="gm_mode">
+                  <GMCenterPage />
                 </ProtectedRoute>
               }
             />

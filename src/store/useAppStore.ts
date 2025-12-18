@@ -1,9 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, BeforeAfterState, WowScenario } from '@/types';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
+
+const DEFAULT_WOW_SCENARIO: WowScenario = {
+  id: 'wow1',
+  label: 'One-Click WOW: Fix OL Depth + Keep Budget Clean',
+  recruitPlayerId: 'p1',
+  targetNeedId: 'n1',
+  suggestReplacementRule: {
+    positionGroup: 'OL',
+    prefer: 'GRADUATING_OR_LOW_GRADE_DEPTH',
+    fallback: 'LOWEST_GRADE_IN_GROUP'
+  }
+};
 
 interface AppStore extends AppState {
   login: (role: Role, programId: string) => void;
@@ -20,6 +32,12 @@ interface AppStore extends AppState {
   selectProspect: (playerId: string | null) => void;
   createContactAccessRequest: (coachId: string) => void;
   logOutreach: (coachId: string, mode: 'email' | 'sms', content: string) => void;
+  setUIMode: (mode: UIMode) => void;
+  runWowScenario: () => void;
+  openWowModal: () => void;
+  closeWowModal: () => void;
+  applySimulation: () => void;
+  undoSimulation: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -47,6 +65,10 @@ export const useAppStore = create<AppStore>()(
       contactAccessRequests: [],
       outreachLogs: [],
       forecast: SEED_FORECAST,
+      uiMode: 'COACH',
+      wowScenario: DEFAULT_WOW_SCENARIO,
+      wowModalOpen: false,
+      beforeAfter: null,
 
       login: (role, programId) => {
         set({ demoAuthed: true, demoRole: role, programId });
@@ -193,6 +215,9 @@ export const useAppStore = create<AppStore>()(
           contactAccessRequests: [],
           outreachLogs: [],
           forecast: SEED_FORECAST,
+          uiMode: 'COACH',
+          wowModalOpen: false,
+          beforeAfter: null,
         });
       },
 
@@ -240,6 +265,84 @@ export const useAppStore = create<AppStore>()(
           coachId,
           message: `${mode.toUpperCase()} outreach drafted for ${coach?.name || 'Unknown Coach'}`,
         });
+      },
+
+      setUIMode: (mode) => {
+        set({ uiMode: mode });
+      },
+
+      runWowScenario: () => {
+        const state = get();
+        const { roster, budget, players } = state;
+        
+        // Find the best OT prospect (first player with OL position group and high fit score)
+        const olProspect = players.find(p => p.positionGroup === 'OL' && p.fitScore >= 80);
+        
+        // Find graduating or low-grade OL to replace
+        const olToReplace = roster
+          .filter(r => r.positionGroup === 'OL')
+          .sort((a, b) => {
+            // Prefer graduating seniors
+            if (a.gradYear === 2026 && b.gradYear !== 2026) return -1;
+            if (b.gradYear === 2026 && a.gradYear !== 2026) return 1;
+            // Then lowest performance grade
+            return a.performanceGrade - b.performanceGrade;
+          })[0];
+        
+        const currentSpent = roster.reduce((sum, p) => sum + p.estimatedCost, 0);
+        const prospectCost = olProspect?.nilRange?.mid || 75000;
+        const replacementSavings = olToReplace?.estimatedCost || 0;
+        
+        const afterSpent = currentSpent - replacementSavings + prospectCost;
+        const delta = afterSpent - currentSpent;
+
+        const beforeAfterState: BeforeAfterState = {
+          budget: {
+            before: { spent: currentSpent, remaining: budget.totalBudget - currentSpent },
+            after: { spent: afterSpent, remaining: budget.totalBudget - afterSpent },
+            delta
+          },
+          allocations: [
+            {
+              positionGroup: 'OL',
+              before: roster.filter(r => r.positionGroup === 'OL').reduce((s, r) => s + r.estimatedCost, 0),
+              after: roster.filter(r => r.positionGroup === 'OL').reduce((s, r) => s + r.estimatedCost, 0) - replacementSavings + prospectCost
+            }
+          ],
+          forecast: {
+            year1Delta: -replacementSavings, // Savings from graduating player
+            year2Delta: prospectCost * 1.08, // Inflation adjusted
+            year3Delta: prospectCost * 1.16
+          },
+          riskHeatmap: [
+            { positionGroup: 'OL', beforeYellow: 0, afterYellow: 0 }
+          ],
+          summary: {
+            recruitAdded: olProspect?.name || 'Portal OT',
+            playerRemoved: olToReplace?.name || 'Graduating OL',
+            budgetImpact: delta > 0 ? `+$${(delta / 1000).toFixed(0)}K` : `-$${(Math.abs(delta) / 1000).toFixed(0)}K`,
+            forecastNote: 'Year 1 savings from graduating player offset new recruit cost.'
+          }
+        };
+
+        set({ beforeAfter: beforeAfterState });
+      },
+
+      openWowModal: () => {
+        set({ wowModalOpen: true });
+      },
+
+      closeWowModal: () => {
+        set({ wowModalOpen: false });
+      },
+
+      applySimulation: () => {
+        // In demo, just close modal and show success
+        set({ wowModalOpen: false });
+      },
+
+      undoSimulation: () => {
+        set({ beforeAfter: null, wowModalOpen: false });
       },
     }),
     {
