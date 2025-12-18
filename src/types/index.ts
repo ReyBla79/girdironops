@@ -117,34 +117,8 @@ export interface WowScenario {
   };
 }
 
-export interface BeforeAfterState {
-  budget: {
-    before: { spent: number; remaining: number };
-    after: { spent: number; remaining: number };
-    delta: number;
-  };
-  allocations: {
-    positionGroup: PositionGroup;
-    before: number;
-    after: number;
-  }[];
-  forecast: {
-    year1Delta: number;
-    year2Delta: number;
-    year3Delta: number;
-  };
-  riskHeatmap: {
-    positionGroup: PositionGroup;
-    beforeYellow: number;
-    afterYellow: number;
-  }[];
-  summary: {
-    recruitAdded: string;
-    playerRemoved: string;
-    budgetImpact: string;
-    forecastNote: string;
-  };
-}
+// BeforeAfterState is now imported from './beforeAfter.ts'
+export type { BeforeAfterState, BeforeAfterSummary } from './beforeAfter';
 
 export interface ProgramDNA {
   program: string;
@@ -300,6 +274,8 @@ export interface OutreachLog {
   draftContent: string;
 }
 
+import type { BeforeAfterState as BeforeAfterStateType } from './beforeAfter';
+
 export interface AppState {
   demoAuthed: boolean;
   demoRole: Role | null;
@@ -324,5 +300,5 @@ export interface AppState {
   uiMode: UIMode;
   wowScenario: WowScenario;
   wowModalOpen: boolean;
-  beforeAfter: BeforeAfterState | null;
+  beforeAfter: BeforeAfterStateType | null;
 }
