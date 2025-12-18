@@ -3,43 +3,42 @@ import { useState } from 'react';
 import { CheckSquare, Plus, Calendar, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
+import { Task } from '@/types';
 
 const TasksPage = () => {
   const { tasks, userList, players, addTask, updateTaskStatus } = useAppStore();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [owner, setOwner] = useState('');
   const [playerId, setPlayerId] = useState('');
   const [dueDate, setDueDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !assignedTo) return;
+    if (!title || !owner) return;
 
-    const player = players.find((p) => p.id === playerId);
     addTask({
       title,
-      description,
-      assignedTo,
-      assignedBy: 'current',
+      owner,
       playerId: playerId || undefined,
-      playerName: player?.name,
-      dueDate: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'pending',
+      due: dueDate || undefined,
+      status: 'OPEN',
     });
 
     setTitle('');
-    setDescription('');
-    setAssignedTo('');
+    setOwner('');
     setPlayerId('');
     setDueDate('');
     setShowForm(false);
   };
 
-  const pendingTasks = tasks.filter((t) => t.status === 'pending');
-  const inProgressTasks = tasks.filter((t) => t.status === 'in_progress');
-  const completedTasks = tasks.filter((t) => t.status === 'completed');
+  const openTasks = tasks.filter((t) => t.status === 'OPEN');
+  const doneTasks = tasks.filter((t) => t.status === 'DONE');
+
+  const getPlayerName = (pId?: string) => {
+    if (!pId) return null;
+    return players.find(p => p.id === pId)?.name;
+  };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -75,31 +74,21 @@ const TasksPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Assign To *</label>
+              <label className="block text-sm font-medium mb-1">Owner *</label>
               <select
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
+                value={owner}
+                onChange={(e) => setOwner(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm"
                 required
               >
-                <option value="">Select user</option>
+                <option value="">Select owner</option>
                 {userList.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} ({user.role})
+                  <option key={user.id} value={user.name}>
+                    {user.name}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Task description"
-              rows={2}
-              className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:border-primary resize-none"
-            />
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -120,7 +109,7 @@ const TasksPage = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Due Date</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm"
@@ -137,43 +126,36 @@ const TasksPage = () => {
       )}
 
       {/* Task Lists */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Pending */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Open */}
         <div>
           <h3 className="font-semibold mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-warning" />
-            Pending ({pendingTasks.length})
+            Open ({openTasks.length})
           </h3>
           <div className="space-y-3">
-            {pendingTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} users={userList} />
+            {openTasks.map((task) => (
+              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
             ))}
+            {openTasks.length === 0 && (
+              <p className="text-sm text-muted-foreground">No open tasks</p>
+            )}
           </div>
         </div>
 
-        {/* In Progress */}
-        <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            In Progress ({inProgressTasks.length})
-          </h3>
-          <div className="space-y-3">
-            {inProgressTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} users={userList} />
-            ))}
-          </div>
-        </div>
-
-        {/* Completed */}
+        {/* Done */}
         <div>
           <h3 className="font-semibold mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-success" />
-            Completed ({completedTasks.length})
+            Done ({doneTasks.length})
           </h3>
           <div className="space-y-3">
-            {completedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} users={userList} />
+            {doneTasks.map((task) => (
+              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
             ))}
+            {doneTasks.length === 0 && (
+              <p className="text-sm text-muted-foreground">No completed tasks</p>
+            )}
           </div>
         </div>
       </div>
@@ -181,39 +163,42 @@ const TasksPage = () => {
   );
 };
 
-const TaskCard = ({ task, onStatusChange, users }: { task: any; onStatusChange: any; users: any[] }) => {
-  const assignee = users.find((u) => u.id === task.assignedTo);
+interface TaskCardProps {
+  task: Task;
+  onStatusChange: (taskId: string, status: Task['status']) => void;
+  getPlayerName: (playerId?: string) => string | null | undefined;
+}
+
+const TaskCard = ({ task, onStatusChange, getPlayerName }: TaskCardProps) => {
+  const playerName = getPlayerName(task.playerId);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <p className="font-medium text-sm">{task.title}</p>
-      {task.description && (
-        <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
-      )}
-      {task.playerName && (
-        <p className="text-xs text-primary mt-1">Player: {task.playerName}</p>
+      {playerName && (
+        <p className="text-xs text-primary mt-1">Player: {playerName}</p>
       )}
       <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
         <User className="w-3 h-3" />
-        {assignee?.name || 'Unassigned'}
+        {task.owner}
       </div>
-      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-        <Calendar className="w-3 h-3" />
-        Due {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
-      </div>
+      {task.due && (
+        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+          <Calendar className="w-3 h-3" />
+          Due {formatDistanceToNow(new Date(task.due), { addSuffix: true })}
+        </div>
+      )}
       <div className="mt-3">
         <select
           value={task.status}
-          onChange={(e) => onStatusChange(task.id, e.target.value)}
+          onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
           className={`w-full text-xs px-2 py-1.5 rounded border ${
-            task.status === 'pending' ? 'bg-warning/20 border-warning/30 text-warning' :
-            task.status === 'in_progress' ? 'bg-primary/20 border-primary/30 text-primary' :
+            task.status === 'OPEN' ? 'bg-warning/20 border-warning/30 text-warning' :
             'bg-success/20 border-success/30 text-success'
           }`}
         >
-          <option value="pending">Pending</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
+          <option value="OPEN">Open</option>
+          <option value="DONE">Done</option>
         </select>
       </div>
     </div>

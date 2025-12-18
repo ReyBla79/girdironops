@@ -49,8 +49,14 @@ const PlayersPage = () => {
             className="px-3 py-2 rounded-lg bg-secondary border border-border text-sm"
           >
             <option value="all">All Positions</option>
-            <option value="Offense">Offense</option>
-            <option value="Defense">Defense</option>
+            <option value="OL">Offensive Line</option>
+            <option value="DL">Defensive Line</option>
+            <option value="LB">Linebackers</option>
+            <option value="DB">Defensive Backs</option>
+            <option value="WR">Wide Receivers</option>
+            <option value="RB">Running Backs</option>
+            <option value="QB">Quarterbacks</option>
+            <option value="TE">Tight Ends</option>
           </select>
           <select
             value={poolFilter}
@@ -58,7 +64,7 @@ const PlayersPage = () => {
             className="px-3 py-2 rounded-lg bg-secondary border border-border text-sm"
           >
             <option value="all">All Pools</option>
-            <option value="Transfer">Transfer</option>
+            <option value="TRANSFER_PORTAL">Transfer Portal</option>
             <option value="HS">High School</option>
             <option value="JUCO">JUCO</option>
           </select>
@@ -86,7 +92,7 @@ const PlayersPage = () => {
         )}
         {poolFilter !== 'all' && (
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/20 text-primary text-sm">
-            {poolFilter}
+            {poolFilter === 'TRANSFER_PORTAL' ? 'Portal' : poolFilter}
             <button onClick={() => setPoolFilter('all')} className="ml-1 hover:text-primary/70">×</button>
           </span>
         )}
@@ -140,17 +146,29 @@ const PlayersPage = () => {
                       {player.position}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{player.size}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{player.origin}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">{player.height} / {player.weight}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">{player.originSchool}</td>
                   <td className="px-4 py-3">
                     <span className={`font-bold ${player.fitScore >= 90 ? 'text-success' : player.fitScore >= 80 ? 'text-primary' : 'text-warning'}`}>
                       {player.fitScore}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{player.readinessScore}</td>
                   <td className="px-4 py-3">
-                    <span className={`${player.riskScore <= 10 ? 'text-success' : player.riskScore <= 15 ? 'text-warning' : 'text-destructive'}`}>
-                      {player.riskScore}
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      player.readiness === 'HIGH' ? 'bg-success/20 text-success' :
+                      player.readiness === 'MED' ? 'bg-warning/20 text-warning' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {player.readiness}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      player.risk === 'LOW' ? 'bg-success/20 text-success' :
+                      player.risk === 'MED' ? 'bg-warning/20 text-warning' :
+                      'bg-destructive/20 text-destructive'
+                    }`}>
+                      {player.risk}
                     </span>
                   </td>
                   <td className="px-4 py-3">

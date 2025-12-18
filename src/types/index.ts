@@ -1,56 +1,72 @@
-export type Role = 'HC' | 'GM' | 'Assistant' | 'Analyst' | 'Compliance' | 'Admin';
+export type Role = 'HC' | 'GM_RC' | 'COORDINATOR' | 'ANALYST_GA' | 'COMPLIANCE';
+
+export type PositionGroup = "OL" | "DL" | "LB" | "DB" | "WR" | "RB" | "QB" | "TE" | "ST";
+export type ClassYear = "FR" | "SO" | "JR" | "SR" | "GR";
+export type Pool = "TRANSFER_PORTAL" | "JUCO" | "HS";
+export type PlayerStatus = "NEW" | "UPDATED" | "WITHDRAWN";
+export type Readiness = "HIGH" | "MED" | "LOW";
+export type Risk = "LOW" | "MED" | "HIGH";
 
 export interface Player {
   id: string;
   name: string;
   position: string;
-  positionGroup: string;
-  size: string;
+  positionGroup: PositionGroup;
+  height: string;
+  weight: string;
+  classYear: ClassYear;
   eligibility: string;
-  origin: string;
-  pool: 'Transfer' | 'HS' | 'JUCO';
+  pool: Pool;
+  originSchool: string;
+  hometown: string;
+  state: string;
+  enteredAt: string;
+  status: PlayerStatus;
   fitScore: number;
-  readinessScore: number;
-  riskScore: number;
+  readiness: Readiness;
+  risk: Risk;
   reasons: string[];
   flags: string[];
-  filmLinks: string[];
-  reviewed: boolean;
-  createdAt: string;
-  updatedAt: string;
+  filmLinks: { label: string; url: string }[];
+  nilRange?: { low: number; mid: number; high: number; rationale: string };
+  reviewed?: boolean;
 }
 
-export interface Event {
+export type EventType =
+  | "PORTAL_NEW"
+  | "PORTAL_UPDATED"
+  | "PORTAL_WITHDRAWN"
+  | "TASK_CREATED"
+  | "PLAYER_REVIEWED"
+  | "CONTACT_REQUESTED"
+  | "AGENT_QUERY";
+
+export interface DemoEvent {
   id: string;
-  type: 'portal_entry' | 'portal_update' | 'portal_withdrawn' | 'task_created' | 'player_reviewed' | 'contact_requested';
+  ts: string;
+  type: EventType;
   playerId?: string;
-  playerName?: string;
-  description: string;
-  timestamp: string;
-  userId?: string;
+  message: string;
 }
 
 export interface Task {
   id: string;
+  ts: string;
   title: string;
-  description: string;
-  assignedTo: string;
-  assignedBy: string;
+  owner: string;
+  status: "OPEN" | "DONE";
+  due?: string;
   playerId?: string;
-  playerName?: string;
-  dueDate: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  createdAt: string;
 }
 
 export interface DemoUser {
   id: string;
   name: string;
-  role: Role;
-  avatar?: string;
+  role: string;
 }
 
 export interface FeatureFlags {
+  base_platform: boolean;
   daily_brief: boolean;
   portal_live: boolean;
   players_module: boolean;
@@ -70,13 +86,24 @@ export interface FeatureFlags {
   nil_engine: boolean;
 }
 
+export interface ProgramDNA {
+  program: string;
+  recruitingPriorities: string[];
+  schemeNotes: {
+    offense: string;
+    defense: string;
+  };
+  fitRules: string[];
+}
+
 export interface AppState {
   demoAuthed: boolean;
   demoRole: Role | null;
   programId: string | null;
   flags: FeatureFlags;
   players: Player[];
-  events: Event[];
+  events: DemoEvent[];
   tasks: Task[];
   userList: DemoUser[];
+  programDNA: ProgramDNA;
 }

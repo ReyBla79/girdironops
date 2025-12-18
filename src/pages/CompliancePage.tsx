@@ -3,10 +3,10 @@ import { Shield, Lock, Eye, FileText, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const CompliancePage = () => {
-  const { events, flags } = useAppStore();
+  const { events } = useAppStore();
 
   const auditEvents = events.filter((e) => 
-    e.type === 'task_created' || e.type === 'player_reviewed' || e.type === 'contact_requested'
+    e.type === 'TASK_CREATED' || e.type === 'PLAYER_REVIEWED' || e.type === 'CONTACT_REQUESTED'
   );
 
   return (
@@ -91,23 +91,23 @@ const CompliancePage = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      event.type === 'task_created' ? 'bg-primary/20' :
-                      event.type === 'player_reviewed' ? 'bg-success/20' :
+                      event.type === 'TASK_CREATED' ? 'bg-primary/20' :
+                      event.type === 'PLAYER_REVIEWED' ? 'bg-success/20' :
                       'bg-warning/20'
                     }`}>
-                      {event.type === 'task_created' && <FileText className="w-4 h-4 text-primary" />}
-                      {event.type === 'player_reviewed' && <Eye className="w-4 h-4 text-success" />}
-                      {event.type === 'contact_requested' && <Lock className="w-4 h-4 text-warning" />}
+                      {event.type === 'TASK_CREATED' && <FileText className="w-4 h-4 text-primary" />}
+                      {event.type === 'PLAYER_REVIEWED' && <Eye className="w-4 h-4 text-success" />}
+                      {event.type === 'CONTACT_REQUESTED' && <Lock className="w-4 h-4 text-warning" />}
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{event.description}</p>
+                      <p className="text-sm font-medium">{event.message}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {event.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {event.type.replace(/_/g, ' ')}
                       </p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(event.ts), { addSuffix: true })}
                   </span>
                 </div>
               </div>

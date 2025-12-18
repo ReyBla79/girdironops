@@ -11,7 +11,8 @@ import {
   UserCheck,
   TrendingUp,
   Shield,
-  Zap
+  Zap,
+  MapPin
 } from 'lucide-react';
 
 const PlayerProfile = () => {
@@ -33,32 +34,27 @@ const PlayerProfile = () => {
   }
 
   const handleCreateTask = () => {
-    const analyst = userList.find((u) => u.role === 'Analyst');
-    if (analyst) {
+    const coordinator = userList.find((u) => u.role === 'COORDINATOR');
+    if (coordinator) {
       addTask({
-        title: `Evaluate ${player.name}`,
-        description: `Complete full evaluation for ${player.name}`,
-        assignedTo: analyst.id,
-        assignedBy: 'current',
+        title: `Evaluate ${player.name} (${player.position})`,
+        owner: coordinator.name,
         playerId: player.id,
-        playerName: player.name,
-        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'pending',
+        due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'OPEN',
       });
     }
   };
 
   const handleRequestContact = () => {
     addEvent({
-      type: 'contact_requested',
+      type: 'CONTACT_REQUESTED',
       playerId: player.id,
-      playerName: player.name,
-      description: `Contact request submitted for ${player.name} - pending compliance approval`,
-      userId: 'current',
+      message: `Contact request submitted for ${player.name} — pending compliance approval`,
     });
   };
 
-  const canSeeNIL = ['HC', 'GM', 'Admin'].includes(demoRole || '') && flags.nil_engine;
+  const canSeeNIL = ['HC', 'GM_RC'].includes(demoRole || '') && flags.nil_engine;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -79,23 +75,37 @@ const PlayerProfile = () => {
               {player.name.split(' ').map(n => n[0]).join('')}
             </div>
             <div>
-              <h1 className="font-display text-2xl md:text-3xl font-bold">{player.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-2xl md:text-3xl font-bold">{player.name}</h1>
+                <span className={`text-xs px-2 py-0.5 rounded ${
+                  player.status === 'NEW' ? 'bg-primary/20 text-primary' :
+                  player.status === 'UPDATED' ? 'bg-warning/20 text-warning' :
+                  'bg-destructive/20 text-destructive'
+                }`}>
+                  {player.status}
+                </span>
+              </div>
               <div className="flex flex-wrap items-center gap-3 mt-2">
                 <span className="px-3 py-1 rounded-lg bg-secondary text-sm font-medium">
                   {player.position}
                 </span>
-                <span className="text-muted-foreground">{player.size}</span>
+                <span className="text-muted-foreground">{player.height} / {player.weight} lbs</span>
                 <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">{player.eligibility}</span>
+                <span className="text-muted-foreground">{player.classYear} • {player.eligibility}</span>
               </div>
               <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                <span>From {player.origin}</span>
-                <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                  player.pool === 'Transfer' ? 'bg-primary/20 text-primary' :
+                <MapPin className="w-4 h-4" />
+                <span>{player.hometown}, {player.state}</span>
+                <span>•</span>
+                <span>From {player.originSchool}</span>
+              </div>
+              <div className="mt-2">
+                <span className={`text-xs px-2 py-1 rounded ${
+                  player.pool === 'TRANSFER_PORTAL' ? 'bg-primary/20 text-primary' :
                   player.pool === 'HS' ? 'bg-success/20 text-success' :
                   'bg-warning/20 text-warning'
                 }`}>
-                  {player.pool}
+                  {player.pool === 'TRANSFER_PORTAL' ? 'Transfer Portal' : player.pool}
                 </span>
               </div>
             </div>
@@ -133,30 +143,50 @@ const PlayerProfile = () => {
         </div>
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary" />
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              player.readiness === 'HIGH' ? 'bg-success/20' :
+              player.readiness === 'MED' ? 'bg-warning/20' :
+              'bg-muted'
+            }`}>
+              <Zap className={`w-5 h-5 ${
+                player.readiness === 'HIGH' ? 'text-success' :
+                player.readiness === 'MED' ? 'text-warning' :
+                'text-muted-foreground'
+              }`} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Readiness</p>
-              <p className="text-2xl font-bold">{player.readinessScore}</p>
+              <p className={`text-2xl font-bold ${
+                player.readiness === 'HIGH' ? 'text-success' :
+                player.readiness === 'MED' ? 'text-warning' :
+                'text-muted-foreground'
+              }`}>
+                {player.readiness}
+              </p>
             </div>
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              player.riskScore <= 10 ? 'bg-success/20' : player.riskScore <= 15 ? 'bg-warning/20' : 'bg-destructive/20'
+              player.risk === 'LOW' ? 'bg-success/20' : 
+              player.risk === 'MED' ? 'bg-warning/20' : 
+              'bg-destructive/20'
             }`}>
               <Shield className={`w-5 h-5 ${
-                player.riskScore <= 10 ? 'text-success' : player.riskScore <= 15 ? 'text-warning' : 'text-destructive'
+                player.risk === 'LOW' ? 'text-success' : 
+                player.risk === 'MED' ? 'text-warning' : 
+                'text-destructive'
               }`} />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Risk Score</p>
+              <p className="text-sm text-muted-foreground">Risk</p>
               <p className={`text-2xl font-bold ${
-                player.riskScore <= 10 ? 'text-success' : player.riskScore <= 15 ? 'text-warning' : 'text-destructive'
+                player.risk === 'LOW' ? 'text-success' : 
+                player.risk === 'MED' ? 'text-warning' : 
+                'text-destructive'
               }`}>
-                {player.riskScore}
+                {player.risk}
               </p>
             </div>
           </div>
@@ -182,7 +212,7 @@ const PlayerProfile = () => {
         <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-warning" />
-            Flags & Concerns
+            Flags & Notes
           </h3>
           {player.flags.length > 0 ? (
             <ul className="space-y-2">
@@ -194,7 +224,7 @@ const PlayerProfile = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No significant flags</p>
+            <p className="text-sm text-muted-foreground">No flags</p>
           )}
         </div>
       </div>
@@ -210,9 +240,9 @@ const PlayerProfile = () => {
             {player.filmLinks.map((link, i) => (
               <span 
                 key={i}
-                className="px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground"
+                className="px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground cursor-pointer hover:bg-secondary/80"
               >
-                Film Clip {i + 1} (Demo)
+                {link.label}
               </span>
             ))}
           </div>
@@ -222,27 +252,27 @@ const PlayerProfile = () => {
       </div>
 
       {/* NIL Snapshot - Conditional */}
-      {canSeeNIL && (
+      {canSeeNIL && player.nilRange && (
         <div className="rounded-xl border border-primary/30 bg-card p-5 shadow-glow">
           <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
             💰 NIL Snapshot
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Est. Value</p>
-              <p className="font-semibold">$250K - $400K</p>
+              <p className="text-xs text-muted-foreground">Low Est.</p>
+              <p className="font-semibold">${player.nilRange.low.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Social Following</p>
-              <p className="font-semibold">45K</p>
+              <p className="text-xs text-muted-foreground">Mid Est.</p>
+              <p className="font-semibold">${player.nilRange.mid.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Engagement Rate</p>
-              <p className="font-semibold">4.2%</p>
+              <p className="text-xs text-muted-foreground">High Est.</p>
+              <p className="font-semibold">${player.nilRange.high.toLocaleString()}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Market Rank</p>
-              <p className="font-semibold">#127</p>
+            <div className="col-span-2 md:col-span-1">
+              <p className="text-xs text-muted-foreground">Rationale</p>
+              <p className="text-sm">{player.nilRange.rationale}</p>
             </div>
           </div>
         </div>

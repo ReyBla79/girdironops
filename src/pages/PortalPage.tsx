@@ -12,7 +12,7 @@ const PortalPage = () => {
   const [poolFilter, setPoolFilter] = useState<string>('all');
 
   const portalEvents = events.filter((e) => 
-    e.type === 'portal_entry' || e.type === 'portal_update' || e.type === 'portal_withdrawn'
+    e.type === 'PORTAL_NEW' || e.type === 'PORTAL_UPDATED' || e.type === 'PORTAL_WITHDRAWN'
   );
 
   const filteredPlayers = players.filter((p) => {
@@ -50,8 +50,14 @@ const PortalPage = () => {
           className="px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm"
         >
           <option value="all">All Positions</option>
-          <option value="Offense">Offense</option>
-          <option value="Defense">Defense</option>
+          <option value="OL">Offensive Line</option>
+          <option value="DL">Defensive Line</option>
+          <option value="LB">Linebackers</option>
+          <option value="DB">Defensive Backs</option>
+          <option value="WR">Wide Receivers</option>
+          <option value="RB">Running Backs</option>
+          <option value="QB">Quarterbacks</option>
+          <option value="TE">Tight Ends</option>
         </select>
         <select
           value={poolFilter}
@@ -59,7 +65,7 @@ const PortalPage = () => {
           className="px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm"
         >
           <option value="all">All Pools</option>
-          <option value="Transfer">Transfer</option>
+          <option value="TRANSFER_PORTAL">Transfer Portal</option>
           <option value="HS">High School</option>
           <option value="JUCO">JUCO</option>
         </select>
@@ -79,14 +85,14 @@ const PortalPage = () => {
                     <div key={event.id} className="p-4 hover:bg-secondary/50 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className={`w-2 h-2 rounded-full mt-2 ${
-                          event.type === 'portal_entry' ? 'bg-primary' :
-                          event.type === 'portal_withdrawn' ? 'bg-destructive' :
+                          event.type === 'PORTAL_NEW' ? 'bg-primary' :
+                          event.type === 'PORTAL_WITHDRAWN' ? 'bg-destructive' :
                           'bg-warning'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm">{event.description}</p>
+                          <p className="text-sm">{event.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(event.ts), { addSuffix: true })}
                           </p>
                         </div>
                       </div>
@@ -139,7 +145,7 @@ const PortalPage = () => {
                           {player.position}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{player.origin}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{player.originSchool}</td>
                       <td className="px-4 py-3">
                         <span className={`font-semibold ${player.fitScore >= 90 ? 'text-success' : player.fitScore >= 80 ? 'text-primary' : 'text-warning'}`}>
                           {player.fitScore}
@@ -147,11 +153,11 @@ const PortalPage = () => {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-1 rounded ${
-                          player.pool === 'Transfer' ? 'bg-primary/20 text-primary' :
+                          player.pool === 'TRANSFER_PORTAL' ? 'bg-primary/20 text-primary' :
                           player.pool === 'HS' ? 'bg-success/20 text-success' :
                           'bg-warning/20 text-warning'
                         }`}>
-                          {player.pool}
+                          {player.pool === 'TRANSFER_PORTAL' ? 'Portal' : player.pool}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
