@@ -6,6 +6,7 @@ export type Pool = "TRANSFER_PORTAL" | "JUCO" | "HS";
 export type PlayerStatus = "NEW" | "UPDATED" | "WITHDRAWN";
 export type Readiness = "HIGH" | "MED" | "LOW";
 export type Risk = "LOW" | "MED" | "HIGH";
+export type NILBand = "ELITE" | "HIGH" | "MID" | "LOW";
 
 export interface Player {
   id: string;
@@ -84,6 +85,8 @@ export interface FeatureFlags {
   api_licensing: boolean;
   film_ai: boolean;
   nil_engine: boolean;
+  roster_module: boolean;
+  fit_lab: boolean;
 }
 
 export interface ProgramDNA {
@@ -96,6 +99,36 @@ export interface ProgramDNA {
   fitRules: string[];
 }
 
+export interface RosterPlayer {
+  id: string;
+  name: string;
+  positionGroup: PositionGroup;
+  position: string;
+  classYear: ClassYear;
+  starter: boolean;
+  snapsShare: number;
+  grade: number;
+  eligibilityRemaining: number;
+  nilBand: NILBand;
+  riskFlags: string[];
+}
+
+export interface RosterNeed {
+  id: string;
+  positionGroup: PositionGroup;
+  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  reason: string;
+  currentDepth: number;
+  targetDepth: number;
+}
+
+export interface Budget {
+  totalNIL: number;
+  committed: number;
+  available: number;
+  positionCaps: Record<PositionGroup, number>;
+}
+
 export interface AppState {
   demoAuthed: boolean;
   demoRole: Role | null;
@@ -106,4 +139,9 @@ export interface AppState {
   tasks: Task[];
   userList: DemoUser[];
   programDNA: ProgramDNA;
+  roster: RosterPlayer[];
+  needs: RosterNeed[];
+  budget: Budget;
+  selectedNeedId: string | null;
+  selectedProspectId: string | null;
 }

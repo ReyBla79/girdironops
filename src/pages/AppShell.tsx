@@ -11,7 +11,9 @@ import {
   LogOut,
   Menu,
   X,
-  MessageSquare
+  MessageSquare,
+  ClipboardList,
+  FlaskConical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -21,6 +23,8 @@ const NAV_ITEMS = [
   { to: '/app/today', icon: Calendar, label: 'Today', flag: 'daily_brief' },
   { to: '/app/portal', icon: Radio, label: 'Portal Live', flag: 'portal_live' },
   { to: '/app/players', icon: Users, label: 'Players', flag: 'players_module' },
+  { to: '/app/roster', icon: ClipboardList, label: 'Roster', flag: 'roster_module' },
+  { to: '/app/fit-lab', icon: FlaskConical, label: 'Fit Lab', flag: 'fit_lab' },
   { to: '/app/tasks', icon: CheckSquare, label: 'Tasks', flag: 'tasks_module' },
   { to: '/app/compliance', icon: Shield, label: 'Compliance', flag: 'audit_logging' },
   { to: '/app/upgrade', icon: Sparkles, label: 'Upgrade', flag: null },
