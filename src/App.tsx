@@ -17,6 +17,8 @@ import RosterPage from "./pages/RosterPage";
 import FitLabPage from "./pages/FitLabPage";
 import NetworkPage from "./pages/NetworkPage";
 import CoachProfilePage from "./pages/CoachProfilePage";
+import BudgetPage from "./pages/BudgetPage";
+import BudgetSimulatorPage from "./pages/BudgetSimulatorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -110,6 +112,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredFlag="coach_network_pro">
                   <CoachProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="budget"
+              element={
+                <ProtectedRoute requiredFlag="nil_engine">
+                  <BudgetPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="budget/simulator"
+              element={
+                <ProtectedRoute requiredFlag="nil_engine">
+                  <BudgetSimulatorPage />
                 </ProtectedRoute>
               }
             />
