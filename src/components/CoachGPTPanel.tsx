@@ -37,7 +37,7 @@ const CoachGPTPanel = () => {
         const topPlayer = players.sort((a, b) => b.fitScore - a.fitScore)[0];
         response = {
           role: 'assistant',
-          content: `**${topPlayer.name}** is ranked #1 with a **${topPlayer.fitScore}** Fit Score because:\n\n${topPlayer.reasons.map((r) => `• ${r}`).join('\n')}\n\n${topPlayer.flags.length > 0 ? `⚠️ Watch for: ${topPlayer.flags.join(', ')}` : '✅ No significant flags.'}`,
+          content: `**${topPlayer.name}** is ranked #1 with a **${topPlayer.fitScore}** Fit Score because:\n\n${topPlayer.reasons.map((r) => `• ${r}`).join('\n')}\n\n${topPlayer.flags.length > 0 ? `⚠️ Flags: ${topPlayer.flags.slice(0, 2).join(', ')}` : '✅ No significant concerns.'}`,
           actions: [
             { label: `View ${topPlayer.name}'s Profile`, action: () => window.location.href = `/app/player/${topPlayer.id}` },
             { label: 'Create evaluation task', action: () => {} },
@@ -45,11 +45,11 @@ const CoachGPTPanel = () => {
         };
       }
       // Pattern 2: Who else entered today?
-      else if (userMessage.includes('who') && (userMessage.includes('entered') || userMessage.includes('today') || userMessage.includes('like'))) {
-        const recentPlayers = players.slice(0, 3);
+      else if (userMessage.includes('who') && (userMessage.includes('entered') || userMessage.includes('today') || userMessage.includes('new'))) {
+        const newPlayers = players.filter(p => p.status === 'NEW').slice(0, 3);
         response = {
           role: 'assistant',
-          content: `Here are the latest portal entries:\n\n${recentPlayers.map((p, i) => `${i + 1}. **${p.name}** (${p.position}) - ${p.origin} - Fit: ${p.fitScore}`).join('\n')}`,
+          content: `Here are the latest portal entries:\n\n${newPlayers.map((p, i) => `${i + 1}. **${p.name}** (${p.position}) - ${p.originSchool} - Fit: ${p.fitScore}`).join('\n')}`,
           actions: [
             { label: 'View Portal Live', action: () => window.location.href = '/app/portal' },
           ],
@@ -57,22 +57,19 @@ const CoachGPTPanel = () => {
       }
       // Pattern 3: Create a task
       else if (userMessage.includes('create') && userMessage.includes('task')) {
-        const topPlayer = players[0];
-        const analyst = userList.find((u) => u.role === 'Analyst');
-        if (analyst && topPlayer) {
+        const topPlayer = players.sort((a, b) => b.fitScore - a.fitScore)[0];
+        const coordinator = userList.find((u) => u.role === 'COORDINATOR');
+        if (coordinator && topPlayer) {
           addTask({
-            title: `Evaluate ${topPlayer.name}`,
-            description: `Complete film review and evaluation for ${topPlayer.name}`,
-            assignedTo: analyst.id,
-            assignedBy: 'current',
+            title: `Evaluate ${topPlayer.name} (${topPlayer.position})`,
+            owner: coordinator.name,
             playerId: topPlayer.id,
-            playerName: topPlayer.name,
-            dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'pending',
+            due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'OPEN',
           });
           response = {
             role: 'assistant',
-            content: `✅ Done! I've created a task:\n\n**"Evaluate ${topPlayer.name}"**\n\nAssigned to: ${analyst.name}\nDue: 3 days from now\n\nThe task has been added to your Tasks board and logged in the audit trail.`,
+            content: `✅ Done! I've created a task:\n\n**"Evaluate ${topPlayer.name} (${topPlayer.position})"**\n\nOwner: ${coordinator.name}\nDue: 3 days from now\n\nThe task has been added to your Tasks board and logged in the audit trail.`,
             actions: [
               { label: 'View Tasks', action: () => window.location.href = '/app/tasks' },
             ],
@@ -91,11 +88,29 @@ const CoachGPTPanel = () => {
           content: '🔒 **Contact access requires approval.**\n\nI cannot reveal player contact information. This is protected by our compliance guardrails. Please submit a contact request through the player profile, which will be reviewed by your Compliance Officer.',
         };
       }
+      // Pattern 5: Player-specific query
+      else if (players.some(p => userMessage.includes(p.name.toLowerCase().split(' ')[0].toLowerCase()))) {
+        const matchedPlayer = players.find(p => userMessage.includes(p.name.toLowerCase().split(' ')[0].toLowerCase()));
+        if (matchedPlayer) {
+          response = {
+            role: 'assistant',
+            content: `**${matchedPlayer.name}** (${matchedPlayer.position})\n\n• Fit Score: **${matchedPlayer.fitScore}**\n• Readiness: ${matchedPlayer.readiness}\n• Risk: ${matchedPlayer.risk}\n• From: ${matchedPlayer.originSchool}\n\n**Why he fits:**\n${matchedPlayer.reasons.slice(0, 2).map(r => `• ${r}`).join('\n')}`,
+            actions: [
+              { label: `View Full Profile`, action: () => window.location.href = `/app/player/${matchedPlayer.id}` },
+            ],
+          };
+        } else {
+          response = {
+            role: 'assistant',
+            content: "I couldn't find that player. Try asking about a specific player by name.",
+          };
+        }
+      }
       // Default response
       else {
         response = {
           role: 'assistant',
-          content: "I can help you with:\n\n1. **\"Why is [player] ranked #1?\"** - Understand fit scores\n2. **\"Who else entered today?\"** - See recent portal activity\n3. **\"Create a task for my team\"** - Delegate evaluations\n\nWhat would you like to know?",
+          content: "I can help you with:\n\n1. **\"Why is [player] ranked #1?\"** - Understand fit scores\n2. **\"Who entered today?\"** - See recent portal activity\n3. **\"Tell me about Malik\"** - Get player details\n4. **\"Create a task\"** - Delegate evaluations\n\nWhat would you like to know?",
         };
       }
 

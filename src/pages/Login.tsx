@@ -7,10 +7,10 @@ import { Role } from '@/types';
 
 const ROLES: { value: Role; label: string; description: string }[] = [
   { value: 'HC', label: 'Head Coach', description: 'Full access to all features' },
-  { value: 'GM', label: 'General Manager', description: 'Roster and player management' },
-  { value: 'Assistant', label: 'Assistant Coach', description: 'Player evaluation and tasks' },
-  { value: 'Analyst', label: 'Analyst', description: 'Data and film analysis' },
-  { value: 'Compliance', label: 'Compliance Officer', description: 'Audit and compliance tools' },
+  { value: 'GM_RC', label: 'Recruiting Coordinator', description: 'Roster and player management' },
+  { value: 'COORDINATOR', label: 'Coordinator', description: 'Offensive/Defensive evaluation' },
+  { value: 'ANALYST_GA', label: 'Analyst/GA', description: 'Data and film analysis' },
+  { value: 'COMPLIANCE', label: 'Compliance Officer', description: 'Audit and compliance tools' },
 ];
 
 const Login = () => {

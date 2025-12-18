@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, Event, Task, Role, FeatureFlags } from '@/types';
-import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup } from '@/types';
+import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 
 interface AppStore extends AppState {
   login: (role: Role, programId: string) => void;
   logout: () => void;
   toggleFlag: (flag: keyof FeatureFlags) => void;
   resetFlags: () => void;
-  addEvent: (event: Omit<Event, 'id' | 'timestamp'>) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
+  addEvent: (event: Omit<DemoEvent, 'id' | 'ts'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'ts'>) => void;
   updateTaskStatus: (taskId: string, status: Task['status']) => void;
   markPlayerReviewed: (playerId: string) => void;
   simulatePortalEntry: () => void;
@@ -29,6 +29,7 @@ export const useAppStore = create<AppStore>()(
       events: SEED_EVENTS,
       tasks: SEED_TASKS,
       userList: DEMO_USERS,
+      programDNA: DEMO_PROGRAM_DNA,
 
       login: (role, programId) => {
         set({ demoAuthed: true, demoRole: role, programId });
@@ -49,10 +50,10 @@ export const useAppStore = create<AppStore>()(
       },
 
       addEvent: (event) => {
-        const newEvent: Event = {
+        const newEvent: DemoEvent = {
           ...event,
           id: generateId(),
-          timestamp: new Date().toISOString(),
+          ts: new Date().toISOString(),
         };
         set((state) => ({
           events: [newEvent, ...state.events],
@@ -63,17 +64,16 @@ export const useAppStore = create<AppStore>()(
         const newTask: Task = {
           ...task,
           id: generateId(),
-          createdAt: new Date().toISOString(),
+          ts: new Date().toISOString(),
         };
         set((state) => ({
           tasks: [...state.tasks, newTask],
         }));
+        const player = get().players.find(p => p.id === task.playerId);
         get().addEvent({
-          type: 'task_created',
+          type: 'TASK_CREATED',
           playerId: task.playerId,
-          playerName: task.playerName,
-          description: `Task created: ${task.title}`,
-          userId: task.assignedBy,
+          message: `Task created: ${task.title}${player ? ` for ${player.name}` : ''}`,
         });
       },
 
@@ -94,11 +94,9 @@ export const useAppStore = create<AppStore>()(
         }));
         if (player) {
           get().addEvent({
-            type: 'player_reviewed',
+            type: 'PLAYER_REVIEWED',
             playerId,
-            playerName: player.name,
-            description: `${player.name} marked as reviewed`,
-            userId: 'current',
+            message: `${player.name} (${player.position}) marked as reviewed`,
           });
         }
       },
@@ -113,26 +111,41 @@ export const useAppStore = create<AppStore>()(
         const name = availableNames[Math.floor(Math.random() * availableNames.length)];
         const position = POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
         const origin = ORIGINS[Math.floor(Math.random() * ORIGINS.length)];
-        const positionGroup = ['QB', 'RB', 'WR', 'TE', 'OT', 'OG', 'C'].includes(position) ? 'Offense' : 'Defense';
+        
+        const positionGroupMap: Record<string, PositionGroup> = {
+          'QB': 'QB', 'RB': 'RB', 'WR': 'WR', 'TE': 'TE',
+          'OT': 'OL', 'OG': 'OL', 'C': 'OL',
+          'EDGE': 'DL', 'DT': 'DL',
+          'LB': 'LB',
+          'CB': 'DB', 'S': 'DB',
+        };
+
+        const classYears: Array<"FR" | "SO" | "JR" | "SR" | "GR"> = ['SO', 'JR', 'SR', 'GR'];
+        const readinessOpts: Array<"HIGH" | "MED" | "LOW"> = ['HIGH', 'MED', 'LOW'];
+        const riskOpts: Array<"LOW" | "MED" | "HIGH"> = ['LOW', 'MED', 'HIGH'];
 
         const newPlayer: Player = {
           id: generateId(),
           name,
           position,
-          positionGroup,
-          size: `6'${Math.floor(Math.random() * 4)}" ${180 + Math.floor(Math.random() * 80)} lbs`,
-          eligibility: ['Junior', 'RS Junior', 'Senior', 'RS Sophomore'][Math.floor(Math.random() * 4)],
-          origin,
-          pool: 'Transfer',
+          positionGroup: positionGroupMap[position] || 'OL',
+          height: `6'${Math.floor(Math.random() * 4)}"`,
+          weight: String(180 + Math.floor(Math.random() * 80)),
+          classYear: classYears[Math.floor(Math.random() * classYears.length)],
+          eligibility: `${1 + Math.floor(Math.random() * 3)} years`,
+          pool: 'TRANSFER_PORTAL',
+          originSchool: `${origin} (FBS)`,
+          hometown: ['Phoenix', 'Denver', 'Salt Lake City', 'San Diego', 'Sacramento'][Math.floor(Math.random() * 5)],
+          state: ['AZ', 'CO', 'UT', 'CA', 'NV'][Math.floor(Math.random() * 5)],
+          enteredAt: new Date().toISOString(),
+          status: 'NEW',
           fitScore: 70 + Math.floor(Math.random() * 25),
-          readinessScore: 70 + Math.floor(Math.random() * 25),
-          riskScore: 5 + Math.floor(Math.random() * 20),
-          reasons: ['New portal entry', 'Evaluation pending'],
-          flags: [],
-          filmLinks: [],
+          readiness: readinessOpts[Math.floor(Math.random() * readinessOpts.length)],
+          risk: riskOpts[Math.floor(Math.random() * riskOpts.length)],
+          reasons: ['New portal entry', 'Evaluation pending', 'Film review needed'],
+          flags: ['Eligibility: Pending verification'],
+          filmLinks: [{ label: 'Film pending', url: '#' }],
           reviewed: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         };
 
         set((state) => ({
@@ -140,10 +153,9 @@ export const useAppStore = create<AppStore>()(
         }));
 
         get().addEvent({
-          type: 'portal_entry',
+          type: 'PORTAL_NEW',
           playerId: newPlayer.id,
-          playerName: newPlayer.name,
-          description: `${newPlayer.name} (${position}) entered the transfer portal from ${origin}`,
+          message: `New portal entry: ${newPlayer.name} (${position}) from ${origin} — matched UNLV needs.`,
         });
       },
 

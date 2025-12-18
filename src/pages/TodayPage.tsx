@@ -13,11 +13,17 @@ const TodayPage = () => {
 
   const topTargets = [...players].sort((a, b) => b.fitScore - a.fitScore).slice(0, 6);
   const newEvents = events.filter((e) => {
-    const eventDate = new Date(e.timestamp);
+    const eventDate = new Date(e.ts);
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     return eventDate > yesterday;
   });
-  const myTasks = tasks.filter((t) => t.status !== 'completed').slice(0, 3);
+  const myTasks = tasks.filter((t) => t.status !== 'DONE').slice(0, 3);
+
+  const getPlayerName = (playerId?: string) => {
+    if (!playerId) return null;
+    const player = players.find(p => p.id === playerId);
+    return player?.name;
+  };
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -59,13 +65,13 @@ const TodayPage = () => {
                 {newEvents.slice(0, 5).map((event) => (
                   <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary transition-colors">
                     <div className={`w-2 h-2 rounded-full ${
-                      event.type === 'portal_entry' ? 'bg-primary' :
-                      event.type === 'portal_withdrawn' ? 'bg-destructive' :
+                      event.type === 'PORTAL_NEW' ? 'bg-primary' :
+                      event.type === 'PORTAL_WITHDRAWN' ? 'bg-destructive' :
                       'bg-success'
                     }`} />
-                    <span className="text-sm flex-1">{event.description}</span>
+                    <span className="text-sm flex-1">{event.message}</span>
                     <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(event.ts), { addSuffix: true })}
                     </span>
                   </div>
                 ))}
@@ -116,7 +122,7 @@ const TodayPage = () => {
                       <td className="px-4 py-3">
                         <div>
                           <p className="font-semibold">{player.name}</p>
-                          <p className="text-xs text-muted-foreground">{player.origin}</p>
+                          <p className="text-xs text-muted-foreground">{player.originSchool}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -129,10 +135,22 @@ const TodayPage = () => {
                           {player.fitScore}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{player.readinessScore}</td>
                       <td className="px-4 py-3">
-                        <span className={`${player.riskScore <= 10 ? 'text-success' : player.riskScore <= 15 ? 'text-warning' : 'text-destructive'}`}>
-                          {player.riskScore}
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          player.readiness === 'HIGH' ? 'bg-success/20 text-success' :
+                          player.readiness === 'MED' ? 'bg-warning/20 text-warning' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {player.readiness}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          player.risk === 'LOW' ? 'bg-success/20 text-success' :
+                          player.risk === 'MED' ? 'bg-warning/20 text-warning' :
+                          'bg-destructive/20 text-destructive'
+                        }`}>
+                          {player.risk}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -160,29 +178,32 @@ const TodayPage = () => {
         {/* Right Column - Tasks */}
         <div className="space-y-6">
           <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="font-display font-semibold mb-4">Tasks Assigned to Me</h2>
+            <h2 className="font-display font-semibold mb-4">Open Tasks</h2>
             {myTasks.length > 0 ? (
               <div className="space-y-3">
-                {myTasks.map((task) => (
-                  <div key={task.id} className="p-3 rounded-lg bg-secondary border border-border">
-                    <p className="font-medium text-sm">{task.title}</p>
-                    {task.playerName && (
-                      <p className="text-xs text-muted-foreground mt-1">Player: {task.playerName}</p>
-                    )}
-                    <div className="flex items-center justify-between mt-2">
-                      <span className={`text-xs px-2 py-0.5 rounded ${
-                        task.status === 'pending' ? 'bg-warning/20 text-warning' :
-                        task.status === 'in_progress' ? 'bg-primary/20 text-primary' :
-                        'bg-success/20 text-success'
-                      }`}>
-                        {task.status.replace('_', ' ')}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Due {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
-                      </span>
+                {myTasks.map((task) => {
+                  const playerName = getPlayerName(task.playerId);
+                  return (
+                    <div key={task.id} className="p-3 rounded-lg bg-secondary border border-border">
+                      <p className="font-medium text-sm">{task.title}</p>
+                      {playerName && (
+                        <p className="text-xs text-muted-foreground mt-1">Player: {playerName}</p>
+                      )}
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          task.status === 'OPEN' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+                        }`}>
+                          {task.status}
+                        </span>
+                        {task.due && (
+                          <span className="text-xs text-muted-foreground">
+                            Due {formatDistanceToNow(new Date(task.due), { addSuffix: true })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">No pending tasks</p>
