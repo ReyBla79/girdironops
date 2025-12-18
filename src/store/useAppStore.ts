@@ -297,6 +297,9 @@ export const useAppStore = create<AppStore>()(
         );
         
         // 4. Create simulated recruit as roster player
+        // DETERMINISTIC COST: Fixed at $127,000 (under $150K cap, clearly "HIGH" band, moves budget without breaking guardrails)
+        const DETERMINISTIC_RECRUIT_COST = 127000;
+        
         const recruitAsRoster: RosterPlayer = {
           id: `sim_${recruit.id}`,
           name: recruit.name,
@@ -306,11 +309,7 @@ export const useAppStore = create<AppStore>()(
           gradYear: CALCULATOR_CONFIG.asOfYear + (recruit.classYear === 'SR' ? 1 : recruit.classYear === 'JR' ? 2 : recruit.classYear === 'SO' ? 3 : 4),
           eligibilityRemaining: parseInt(recruit.eligibility) || 2,
           nilBand: 'HIGH',
-          estimatedCost: recruit.nilRange?.mid || calculatePlayerCost({
-            nilBand: 'HIGH',
-            role: wowConfig.assumedRecruitRole,
-            positionGroup: recruit.positionGroup
-          }),
+          estimatedCost: DETERMINISTIC_RECRUIT_COST,
           role: wowConfig.assumedRecruitRole,
           snapsShare: 70,
           performanceGrade: 80,
