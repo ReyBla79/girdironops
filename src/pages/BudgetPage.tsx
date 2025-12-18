@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { DollarSign, Users, TrendingUp, AlertTriangle, Calculator } from 'lucide-react';
-import { PositionGroup, RosterRole, RosterRisk } from '@/types';
+import { PositionGroup, RosterRole, RiskColor } from '@/types';
+import { ROSTER_META } from '@/demo/rosterData';
 
 const NIL_BAND_COLORS = {
   HIGH: 'bg-chart-1 text-primary-foreground',
@@ -14,18 +15,17 @@ const NIL_BAND_COLORS = {
   LOW: 'bg-muted text-muted-foreground',
 };
 
-const ROLE_COLORS: Record<RosterRole, string> = {
+const ROLE_VARIANTS: Record<RosterRole, 'default' | 'secondary' | 'outline'> = {
   STARTER: 'default',
-  ROTATIONAL: 'secondary',
+  ROTATION: 'secondary',
   DEPTH: 'outline',
   DEVELOPMENTAL: 'outline',
 };
 
-const RISK_COLORS: Record<RosterRisk, string> = {
-  NONE: 'text-muted-foreground',
-  LOW: 'text-chart-2',
-  MED: 'text-chart-1',
-  HIGH: 'text-destructive',
+const RISK_COLOR_CLASSES: Record<RiskColor, string> = {
+  GREEN: 'text-chart-1',
+  YELLOW: 'text-chart-2',
+  RED: 'text-destructive',
 };
 
 const BudgetPage = () => {
@@ -56,7 +56,7 @@ const BudgetPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold">Team Budget Overview</h1>
-          <p className="text-muted-foreground mt-1">52-man roster + NIL budget (demo projections).</p>
+          <p className="text-muted-foreground mt-1">{ROSTER_META.disclaimer}</p>
         </div>
         <Button onClick={() => navigate('/app/budget/simulator')} className="gap-2">
           <Calculator className="w-4 h-4" />
@@ -214,9 +214,9 @@ const BudgetPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
+                  <TableHead>Pos</TableHead>
                   <TableHead>Year</TableHead>
-                  <TableHead>Grad Year</TableHead>
+                  <TableHead>Grad</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>NIL Band</TableHead>
                   <TableHead className="text-right">Est. Cost</TableHead>
@@ -228,12 +228,12 @@ const BudgetPage = () => {
                   <TableRow key={player.id}>
                     <TableCell className="font-medium">{player.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{player.positionGroup}</Badge>
+                      <Badge variant="outline">{player.position}</Badge>
                     </TableCell>
                     <TableCell>{player.year}</TableCell>
                     <TableCell>{player.gradYear}</TableCell>
                     <TableCell>
-                      <Badge variant={ROLE_COLORS[player.role] as any}>{player.role}</Badge>
+                      <Badge variant={ROLE_VARIANTS[player.role]}>{player.role}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge className={NIL_BAND_COLORS[player.nilBand]}>{player.nilBand}</Badge>
@@ -242,8 +242,8 @@ const BudgetPage = () => {
                       ${player.estimatedCost.toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      <span className={`text-sm font-medium ${RISK_COLORS[player.risk]}`}>
-                        {player.risk === 'NONE' ? '—' : player.risk}
+                      <span className={`text-sm font-medium ${RISK_COLOR_CLASSES[player.riskColor]}`}>
+                        {player.riskScore}
                       </span>
                     </TableCell>
                   </TableRow>
