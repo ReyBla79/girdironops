@@ -158,6 +158,30 @@ export interface BudgetGuardrails {
   maxPerPositionPercent: number;
 }
 
+export interface ForecastDeparture {
+  id: string;
+  name: string;
+  position: string;
+  positionGroup: PositionGroup;
+  estimatedCost: number;
+  role: RosterRole;
+  reason: "GRADUATION" | "ELIGIBILITY" | "TRANSFER_RISK";
+}
+
+export interface ForecastYear {
+  projectedSpend: number;
+  returningCount: number;
+  departures: ForecastDeparture[];
+  gapsByGroup: Partial<Record<PositionGroup, number>>;
+  notes: string[];
+}
+
+export interface BudgetForecast {
+  year1: ForecastYear;
+  year2: ForecastYear;
+  year3: ForecastYear;
+}
+
 export interface Budget {
   totalBudget: number;
   allocations: PositionAllocations;
@@ -208,6 +232,7 @@ export interface AppState {
   flags: FeatureFlags;
   players: Player[];
   events: DemoEvent[];
+  forecast: BudgetForecast;
   tasks: Task[];
   userList: DemoUser[];
   programDNA: ProgramDNA;

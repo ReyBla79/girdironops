@@ -1,4 +1,4 @@
-import { RosterPlayer, RosterNeed, Budget, RosterMeta } from '@/types';
+import { RosterPlayer, RosterNeed, Budget, RosterMeta, BudgetForecast, ForecastDeparture, PositionGroup } from '@/types';
 
 export const ROSTER_META: RosterMeta = {
   programId: "unlv",
@@ -89,3 +89,80 @@ export const SEED_NEEDS: RosterNeed[] = [
   { id: "n3", label: "Nickel DB Speed (Depth)", positionGroup: "DB", priority: "DEPTH", reason: "Rotation speed needed for tempo opponents." },
   { id: "n4", label: "RB Depth", positionGroup: "RB", priority: "DEPTH", reason: "Senior RB1 with high injury risk; need insurance." }
 ];
+
+// Compute forecast from roster data
+const computeForecast = (roster: RosterPlayer[]): BudgetForecast => {
+  const currentYear = 2026; // Based on rosterMeta.asOf
+  const positionGroups: PositionGroup[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "ST"];
+  
+  const computeYearForecast = (targetYear: number) => {
+    const departures: ForecastDeparture[] = roster
+      .filter(p => p.gradYear === targetYear)
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        positionGroup: p.positionGroup,
+        estimatedCost: p.estimatedCost,
+        role: p.role,
+        reason: "GRADUATION" as const
+      }));
+    
+    // Add high transfer risk players as potential departures
+    const transferRisks: ForecastDeparture[] = roster
+      .filter(p => p.gradYear > targetYear && p.risk.transfer >= 28)
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        positionGroup: p.positionGroup,
+        estimatedCost: p.estimatedCost,
+        role: p.role,
+        reason: "TRANSFER_RISK" as const
+      }));
+    
+    const allDepartures = [...departures, ...transferRisks];
+    const departingIds = new Set(departures.map(d => d.id));
+    const returning = roster.filter(p => p.gradYear > targetYear);
+    const projectedSpend = returning.reduce((sum, p) => sum + p.estimatedCost, 0);
+    
+    // Calculate gaps by position group
+    const gapsByGroup: Partial<Record<PositionGroup, number>> = {};
+    for (const group of positionGroups) {
+      const groupDepartures = departures.filter(d => d.positionGroup === group);
+      const startersLeaving = groupDepartures.filter(d => d.role === "STARTER").length;
+      if (startersLeaving > 0) {
+        gapsByGroup[group] = startersLeaving;
+      }
+    }
+    
+    // Generate notes
+    const notes: string[] = [];
+    if (departures.length > 5) {
+      notes.push(`Heavy attrition year: ${departures.length} players graduating.`);
+    }
+    const starterDepartures = departures.filter(d => d.role === "STARTER");
+    if (starterDepartures.length > 0) {
+      notes.push(`${starterDepartures.length} starter(s) departing: ${starterDepartures.map(d => d.name).slice(0, 3).join(", ")}${starterDepartures.length > 3 ? "..." : ""}.`);
+    }
+    if (transferRisks.length > 0) {
+      notes.push(`${transferRisks.length} player(s) flagged as transfer risk.`);
+    }
+    
+    return {
+      projectedSpend,
+      returningCount: returning.length,
+      departures: allDepartures,
+      gapsByGroup,
+      notes
+    };
+  };
+  
+  return {
+    year1: computeYearForecast(currentYear),
+    year2: computeYearForecast(currentYear + 1),
+    year3: computeYearForecast(currentYear + 2)
+  };
+};
+
+export const SEED_FORECAST: BudgetForecast = computeForecast(SEED_ROSTER);
