@@ -15,6 +15,8 @@ import CompliancePage from "./pages/CompliancePage";
 import UpgradePage from "./pages/UpgradePage";
 import RosterPage from "./pages/RosterPage";
 import FitLabPage from "./pages/FitLabPage";
+import NetworkPage from "./pages/NetworkPage";
+import CoachProfilePage from "./pages/CoachProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -92,6 +94,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredFlag="fit_lab">
                   <FitLabPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="network"
+              element={
+                <ProtectedRoute requiredFlag="coach_network_pro">
+                  <NetworkPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="network/coach/:id"
+              element={
+                <ProtectedRoute requiredFlag="coach_network_pro">
+                  <CoachProfilePage />
                 </ProtectedRoute>
               }
             />

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog } from '@/types';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET } from '@/demo/rosterData';
+import { SEED_COACHES } from '@/demo/coachData';
 
 interface AppStore extends AppState {
   login: (role: Role, programId: string) => void;
@@ -17,6 +18,8 @@ interface AppStore extends AppState {
   resetDemo: () => void;
   setSelectedNeed: (needId: string | null) => void;
   selectProspect: (playerId: string | null) => void;
+  createContactAccessRequest: (coachId: string) => void;
+  logOutreach: (coachId: string, mode: 'email' | 'sms', content: string) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -38,6 +41,9 @@ export const useAppStore = create<AppStore>()(
       budget: SEED_BUDGET,
       selectedNeedId: null,
       selectedProspectId: null,
+      coaches: SEED_COACHES,
+      contactAccessRequests: [],
+      outreachLogs: [],
 
       login: (role, programId) => {
         set({ demoAuthed: true, demoRole: role, programId });
@@ -178,6 +184,9 @@ export const useAppStore = create<AppStore>()(
           budget: SEED_BUDGET,
           selectedNeedId: null,
           selectedProspectId: null,
+          coaches: SEED_COACHES,
+          contactAccessRequests: [],
+          outreachLogs: [],
         });
       },
 
@@ -187,6 +196,44 @@ export const useAppStore = create<AppStore>()(
 
       selectProspect: (playerId) => {
         set({ selectedProspectId: playerId });
+      },
+
+      createContactAccessRequest: (coachId) => {
+        const coach = get().coaches.find(c => c.id === coachId);
+        const newRequest: ContactAccessRequest = {
+          id: generateId(),
+          coachId,
+          requesterId: 'demo-user',
+          ts: new Date().toISOString(),
+          status: 'PENDING',
+        };
+        set((state) => ({
+          contactAccessRequests: [...state.contactAccessRequests, newRequest],
+        }));
+        get().addEvent({
+          type: 'NETWORK_ACCESS_REQUESTED',
+          coachId,
+          message: `Contact access requested for ${coach?.name || 'Unknown Coach'}`,
+        });
+      },
+
+      logOutreach: (coachId, mode, content) => {
+        const coach = get().coaches.find(c => c.id === coachId);
+        const newLog: OutreachLog = {
+          id: generateId(),
+          coachId,
+          mode,
+          ts: new Date().toISOString(),
+          draftContent: content,
+        };
+        set((state) => ({
+          outreachLogs: [...state.outreachLogs, newLog],
+        }));
+        get().addEvent({
+          type: 'OUTREACH_DRAFTED',
+          coachId,
+          message: `${mode.toUpperCase()} outreach drafted for ${coach?.name || 'Unknown Coach'}`,
+        });
       },
     }),
     {

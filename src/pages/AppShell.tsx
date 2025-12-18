@@ -13,7 +13,8 @@ import {
   X,
   MessageSquare,
   ClipboardList,
-  FlaskConical
+  FlaskConical,
+  Network
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { to: '/app/players', icon: Users, label: 'Players', flag: 'players_module' },
   { to: '/app/roster', icon: ClipboardList, label: 'Roster', flag: 'roster_module' },
   { to: '/app/fit-lab', icon: FlaskConical, label: 'Fit Lab', flag: 'fit_lab' },
+  { to: '/app/network', icon: Network, label: 'Network', flag: 'coach_network_pro' },
   { to: '/app/tasks', icon: CheckSquare, label: 'Tasks', flag: 'tasks_module' },
   { to: '/app/compliance', icon: Shield, label: 'Compliance', flag: 'audit_logging' },
   { to: '/app/upgrade', icon: Sparkles, label: 'Upgrade', flag: null },

@@ -8,6 +8,10 @@ export type Readiness = "HIGH" | "MED" | "LOW";
 export type Risk = "LOW" | "MED" | "HIGH";
 export type NILBand = "HIGH" | "MED" | "LOW";
 export type NeedPriority = "MUST_REPLACE" | "UPGRADE" | "DEPTH";
+export type VerificationStatus = "VERIFIED_OPT_IN" | "CLAIMED" | "UNVERIFIED";
+export type ContactVisibility = "PUBLIC" | "GATED" | "HIDDEN";
+export type CoachLevel = "FBS" | "FCS" | "D2" | "D3" | "JUCO" | "HS";
+export type CoachRoleType = "HC" | "OC" | "DC" | "POSITION" | "ANALYST" | "RECRUITING";
 
 export interface Player {
   id: string;
@@ -41,13 +45,16 @@ export type EventType =
   | "TASK_CREATED"
   | "PLAYER_REVIEWED"
   | "CONTACT_REQUESTED"
-  | "AGENT_QUERY";
+  | "AGENT_QUERY"
+  | "NETWORK_ACCESS_REQUESTED"
+  | "OUTREACH_DRAFTED";
 
 export interface DemoEvent {
   id: string;
   ts: string;
   type: EventType;
   playerId?: string;
+  coachId?: string;
   message: string;
 }
 
@@ -137,6 +144,43 @@ export interface Budget {
   caps: BudgetCap[];
 }
 
+export interface ContactMethod {
+  type: "email" | "phone" | "twitter";
+  value: string;
+  visibility: ContactVisibility;
+}
+
+export interface Coach {
+  id: string;
+  name: string;
+  roleTitle: string;
+  roleType: CoachRoleType;
+  program: string;
+  level: CoachLevel;
+  state: string;
+  verificationStatus: VerificationStatus;
+  contactMethods: ContactMethod[];
+  bio?: string;
+  yearsExperience?: number;
+}
+
+export interface ContactAccessRequest {
+  id: string;
+  coachId: string;
+  requesterId: string;
+  ts: string;
+  status: "PENDING" | "APPROVED" | "DENIED";
+  reason?: string;
+}
+
+export interface OutreachLog {
+  id: string;
+  coachId: string;
+  mode: "email" | "sms";
+  ts: string;
+  draftContent: string;
+}
+
 export interface AppState {
   demoAuthed: boolean;
   demoRole: Role | null;
@@ -152,4 +196,7 @@ export interface AppState {
   budget: Budget;
   selectedNeedId: string | null;
   selectedProspectId: string | null;
+  coaches: Coach[];
+  contactAccessRequests: ContactAccessRequest[];
+  outreachLogs: OutreachLog[];
 }
