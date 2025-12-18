@@ -14,7 +14,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   memory_engine: false,
   alerts_realtime: false,
   sms_daily: false,
-  coach_network_pro: false,
+  coach_network_pro: true,
   enterprise_institutional: false,
   api_licensing: false,
   film_ai: false,
