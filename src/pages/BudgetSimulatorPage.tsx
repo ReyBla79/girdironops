@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, UserPlus, UserMinus, Undo2, CheckCircle, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Player, RosterPlayer, PositionGroup } from '@/types';
+import LockedCardUpsell from '@/components/LockedCardUpsell';
 
 const BudgetSimulatorPage = () => {
   const navigate = useNavigate();
-  const { budget, roster, players, selectedProspectId, selectProspect } = useAppStore();
+  const { budget, roster, players, selectedProspectId, selectProspect, flags } = useAppStore();
 
   const [simulatedRoster, setSimulatedRoster] = useState<RosterPlayer[]>(roster);
   const [addedProspects, setAddedProspects] = useState<Player[]>([]);
@@ -88,6 +89,27 @@ const BudgetSimulatorPage = () => {
   };
 
   const hasChanges = addedProspects.length > 0 || removedPlayerIds.length > 0;
+
+  // Gate check
+  if (!flags.budget_simulator) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/app/budget')}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-bold">Recruit Budget Simulator</h1>
+            <p className="text-muted-foreground mt-1">Plug-and-play impact before you recruit.</p>
+          </div>
+        </div>
+        <LockedCardUpsell 
+          title="Unlock Budget Simulator" 
+          copy="Plug a recruit into the roster and see immediate budget + roster impact."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

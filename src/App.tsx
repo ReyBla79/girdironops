@@ -19,6 +19,7 @@ import NetworkPage from "./pages/NetworkPage";
 import CoachProfilePage from "./pages/CoachProfilePage";
 import BudgetPage from "./pages/BudgetPage";
 import BudgetSimulatorPage from "./pages/BudgetSimulatorPage";
+import ForecastPage from "./pages/ForecastPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -118,7 +119,7 @@ const App = () => (
             <Route
               path="budget"
               element={
-                <ProtectedRoute requiredFlag="nil_engine">
+                <ProtectedRoute requiredFlag="budget_core">
                   <BudgetPage />
                 </ProtectedRoute>
               }
@@ -126,8 +127,16 @@ const App = () => (
             <Route
               path="budget/simulator"
               element={
-                <ProtectedRoute requiredFlag="nil_engine">
+                <ProtectedRoute requiredFlag="budget_core">
                   <BudgetSimulatorPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="forecast"
+              element={
+                <ProtectedRoute requiredFlag="budget_core">
+                  <ForecastPage />
                 </ProtectedRoute>
               }
             />
@@ -139,4 +148,5 @@ const App = () => (
   </QueryClientProvider>
 );
 
+export default App;
 export default App;
