@@ -6,7 +6,8 @@ export type Pool = "TRANSFER_PORTAL" | "JUCO" | "HS";
 export type PlayerStatus = "NEW" | "UPDATED" | "WITHDRAWN";
 export type Readiness = "HIGH" | "MED" | "LOW";
 export type Risk = "LOW" | "MED" | "HIGH";
-export type NILBand = "ELITE" | "HIGH" | "MID" | "LOW";
+export type NILBand = "HIGH" | "MED" | "LOW";
+export type NeedPriority = "MUST_REPLACE" | "UPGRADE" | "DEPTH";
 
 export interface Player {
   id: string;
@@ -103,30 +104,37 @@ export interface RosterPlayer {
   id: string;
   name: string;
   positionGroup: PositionGroup;
-  position: string;
   classYear: ClassYear;
   starter: boolean;
   snapsShare: number;
   grade: number;
-  eligibilityRemaining: number;
+  eligibilityRemaining: string;
   nilBand: NILBand;
   riskFlags: string[];
 }
 
 export interface RosterNeed {
   id: string;
+  label: string;
   positionGroup: PositionGroup;
-  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  priority: NeedPriority;
   reason: string;
-  currentDepth: number;
-  targetDepth: number;
+}
+
+export interface BudgetAllocation {
+  positionGroup: PositionGroup;
+  band: string;
+}
+
+export interface BudgetCap {
+  positionGroup: PositionGroup;
+  max: string;
 }
 
 export interface Budget {
-  totalNIL: number;
-  committed: number;
-  available: number;
-  positionCaps: Record<PositionGroup, number>;
+  nilTotalBand: string;
+  allocations: BudgetAllocation[];
+  caps: BudgetCap[];
 }
 
 export interface AppState {
