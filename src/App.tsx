@@ -3,7 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import AppShell from "./pages/AppShell";
+import TodayPage from "./pages/TodayPage";
+import PortalPage from "./pages/PortalPage";
+import PlayersPage from "./pages/PlayersPage";
+import PlayerProfile from "./pages/PlayerProfile";
+import TasksPage from "./pages/TasksPage";
+import CompliancePage from "./pages/CompliancePage";
+import UpgradePage from "./pages/UpgradePage";
+import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +25,59 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              path="today"
+              element={
+                <ProtectedRoute requiredFlag="daily_brief">
+                  <TodayPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="portal"
+              element={
+                <ProtectedRoute requiredFlag="portal_live">
+                  <PortalPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="players"
+              element={
+                <ProtectedRoute requiredFlag="players_module">
+                  <PlayersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="player/:id"
+              element={
+                <ProtectedRoute requiredFlag="player_profile">
+                  <PlayerProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="tasks"
+              element={
+                <ProtectedRoute requiredFlag="tasks_module">
+                  <TasksPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="compliance" element={<CompliancePage />} />
+            <Route path="upgrade" element={<UpgradePage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
