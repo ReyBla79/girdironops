@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store/useAppStore';
 import { useState } from 'react';
-import { CheckSquare, Plus, Calendar, User } from 'lucide-react';
+import { CheckSquare, Plus, Calendar, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { Task } from '@/types';
@@ -42,14 +42,14 @@ const TasksPage = () => {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold flex items-center gap-2">
             <CheckSquare className="w-6 h-6 text-primary" />
             Tasks
           </h1>
-          <p className="text-muted-foreground">Manage team tasks and assignments</p>
+          <p className="text-muted-foreground">Ownership, due dates, and accountability.</p>
         </div>
         <Button variant="hero" onClick={() => setShowForm(!showForm)}>
           <Plus className="w-4 h-4" />
@@ -57,7 +57,7 @@ const TasksPage = () => {
         </Button>
       </div>
 
-      {/* Task Form */}
+      {/* Task Create Form */}
       {showForm && (
         <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-6 space-y-4">
           <h3 className="font-display font-semibold">Create New Task</h3>
@@ -74,14 +74,14 @@ const TasksPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Owner *</label>
+              <label className="block text-sm font-medium mb-1">Assign To *</label>
               <select
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm"
                 required
               >
-                <option value="">Select owner</option>
+                <option value="">Select assignee</option>
                 {userList.map((user) => (
                   <option key={user.id} value={user.name}>
                     {user.name}
@@ -125,36 +125,38 @@ const TasksPage = () => {
         </form>
       )}
 
-      {/* Task Lists */}
+      {/* Task List grouped by status */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Open */}
-        <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-warning" />
-            Open ({openTasks.length})
-          </h3>
-          <div className="space-y-3">
-            {openTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
-            ))}
-            {openTasks.length === 0 && (
-              <p className="text-sm text-muted-foreground">No open tasks</p>
+            <h3 className="font-semibold">Open ({openTasks.length})</h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {openTasks.length > 0 ? (
+              openTasks.map((task) => (
+                <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No open tasks</p>
             )}
           </div>
         </div>
 
         {/* Done */}
-        <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-success" />
-            Done ({doneTasks.length})
-          </h3>
-          <div className="space-y-3">
-            {doneTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
-            ))}
-            {doneTasks.length === 0 && (
-              <p className="text-sm text-muted-foreground">No completed tasks</p>
+            <h3 className="font-semibold">Done ({doneTasks.length})</h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {doneTasks.length > 0 ? (
+              doneTasks.map((task) => (
+                <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} getPlayerName={getPlayerName} />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No completed tasks</p>
             )}
           </div>
         </div>
@@ -173,33 +175,36 @@ const TaskCard = ({ task, onStatusChange, getPlayerName }: TaskCardProps) => {
   const playerName = getPlayerName(task.playerId);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <p className="font-medium text-sm">{task.title}</p>
+    <div className={`rounded-lg border p-4 transition-colors ${
+      task.status === 'DONE' ? 'border-success/30 bg-success/5' : 'border-border bg-secondary/30'
+    }`}>
+      <p className={`font-medium text-sm ${task.status === 'DONE' ? 'line-through text-muted-foreground' : ''}`}>
+        {task.title}
+      </p>
       {playerName && (
         <p className="text-xs text-primary mt-1">Player: {playerName}</p>
       )}
-      <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-        <User className="w-3 h-3" />
-        {task.owner}
-      </div>
-      {task.due && (
-        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-          <Calendar className="w-3 h-3" />
-          Due {formatDistanceToNow(new Date(task.due), { addSuffix: true })}
+      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <User className="w-3 h-3" />
+          {task.owner}
         </div>
-      )}
+        {task.due && (
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            Due {formatDistanceToNow(new Date(task.due), { addSuffix: true })}
+          </div>
+        )}
+      </div>
       <div className="mt-3">
-        <select
-          value={task.status}
-          onChange={(e) => onStatusChange(task.id, e.target.value as Task['status'])}
-          className={`w-full text-xs px-2 py-1.5 rounded border ${
-            task.status === 'OPEN' ? 'bg-warning/20 border-warning/30 text-warning' :
-            'bg-success/20 border-success/30 text-success'
-          }`}
+        <Button
+          variant={task.status === 'OPEN' ? 'outline' : 'success'}
+          size="sm"
+          className="w-full"
+          onClick={() => onStatusChange(task.id, task.status === 'OPEN' ? 'DONE' : 'OPEN')}
         >
-          <option value="OPEN">Open</option>
-          <option value="DONE">Done</option>
-        </select>
+          {task.status === 'OPEN' ? 'Mark Complete' : 'Reopen'}
+        </Button>
       </div>
     </div>
   );
