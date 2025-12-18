@@ -284,15 +284,46 @@ const GMCenterPage = () => {
       <Dialog open={wowModalOpen} onOpenChange={closeWowModal}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">GM Simulation Result (Before → After)</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Roster + budget + risk + forecast updated in one click.
-            </p>
+            <DialogTitle className="font-display text-xl">{beforeAfter?.summary.headline.title || 'GM Simulation Result'}</DialogTitle>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant={
+                beforeAfter?.summary.headline.status === 'WITHIN_GUARDRAILS' ? 'default' :
+                beforeAfter?.summary.headline.status === 'NEAR_LIMIT' ? 'secondary' : 'destructive'
+              } className={
+                beforeAfter?.summary.headline.status === 'WITHIN_GUARDRAILS' ? 'bg-emerald-500/10 text-emerald-500' :
+                beforeAfter?.summary.headline.status === 'NEAR_LIMIT' ? 'bg-amber-500/10 text-amber-500' : ''
+              }>
+                {beforeAfter?.summary.headline.statusLabel}
+              </Badge>
+              <p className="text-xs text-muted-foreground">{beforeAfter?.summary.headline.confidenceNote}</p>
+            </div>
           </DialogHeader>
 
           {beforeAfter && (
             <div className="space-y-6 py-4">
-              {/* Budget Before/After */}
+              {/* Entities: Recruit Added & Replacement Suggested */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                  <p className="text-xs text-emerald-600 font-medium mb-1">Recruit Added</p>
+                  <p className="font-semibold">{beforeAfter.summary.entities.recruitAdded.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {beforeAfter.summary.entities.recruitAdded.position} • {beforeAfter.summary.entities.recruitAdded.assumedRole}
+                  </p>
+                  <p className="text-sm font-medium mt-1">
+                    ${(beforeAfter.summary.entities.recruitAdded.deterministicCost / 1000).toFixed(0)}K
+                  </p>
+                </div>
+                <div className="p-4 bg-destructive/5 rounded-lg border border-destructive/20">
+                  <p className="text-xs text-destructive font-medium mb-1">Replacement Suggested</p>
+                  <p className="font-semibold">{beforeAfter.summary.entities.replacementSuggested.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {beforeAfter.summary.entities.replacementSuggested.positionGroup} • {beforeAfter.summary.entities.replacementSuggested.role}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{beforeAfter.summary.entities.replacementSuggested.reason}</p>
+                </div>
+              </div>
+
+              {/* Budget Delta */}
               <div>
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
@@ -301,47 +332,85 @@ const GMCenterPage = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="p-4 bg-secondary rounded-lg text-center">
                     <p className="text-sm text-muted-foreground">Before</p>
-                    <p className="text-xl font-bold">${(beforeAfter.budget.before.spent / 1000).toFixed(0)}K</p>
+                    <p className="text-xl font-bold">${(beforeAfter.summary.budgetDelta.totalAllocatedBefore / 1000).toFixed(0)}K</p>
+                    <p className="text-xs text-muted-foreground">Remaining: ${(beforeAfter.summary.budgetDelta.remainingBefore / 1000).toFixed(0)}K</p>
                   </div>
                   <div className="p-4 bg-secondary rounded-lg text-center flex flex-col items-center justify-center">
-                    {beforeAfter.budget.delta > 0 ? (
+                    {beforeAfter.summary.budgetDelta.deltaAllocated > 0 ? (
                       <TrendingUp className="w-5 h-5 text-destructive mb-1" />
                     ) : (
                       <TrendingDown className="w-5 h-5 text-chart-1 mb-1" />
                     )}
-                    <p className={`font-bold ${beforeAfter.budget.delta > 0 ? 'text-destructive' : 'text-chart-1'}`}>
-                      {beforeAfter.summary.budgetImpact}
+                    <p className={`font-bold ${beforeAfter.summary.budgetDelta.deltaAllocated > 0 ? 'text-destructive' : 'text-chart-1'}`}>
+                      {beforeAfter.summary.budgetDelta.deltaAllocated > 0 ? '+' : ''}${(beforeAfter.summary.budgetDelta.deltaAllocated / 1000).toFixed(0)}K
                     </p>
                   </div>
                   <div className="p-4 bg-primary/10 rounded-lg text-center">
                     <p className="text-sm text-muted-foreground">After</p>
-                    <p className="text-xl font-bold">${(beforeAfter.budget.after.spent / 1000).toFixed(0)}K</p>
+                    <p className="text-xl font-bold">${(beforeAfter.summary.budgetDelta.totalAllocatedAfter / 1000).toFixed(0)}K</p>
+                    <p className="text-xs text-muted-foreground">Remaining: ${(beforeAfter.summary.budgetDelta.remainingAfter / 1000).toFixed(0)}K</p>
+                  </div>
+                </div>
+                {/* Guardrail Checks */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {beforeAfter.summary.budgetDelta.guardrailChecks.remainingBufferOk ? (
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500">Buffer OK</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive">Buffer Low</Badge>
+                  )}
+                  {!beforeAfter.summary.budgetDelta.guardrailChecks.anyPositionOverMax && (
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500">No Position Over Cap</Badge>
+                  )}
+                  {beforeAfter.summary.budgetDelta.guardrailChecks.anyPositionOverWarn && (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500">Position Near Cap</Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Allocation Delta */}
+              <div>
+                <h4 className="font-semibold mb-3">Position Allocation: {beforeAfter.summary.allocationDelta.positionGroup}</h4>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 bg-secondary rounded-lg">
+                    <p className="text-xs text-muted-foreground">Before</p>
+                    <p className="font-semibold">{beforeAfter.summary.allocationDelta.percentBefore.toFixed(1)}%</p>
+                  </div>
+                  <div className="p-3 bg-secondary rounded-lg">
+                    <p className="text-xs text-muted-foreground">Delta</p>
+                    <p className={`font-semibold ${beforeAfter.summary.allocationDelta.deltaPercent > 0 ? 'text-destructive' : 'text-chart-1'}`}>
+                      {beforeAfter.summary.allocationDelta.deltaPercent > 0 ? '+' : ''}{beforeAfter.summary.allocationDelta.deltaPercent.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-xs text-muted-foreground">After</p>
+                    <p className="font-semibold">{beforeAfter.summary.allocationDelta.percentAfter.toFixed(1)}%</p>
                   </div>
                 </div>
               </div>
 
-              {/* Allocations */}
+              {/* Forecast Delta */}
               <div>
-                <h4 className="font-semibold mb-3">Position Allocation Changes</h4>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Forecast Impact ({beforeAfter.summary.allocationDelta.positionGroup} Gaps)
+                </h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Position</TableHead>
-                      <TableHead className="text-right">Before</TableHead>
-                      <TableHead className="text-right">After</TableHead>
+                      <TableHead>Year</TableHead>
+                      <TableHead className="text-right">Gaps Before</TableHead>
+                      <TableHead className="text-right">Gaps After</TableHead>
                       <TableHead className="text-right">Delta</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {beforeAfter.allocations.map(alloc => (
-                      <TableRow key={alloc.positionGroup}>
-                        <TableCell>
-                          <Badge variant="outline">{alloc.positionGroup}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">${(alloc.before / 1000).toFixed(0)}K</TableCell>
-                        <TableCell className="text-right">${(alloc.after / 1000).toFixed(0)}K</TableCell>
-                        <TableCell className={`text-right ${alloc.after - alloc.before > 0 ? 'text-destructive' : 'text-chart-1'}`}>
-                          {alloc.after - alloc.before > 0 ? '+' : ''}{((alloc.after - alloc.before) / 1000).toFixed(0)}K
+                    {(['year1', 'year2', 'year3'] as const).map((yr, i) => (
+                      <TableRow key={yr}>
+                        <TableCell>Year {i + 1}</TableCell>
+                        <TableCell className="text-right">{beforeAfter.summary.forecastDelta[yr].gapsBefore}</TableCell>
+                        <TableCell className="text-right">{beforeAfter.summary.forecastDelta[yr].gapsAfter}</TableCell>
+                        <TableCell className={`text-right ${beforeAfter.summary.forecastDelta[yr].deltaGaps < 0 ? 'text-chart-1' : beforeAfter.summary.forecastDelta[yr].deltaGaps > 0 ? 'text-destructive' : ''}`}>
+                          {beforeAfter.summary.forecastDelta[yr].deltaGaps > 0 ? '+' : ''}{beforeAfter.summary.forecastDelta[yr].deltaGaps}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -349,42 +418,77 @@ const GMCenterPage = () => {
                 </Table>
               </div>
 
-              {/* Forecast Impact */}
+              {/* Risk Delta */}
               <div>
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Forecast Impact
+                  <AlertTriangle className="w-4 h-4" />
+                  Risk Heatmap Delta
                 </h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="p-3 bg-secondary rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">Year 1</p>
-                    <p className="font-semibold">
-                      {beforeAfter.forecast.year1Delta < 0 ? '-' : '+'}${(Math.abs(beforeAfter.forecast.year1Delta) / 1000).toFixed(0)}K
-                    </p>
+                <div className="grid grid-cols-3 gap-4 text-center mb-3">
+                  <div className="p-2 rounded bg-emerald-500/10">
+                    <p className="text-xs text-muted-foreground">Green</p>
+                    <p className="font-semibold">{beforeAfter.summary.riskDelta.heatmapDelta.greenBefore} → {beforeAfter.summary.riskDelta.heatmapDelta.greenAfter}</p>
                   </div>
-                  <div className="p-3 bg-secondary rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">Year 2</p>
-                    <p className="font-semibold">
-                      +${(beforeAfter.forecast.year2Delta / 1000).toFixed(0)}K
-                    </p>
+                  <div className="p-2 rounded bg-amber-500/10">
+                    <p className="text-xs text-muted-foreground">Yellow</p>
+                    <p className="font-semibold">{beforeAfter.summary.riskDelta.heatmapDelta.yellowBefore} → {beforeAfter.summary.riskDelta.heatmapDelta.yellowAfter}</p>
                   </div>
-                  <div className="p-3 bg-secondary rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">Year 3</p>
-                    <p className="font-semibold">
-                      +${(beforeAfter.forecast.year3Delta / 1000).toFixed(0)}K
-                    </p>
+                  <div className="p-2 rounded bg-destructive/10">
+                    <p className="text-xs text-muted-foreground">Red</p>
+                    <p className="font-semibold">{beforeAfter.summary.riskDelta.heatmapDelta.redBefore} → {beforeAfter.summary.riskDelta.heatmapDelta.redAfter}</p>
                   </div>
                 </div>
+                {beforeAfter.summary.riskDelta.newRedIntroduced && (
+                  <Badge variant="destructive" className="mb-2">New RED Risk Introduced</Badge>
+                )}
+                {beforeAfter.summary.riskDelta.keyRisks.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {beforeAfter.summary.riskDelta.keyRisks.map(risk => (
+                      <Badge key={risk.playerId} variant="outline" className={
+                        risk.riskColor === 'YELLOW' ? 'bg-amber-500/10 text-amber-600' : 
+                        risk.riskColor === 'RED' ? 'bg-destructive/10 text-destructive' : ''
+                      }>
+                        {risk.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Decision Summary */}
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <h4 className="font-semibold mb-2">Decision Summary</h4>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-muted-foreground">Recruit Added:</span> {beforeAfter.summary.recruitAdded}</p>
-                  <p><span className="text-muted-foreground">Player Removed:</span> {beforeAfter.summary.playerRemoved}</p>
-                  <p><span className="text-muted-foreground">Budget Impact:</span> {beforeAfter.summary.budgetImpact}</p>
-                  <p><span className="text-muted-foreground">Note:</span> {beforeAfter.summary.forecastNote}</p>
+              {/* Recommended Decision */}
+              <div className={`p-4 rounded-lg border ${
+                beforeAfter.summary.recommendedDecision.verdict === 'PROCEED' ? 'bg-emerald-500/5 border-emerald-500/20' :
+                beforeAfter.summary.recommendedDecision.verdict === 'CAUTION' ? 'bg-amber-500/5 border-amber-500/20' :
+                'bg-destructive/5 border-destructive/20'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={
+                    beforeAfter.summary.recommendedDecision.verdict === 'PROCEED' ? 'default' :
+                    beforeAfter.summary.recommendedDecision.verdict === 'CAUTION' ? 'secondary' : 'destructive'
+                  } className={
+                    beforeAfter.summary.recommendedDecision.verdict === 'PROCEED' ? 'bg-emerald-500 text-white' :
+                    beforeAfter.summary.recommendedDecision.verdict === 'CAUTION' ? 'bg-amber-500 text-white' : ''
+                  }>
+                    {beforeAfter.summary.recommendedDecision.verdictLabel}
+                  </Badge>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Why:</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {beforeAfter.summary.recommendedDecision.why.map((reason, i) => (
+                        <li key={i}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Tradeoffs:</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {beforeAfter.summary.recommendedDecision.tradeoffs.map((t, i) => (
+                        <li key={i}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { CALCULATOR_CONFIG } from '@/demo/calculatorConfig';
-import type { RosterPlayer, PositionGroup, RiskColor, RosterRole, NILBand, ForecastYear, BudgetForecast, RiskHeatmapRow } from '@/types';
+import type { RosterPlayer, PositionGroup, RiskColor, RosterRole, NILBand, ForecastYear, BudgetForecast, RiskHeatmapRow, Player } from '@/types';
+import type { BeforeAfterSummary, BeforeAfterState } from '@/types/beforeAfter';
 
 const config = CALCULATOR_CONFIG;
 
@@ -346,53 +347,235 @@ export function findReplacementCandidate(
   return candidates[0] || null;
 }
 
-// Decision summary generation
-export function generateDecisionSummary(
-  beforeRemaining: number,
-  afterRemaining: number,
-  recruitName: string,
-  replacedName: string,
-  positionGroup: PositionGroup,
-  beforeGaps: Partial<Record<PositionGroup, number>>,
-  afterGaps: Partial<Record<PositionGroup, number>>,
-  beforeAllocPercent: number,
-  afterAllocPercent: number
-): {
-  recruitAdded: string;
-  playerRemoved: string;
-  budgetImpact: string;
-  forecastNote: string;
-} {
-  const delta = afterRemaining - beforeRemaining;
-  const { warnPositionPercent } = config.budgetGuardrails;
+// Full BeforeAfterSummary generation per template
+export interface WowScenarioInput {
+  recruit: Player;
+  replacement: RosterPlayer;
+  rosterBefore: RosterPlayer[];
+  rosterAfter: RosterPlayer[];
+}
 
-  let forecastNote = '';
+export function generateBeforeAfterSummary(input: WowScenarioInput): BeforeAfterState {
+  const { recruit, replacement, rosterBefore, rosterAfter } = input;
+  const wowConfig = config.wowScenario;
+  const positionGroup = wowConfig.targetNeedPositionGroup;
 
-  // Check Year 1 gap reduction
-  const beforeGap = beforeGaps[positionGroup] || 0;
-  const afterGap = afterGaps[positionGroup] || 0;
-  if (afterGap < beforeGap) {
-    forecastNote = `Reduced Year-1 ${positionGroup} gap by ${beforeGap - afterGap}.`;
-  }
+  // Budget calculations
+  const budgetBefore = calculateRemainingBudget(rosterBefore);
+  const budgetAfter = calculateRemainingBudget(rosterAfter);
+  const allocBefore = calculateAllocationsByGroup(rosterBefore);
+  const allocAfter = calculateAllocationsByGroup(rosterAfter);
 
-  // Check runway buffer
-  if (afterRemaining >= config.budgetGuardrails.minRemainingBuffer && delta < 0) {
-    forecastNote += forecastNote ? ' ' : '';
-    forecastNote += 'Stayed within runway buffer.';
-  }
+  // Forecast calculations
+  const forecastBefore = calculateFullForecast(rosterBefore);
+  const forecastAfter = calculateFullForecast(rosterAfter);
 
-  // Check position allocation warning
-  if (afterAllocPercent > warnPositionPercent) {
-    forecastNote += forecastNote ? ' ' : '';
-    forecastNote += `${positionGroup} allocation nearing cap.`;
-  }
+  // Heatmap calculations
+  const heatmapBefore = calculateRiskHeatmap(rosterBefore);
+  const heatmapAfter = calculateRiskHeatmap(rosterAfter);
 
-  return {
-    recruitAdded: recruitName,
-    playerRemoved: replacedName,
-    budgetImpact: delta >= 0 
-      ? `-$${(Math.abs(delta) / 1000).toFixed(0)}K` 
-      : `+$${(Math.abs(delta) / 1000).toFixed(0)}K`,
-    forecastNote: forecastNote || 'Simulation applied successfully.'
+  // Guardrail checks
+  const { status: guardrailStatus, reasons } = calculateGuardrailStatus(rosterAfter);
+  const statusMap = {
+    within: 'WITHIN_GUARDRAILS' as const,
+    near: 'NEAR_LIMIT' as const,
+    over: 'OVER_LIMIT' as const
   };
+  const statusLabelMap = {
+    within: 'Within guardrails',
+    near: 'Near limit',
+    over: 'Over limit'
+  };
+
+  // Position group allocation percentages
+  const percentBefore = budgetBefore.allocated > 0 ? allocBefore[positionGroup] / budgetBefore.allocated : 0;
+  const percentAfter = budgetAfter.allocated > 0 ? allocAfter[positionGroup] / budgetAfter.allocated : 0;
+
+  // Gap calculations for target position group
+  const gapsBefore1 = forecastBefore.year1.gapsByGroup[positionGroup] || 0;
+  const gapsAfter1 = forecastAfter.year1.gapsByGroup[positionGroup] || 0;
+  const gapsBefore2 = forecastBefore.year2.gapsByGroup[positionGroup] || 0;
+  const gapsAfter2 = forecastAfter.year2.gapsByGroup[positionGroup] || 0;
+  const gapsBefore3 = forecastBefore.year3.gapsByGroup[positionGroup] || 0;
+  const gapsAfter3 = forecastAfter.year3.gapsByGroup[positionGroup] || 0;
+
+  // Heatmap delta for target position group
+  const heatmapRowBefore = heatmapBefore.find(r => r.positionGroup === positionGroup) || { GREEN: 0, YELLOW: 0, RED: 0, positionGroup };
+  const heatmapRowAfter = heatmapAfter.find(r => r.positionGroup === positionGroup) || { GREEN: 0, YELLOW: 0, RED: 0, positionGroup };
+
+  // Check for new red risks
+  const redBefore = heatmapBefore.reduce((sum, r) => sum + r.RED, 0);
+  const redAfter = heatmapAfter.reduce((sum, r) => sum + r.RED, 0);
+  const newRedIntroduced = redAfter > redBefore;
+
+  // Key risks from roster
+  const keyRisks = rosterAfter
+    .filter(p => p.riskColor === 'YELLOW' || p.riskColor === 'RED')
+    .slice(0, 5)
+    .map(p => ({
+      playerId: p.id,
+      name: p.name,
+      riskColor: p.riskColor,
+      drivers: Object.entries(p.risk)
+        .filter(([_, val]) => val >= config.risk.driversMinToDisplay)
+        .map(([key]) => key)
+    }));
+
+  // Recruit cost
+  const recruitCost = recruit.nilRange?.mid || calculatePlayerCost({
+    nilBand: 'HIGH',
+    role: wowConfig.assumedRecruitRole,
+    positionGroup: recruit.positionGroup
+  });
+
+  // Build recommended decision
+  const why: string[] = [];
+  const tradeoffs: string[] = [];
+
+  if (gapsAfter1 < gapsBefore1) {
+    why.push(`Year-1 ${positionGroup} gap decreases based on target headcount model.`);
+  }
+  if (budgetAfter.remaining >= config.budgetGuardrails.minRemainingBuffer) {
+    why.push(`${positionGroup} depth improves without breaking runway buffer.`);
+  }
+  if (!newRedIntroduced) {
+    why.push('No new RED risk introduced by simulation.');
+  }
+
+  if (percentAfter > config.budgetGuardrails.warnPositionPercent) {
+    tradeoffs.push(`${positionGroup} allocation increases; monitor % near cap.`);
+  }
+  if (budgetAfter.remaining < budgetBefore.remaining) {
+    tradeoffs.push('Remaining budget decreases; prioritize high-impact additions.');
+  }
+
+  let verdict: 'PROCEED' | 'CAUTION' | 'BLOCK' = 'PROCEED';
+  let verdictLabel = 'Proceed (simulation)';
+  if (guardrailStatus === 'over') {
+    verdict = 'BLOCK';
+    verdictLabel = 'Blocked (over limit)';
+  } else if (guardrailStatus === 'near' || newRedIntroduced) {
+    verdict = 'CAUTION';
+    verdictLabel = 'Caution (near limit)';
+  }
+
+  const summary: BeforeAfterSummary = {
+    scenarioId: wowConfig.id,
+    scenarioLabel: wowConfig.label,
+    timestampISO: new Date().toISOString(),
+    mode: 'SIMULATION_ONLY',
+    headline: {
+      title: 'GM Simulation Result',
+      status: statusMap[guardrailStatus],
+      statusLabel: statusLabelMap[guardrailStatus],
+      confidenceNote: 'Demo projection using deterministic calculator settings.'
+    },
+    entities: {
+      recruitAdded: {
+        sourcePlayerId: recruit.id,
+        rosterInsertId: `sim_${recruit.id}`,
+        name: recruit.name,
+        position: recruit.position,
+        positionGroup: recruit.positionGroup,
+        assumedRole: wowConfig.assumedRecruitRole,
+        nilBand: 'HIGH',
+        deterministicCost: recruitCost
+      },
+      replacementSuggested: {
+        rosterPlayerId: replacement.id,
+        name: replacement.name,
+        positionGroup: replacement.positionGroup,
+        role: replacement.role,
+        reason: 'Graduating soon or low-grade depth; selected deterministically.',
+        simRemoved: true
+      }
+    },
+    budgetDelta: {
+      totalAllocatedBefore: budgetBefore.allocated,
+      totalAllocatedAfter: budgetAfter.allocated,
+      deltaAllocated: budgetAfter.allocated - budgetBefore.allocated,
+      remainingBefore: budgetBefore.remaining,
+      remainingAfter: budgetAfter.remaining,
+      deltaRemaining: budgetAfter.remaining - budgetBefore.remaining,
+      reserveLocked: config.budgetTotals.treatReserveAsLocked,
+      reserveAmount: config.budgetTotals.contingencyReserve,
+      guardrails: {
+        minRemainingBuffer: config.budgetGuardrails.minRemainingBuffer,
+        maxPerPlayer: config.budgetGuardrails.maxPerPlayer,
+        warnPositionPercent: config.budgetGuardrails.warnPositionPercent,
+        maxPositionPercent: config.budgetGuardrails.maxPositionPercent
+      },
+      guardrailChecks: {
+        remainingBufferOk: budgetAfter.remaining >= config.budgetGuardrails.minRemainingBuffer,
+        anyPositionOverMax: Object.values(allocAfter).some(v => v / budgetAfter.allocated > config.budgetGuardrails.maxPositionPercent),
+        anyPositionOverWarn: Object.values(allocAfter).some(v => v / budgetAfter.allocated > config.budgetGuardrails.warnPositionPercent),
+        maxPlayerCostOk: recruitCost <= config.budgetGuardrails.maxPerPlayer
+      }
+    },
+    allocationDelta: {
+      positionGroup,
+      percentBefore: Math.round(percentBefore * 10000) / 100,
+      percentAfter: Math.round(percentAfter * 10000) / 100,
+      deltaPercent: Math.round((percentAfter - percentBefore) * 10000) / 100,
+      note: 'Allocation % = groupAllocated / totalAllocated.'
+    },
+    forecastDelta: {
+      year1: {
+        gapsBefore: gapsBefore1,
+        gapsAfter: gapsAfter1,
+        deltaGaps: gapsAfter1 - gapsBefore1,
+        projectedSpendBefore: forecastBefore.year1.projectedSpend,
+        projectedSpendAfter: forecastAfter.year1.projectedSpend
+      },
+      year2: {
+        gapsBefore: gapsBefore2,
+        gapsAfter: gapsAfter2,
+        deltaGaps: gapsAfter2 - gapsBefore2,
+        projectedSpendBefore: forecastBefore.year2.projectedSpend,
+        projectedSpendAfter: forecastAfter.year2.projectedSpend
+      },
+      year3: {
+        gapsBefore: gapsBefore3,
+        gapsAfter: gapsAfter3,
+        deltaGaps: gapsAfter3 - gapsBefore3,
+        projectedSpendBefore: forecastBefore.year3.projectedSpend,
+        projectedSpendAfter: forecastAfter.year3.projectedSpend
+      }
+    },
+    riskDelta: {
+      newRedIntroduced,
+      heatmapDelta: {
+        positionGroup,
+        greenBefore: heatmapRowBefore.GREEN,
+        greenAfter: heatmapRowAfter.GREEN,
+        yellowBefore: heatmapRowBefore.YELLOW,
+        yellowAfter: heatmapRowAfter.YELLOW,
+        redBefore: heatmapRowBefore.RED,
+        redAfter: heatmapRowAfter.RED
+      },
+      keyRisks
+    },
+    recommendedDecision: {
+      verdict,
+      verdictLabel,
+      why: why.length > 0 ? why : ['Simulation completed successfully.'],
+      tradeoffs: tradeoffs.length > 0 ? tradeoffs : ['No significant tradeoffs identified.']
+    },
+    nextActions: [
+      { label: 'Apply Simulation', action: 'applySimulation' },
+      { label: 'Undo', action: 'undoSimulation' },
+      { label: 'Open Budget Simulator', action: 'navigate:/app/budget/simulator' },
+      { label: 'Open 3-Year Forecast', action: 'navigate:/app/forecast' }
+    ],
+    audit: {
+      eventsWritten: [
+        'WOW_SIMULATION_RUN',
+        'RECRUIT_SIM_ADDED',
+        'SIM_REPLACEMENT_SUGGESTED',
+        'BEFORE_AFTER_COMPUTED'
+      ]
+    }
+  };
+
+  return { summary };
 }

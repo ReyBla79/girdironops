@@ -1,18 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, BeforeAfterState, WowScenario, RosterPlayer } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer } from '@/types';
+import type { BeforeAfterState } from '@/types/beforeAfter';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
 import { CALCULATOR_CONFIG } from '@/demo/calculatorConfig';
 import {
-  calculateRemainingBudget,
-  calculateAllocationsByGroup,
-  calculateFullForecast,
-  calculateRiskHeatmap,
   findReplacementCandidate,
   calculatePlayerCost,
-  generateDecisionSummary
+  generateBeforeAfterSummary
 } from '@/lib/budgetCalculator';
 const DEFAULT_WOW_SCENARIO: WowScenario = {
   id: 'wow1',
@@ -293,9 +290,10 @@ export const useAppStore = create<AppStore>()(
         const replacement = findReplacementCandidate(roster, wowConfig.targetNeedPositionGroup);
         if (!replacement) return;
         
-        // 3. Create simulation roster with simRemoved/simAdded flags
-        const simRoster: RosterPlayer[] = roster.map(p => 
-          p.id === replacement.id ? { ...p, simRemoved: true } : p
+        // 3. Create simulation roster with simRemoved flag
+        const rosterBefore = roster.map(p => ({ ...p, simRemoved: false, simAdded: false }));
+        const rosterAfter: RosterPlayer[] = roster.map(p => 
+          p.id === replacement.id ? { ...p, simRemoved: true } : { ...p }
         );
         
         // 4. Create simulated recruit as roster player
@@ -322,67 +320,15 @@ export const useAppStore = create<AppStore>()(
           simAdded: true
         };
         
-        simRoster.push(recruitAsRoster);
+        rosterAfter.push(recruitAsRoster);
         
-        // 5. Calculate BEFORE state (original roster)
-        const beforeBudget = calculateRemainingBudget(roster);
-        const beforeAllocations = calculateAllocationsByGroup(roster);
-        const beforeForecast = calculateFullForecast(roster);
-        const beforeHeatmap = calculateRiskHeatmap(roster);
-        
-        // 6. Calculate AFTER state (simulated roster)
-        const afterBudget = calculateRemainingBudget(simRoster);
-        const afterAllocations = calculateAllocationsByGroup(simRoster);
-        const afterForecast = calculateFullForecast(simRoster);
-        const afterHeatmap = calculateRiskHeatmap(simRoster);
-        
-        // 7. Calculate deltas
-        const beforeOLAlloc = beforeAllocations[wowConfig.targetNeedPositionGroup];
-        const afterOLAlloc = afterAllocations[wowConfig.targetNeedPositionGroup];
-        const beforeOLPercent = beforeOLAlloc / beforeBudget.allocated;
-        const afterOLPercent = afterOLAlloc / afterBudget.allocated;
-        
-        // 8. Generate decision summary
-        const summary = generateDecisionSummary(
-          beforeBudget.remaining,
-          afterBudget.remaining,
-          recruit.name,
-          replacement.name,
-          wowConfig.targetNeedPositionGroup,
-          beforeForecast.year1.gapsByGroup,
-          afterForecast.year1.gapsByGroup,
-          beforeOLPercent,
-          afterOLPercent
-        );
-        
-        // 9. Build BeforeAfterState
-        const beforeAfterState: BeforeAfterState = {
-          budget: {
-            before: { spent: beforeBudget.allocated, remaining: beforeBudget.remaining },
-            after: { spent: afterBudget.allocated, remaining: afterBudget.remaining },
-            delta: afterBudget.allocated - beforeBudget.allocated
-          },
-          allocations: (['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'] as PositionGroup[]).map(group => ({
-            positionGroup: group,
-            before: beforeAllocations[group],
-            after: afterAllocations[group]
-          })),
-          forecast: {
-            year1Delta: afterForecast.year1.projectedSpend - beforeForecast.year1.projectedSpend,
-            year2Delta: afterForecast.year2.projectedSpend - beforeForecast.year2.projectedSpend,
-            year3Delta: afterForecast.year3.projectedSpend - beforeForecast.year3.projectedSpend
-          },
-          riskHeatmap: (['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'] as PositionGroup[]).map(group => {
-            const beforeRow = beforeHeatmap.find(r => r.positionGroup === group);
-            const afterRow = afterHeatmap.find(r => r.positionGroup === group);
-            return {
-              positionGroup: group,
-              beforeYellow: beforeRow?.YELLOW || 0,
-              afterYellow: afterRow?.YELLOW || 0
-            };
-          }),
-          summary
-        };
+        // 5. Generate full BeforeAfterState using template
+        const beforeAfterState = generateBeforeAfterSummary({
+          recruit,
+          replacement,
+          rosterBefore,
+          rosterAfter
+        });
 
         set({ beforeAfter: beforeAfterState });
       },
