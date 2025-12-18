@@ -103,8 +103,8 @@ const RosterPage = () => {
                 <DollarSign className="w-5 h-5 text-chart-2" />
               </div>
               <div>
-                <p className="text-lg font-bold">{budget.nilTotalBand}</p>
-                <p className="text-sm text-muted-foreground">NIL Band</p>
+                <p className="text-lg font-bold">${(budget.totalBudget / 1000000).toFixed(1)}M</p>
+                <p className="text-sm text-muted-foreground">Total Budget</p>
               </div>
             </div>
           </CardContent>

@@ -42,16 +42,16 @@ const computeImpact = (player: Player, need: RosterNeed | null) => {
 };
 
 // Demo budget fit computation
-const computeBudgetFit = (player: Player, caps: { positionGroup: string; max: string }[]) => {
+const computeBudgetFit = (player: Player, allocations: Record<string, number>, guardrails: { maxPerPlayer: number }) => {
   if (!player.nilRange) return { status: 'UNKNOWN', label: 'Unknown' };
   
-  const cap = caps.find(c => c.positionGroup === player.positionGroup);
-  const maxValue = cap ? parseInt(cap.max.replace(/[$K,]/g, '')) * 1000 : 100000;
+  const positionBudget = allocations[player.positionGroup] || 100000;
+  const maxPlayer = guardrails.maxPerPlayer;
   const midValue = player.nilRange.mid;
   
-  if (midValue <= maxValue * 0.8) {
+  if (midValue <= Math.min(positionBudget * 0.3, maxPlayer * 0.8)) {
     return { status: 'GOOD', label: 'Within Budget' };
-  } else if (midValue <= maxValue) {
+  } else if (midValue <= maxPlayer) {
     return { status: 'STRETCH', label: 'Stretch' };
   } else {
     return { status: 'OVER', label: 'Over Budget' };
@@ -138,24 +138,22 @@ const FitLabPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div>
-              <p className="text-muted-foreground text-sm">Total NIL Band</p>
-              <p className="text-xl font-bold">{budget.nilTotalBand}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm">Total Budget</p>
+                <p className="text-xl font-bold">${(budget.totalBudget / 1000000).toFixed(1)}M</p>
+              </div>
+              <div className="text-right text-sm text-muted-foreground">
+                <p>Max per player: ${(budget.guardrails.maxPerPlayer / 1000).toFixed(0)}K</p>
+                <p>Max per position: {budget.guardrails.maxPerPositionPercent}%</p>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {budget.allocations.map((alloc) => (
-                <div key={alloc.positionGroup} className="p-3 bg-secondary rounded-lg">
-                  <p className="text-xs text-muted-foreground">{alloc.positionGroup}</p>
-                  <p className="font-semibold">{alloc.band}</p>
+            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+              {Object.entries(budget.allocations).map(([pos, amount]) => (
+                <div key={pos} className="p-2 bg-secondary rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground">{pos}</p>
+                  <p className="font-semibold text-sm">${(amount / 1000).toFixed(0)}K</p>
                 </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 text-sm">
-              <span className="text-muted-foreground">Caps:</span>
-              {budget.caps.map((cap) => (
-                <Badge key={cap.positionGroup} variant="outline">
-                  {cap.positionGroup}: {cap.max}
-                </Badge>
               ))}
             </div>
           </div>
@@ -237,7 +235,7 @@ const FitLabPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredPlayers.map((player) => {
-                  const budgetFit = computeBudgetFit(player, budget.caps);
+                  const budgetFit = computeBudgetFit(player, budget.allocations, budget.guardrails);
                   const impact = computeImpact(player, selectedNeed);
                   
                   return (
