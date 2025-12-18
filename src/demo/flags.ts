@@ -21,4 +21,8 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   nil_engine: false,
   roster_module: true,
   fit_lab: true,
+  budget_core: true,
+  budget_simulator: false,
+  budget_forecast: false,
+  risk_heatmaps: false,
 };

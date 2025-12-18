@@ -95,6 +95,10 @@ export interface FeatureFlags {
   nil_engine: boolean;
   roster_module: boolean;
   fit_lab: boolean;
+  budget_core: boolean;
+  budget_simulator: boolean;
+  budget_forecast: boolean;
+  risk_heatmaps: boolean;
 }
 
 export interface ProgramDNA {
