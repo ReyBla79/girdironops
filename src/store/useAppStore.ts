@@ -290,10 +290,23 @@ export const useAppStore = create<AppStore>()(
         const replacement = findReplacementCandidate(roster, wowConfig.targetNeedPositionGroup);
         if (!replacement) return;
         
-        // 3. Create simulation roster with simRemoved flag
-        const rosterBefore = roster.map(p => ({ ...p, simRemoved: false, simAdded: false }));
+        // 3. Create simulation roster with simRemoved patch applied to replacement
+        const rosterBefore = roster.map(p => ({ 
+          ...p, 
+          simRemoved: false, 
+          simAdded: false,
+          simScenarioId: undefined,
+          simRemovalReason: undefined
+        }));
         const rosterAfter: RosterPlayer[] = roster.map(p => 
-          p.id === replacement.id ? { ...p, simRemoved: true } : { ...p }
+          p.id === replacement.id 
+            ? { 
+                ...p, 
+                simRemoved: true,
+                simScenarioId: 'wow1',
+                simRemovalReason: 'Replacement suggested to maintain OL headcount and budget runway.'
+              } 
+            : { ...p }
         );
         
         // 4. Create simulated recruit as roster player
@@ -314,7 +327,8 @@ export const useAppStore = create<AppStore>()(
           risk: { injury: 18, transfer: 22, academics: 6 },
           riskScore: 20,
           riskColor: 'GREEN',
-          simAdded: true
+          simAdded: true,
+          simScenarioId: 'wow1'
         };
         
         rosterAfter.push(recruitAsRoster);
