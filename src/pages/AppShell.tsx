@@ -15,7 +15,8 @@ import {
   ClipboardList,
   FlaskConical,
   Network,
-  Wallet
+  Wallet,
+  LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ import CoachGPTPanel from '@/components/CoachGPTPanel';
 
 const NAV_ITEMS = [
   { to: '/app/today', icon: Calendar, label: 'Today', flag: 'daily_brief' },
+  { to: '/app/gm', icon: LayoutDashboard, label: 'GM Center', flag: 'gm_mode' },
   { to: '/app/portal', icon: Radio, label: 'Portal Live', flag: 'portal_live' },
   { to: '/app/players', icon: Users, label: 'Players', flag: 'players_module' },
   { to: '/app/roster', icon: ClipboardList, label: 'Roster', flag: 'roster_module' },

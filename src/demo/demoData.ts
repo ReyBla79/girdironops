@@ -22,9 +22,11 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   roster_module: true,
   fit_lab: true,
   budget_core: true,
-  budget_simulator: false,
-  budget_forecast: false,
-  risk_heatmaps: false,
+  budget_simulator: true,
+  budget_forecast: true,
+  risk_heatmaps: true,
+  gm_mode: true,
+  wow_button: true,
 };
 
 export const DEMO_USERS: DemoUser[] = [
