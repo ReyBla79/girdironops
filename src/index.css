@@ -2,67 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* UNLV Color Palette - Dark Theme */
+    /* Base: Rich Black foundation */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    /* Cards: Elevated surfaces with subtle warmth */
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover: Slightly elevated from cards */
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 25 95% 53%;
-    --primary-foreground: 222 47% 6%;
+    /* Primary: UNLV Scarlet */
+    --primary: 351 83% 49%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 47% 14%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary: Dark gray surface */
+    --secondary: 208 8% 12%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 55%;
+    /* Muted: Subtle backgrounds */
+    --muted: 208 6% 10%;
+    --muted-foreground: 216 2% 55%;
 
-    --accent: 25 95% 53%;
-    --accent-foreground: 222 47% 6%;
+    /* Accent: Scarlet Dark for accents */
+    --accent: 8 66% 38%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive: Matches Scarlet but distinct */
+    --destructive: 351 83% 49%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    /* Success: Green that complements the palette */
+    --success: 152 69% 31%;
+    --success-foreground: 0 0% 100%;
 
+    /* Warning: Warm amber */
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 6%;
+    --warning-foreground: 0 0% 8%;
 
-    --border: 222 47% 16%;
-    --input: 222 47% 14%;
-    --ring: 25 95% 53%;
+    /* Borders & Inputs */
+    --border: 208 8% 18%;
+    --input: 208 8% 14%;
+    --ring: 351 83% 49%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 12%;
-    --sidebar-ring: 25 95% 53%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 3%;
+    --sidebar-foreground: 216 2% 75%;
+    --sidebar-primary: 351 83% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 208 8% 14%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 208 8% 14%;
+    --sidebar-ring: 351 83% 49%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 4%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(222 47% 10%) 0%, hsl(222 47% 8%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(32 95% 44%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(25 95% 53% / 0.15) 0%, transparent 70%);
+    /* Custom Gradients - UNLV Theme */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 2%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 9%) 0%, hsl(0 0% 6%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(351 83% 49%) 0%, hsl(8 66% 38%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(351 83% 49% / 0.12) 0%, transparent 70%);
+    --gradient-scarlet: linear-gradient(135deg, hsl(351 83% 49%) 0%, hsl(351 83% 40%) 100%);
 
-    --shadow-glow: 0 0 60px hsl(25 95% 53% / 0.2);
-    --shadow-card: 0 4px 24px hsl(222 47% 4% / 0.5);
+    /* Shadows */
+    --shadow-glow: 0 0 60px hsl(351 83% 49% / 0.25);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.6);
+    --shadow-scarlet: 0 4px 20px hsl(351 83% 49% / 0.3);
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
   }
 }
 
@@ -77,7 +94,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -98,6 +117,10 @@
     background: var(--gradient-glow);
   }
 
+  .gradient-scarlet {
+    background: var(--gradient-scarlet);
+  }
+
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
@@ -106,9 +129,19 @@
     box-shadow: var(--shadow-card);
   }
 
+  .shadow-scarlet {
+    box-shadow: var(--shadow-scarlet);
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-accent);
+  }
+
+  .border-gradient {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+                var(--gradient-accent) border-box;
   }
 
   .animate-fade-in {
@@ -121,6 +154,10 @@
 
   .animate-pulse-glow {
     animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .animate-scarlet-pulse {
+    animation: scarletPulse 3s ease-in-out infinite;
   }
 }
 
@@ -142,10 +179,19 @@
 
 @keyframes pulseGlow {
   0%, 100% { 
-    box-shadow: 0 0 20px hsl(25 95% 53% / 0.3);
+    box-shadow: 0 0 20px hsl(351 83% 49% / 0.3);
   }
   50% { 
-    box-shadow: 0 0 40px hsl(25 95% 53% / 0.5);
+    box-shadow: 0 0 40px hsl(351 83% 49% / 0.5);
+  }
+}
+
+@keyframes scarletPulse {
+  0%, 100% { 
+    background-position: 0% 50%;
+  }
+  50% { 
+    background-position: 100% 50%;
   }
 }
 
@@ -156,14 +202,26 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(222 47% 8%);
+  background: hsl(0 0% 6%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(222 47% 20%);
+  background: hsl(208 8% 25%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(222 47% 25%);
+  background: hsl(351 83% 49%);
+}
+
+/* Selection styling */
+::selection {
+  background: hsl(351 83% 49% / 0.4);
+  color: hsl(0 0% 100%);
+}
+
+/* Focus ring styling */
+:focus-visible {
+  outline: 2px solid hsl(351 83% 49%);
+  outline-offset: 2px;
 }

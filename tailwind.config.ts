@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Space Grotesk', 'sans-serif'],
+        display: ['Oswald', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -69,6 +69,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        /* UNLV Brand Colors */
+        scarlet: {
+          DEFAULT: "hsl(351 83% 49%)",
+          dark: "hsl(8 66% 38%)",
+          light: "hsl(351 83% 60%)",
+        },
+        unlv: {
+          gray: "hsl(216 2% 63%)",
+          "gray-dark": "hsl(208 8% 45%)",
+          black: "hsl(0 0% 0%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -92,12 +103,21 @@ export default {
           from: { opacity: "0", transform: "translateY(20px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "pulse-scarlet": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(351 83% 49% / 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(351 83% 49% / 0.5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out forwards",
         "slide-up": "slide-up 0.6s ease-out forwards",
+        "pulse-scarlet": "pulse-scarlet 2s ease-in-out infinite",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "scarlet-gradient": "linear-gradient(135deg, hsl(351 83% 49%) 0%, hsl(8 66% 38%) 100%)",
       },
     },
   },
