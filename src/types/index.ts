@@ -74,6 +74,8 @@ export interface DemoUser {
   role: string;
 }
 
+export type PipelineTier = 'CORE' | 'GM' | 'ELITE';
+
 export interface FeatureFlags {
   base_platform: boolean;
   daily_brief: boolean;
@@ -101,6 +103,7 @@ export interface FeatureFlags {
   risk_heatmaps: boolean;
   gm_mode: boolean;
   wow_button: boolean;
+  tier: PipelineTier;
 }
 
 export type UIMode = 'COACH' | 'GM';
