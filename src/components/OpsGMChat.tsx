@@ -12,11 +12,24 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ops-gm-chat`;
 
-export const OpsGMChat: React.FC = () => {
+interface OpsGMChatProps {
+  initialPrompt?: string;
+}
+
+export const OpsGMChat: React.FC<OpsGMChatProps> = ({ initialPrompt }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasUsedInitialPrompt = useRef(false);
+
+  // Handle initial prompt from parent
+  useEffect(() => {
+    if (initialPrompt && initialPrompt !== input && !hasUsedInitialPrompt.current) {
+      setInput(initialPrompt);
+      hasUsedInitialPrompt.current = true;
+    }
+  }, [initialPrompt]);
 
   useEffect(() => {
     if (scrollRef.current) {
