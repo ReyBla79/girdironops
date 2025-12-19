@@ -11,7 +11,7 @@ import DemoTierSwitcher from '@/components/DemoTierSwitcher';
 
 const FilmInboxPage = () => {
   const navigate = useNavigate();
-  const { tiers } = useAppStore();
+  const { tiers, setSelectedFilm } = useAppStore();
 
   const handleUpload = () => {
     toast('Demo upload queued. (No backend)');
@@ -101,7 +101,10 @@ const FilmInboxPage = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/app/film/${film.filmId}`)}
+                        onClick={() => {
+                          setSelectedFilm(film.filmId);
+                          navigate(`/app/film/${film.filmId}`);
+                        }}
                       >
                         Open Timeline
                       </Button>
