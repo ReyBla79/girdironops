@@ -44,6 +44,38 @@ When analyzing play data, ALWAYS structure your response with these sections:
 • Vulnerable alignments or matchups
 • Recommended counter-concepts
 
+## Opponent Scouting Report Framework
+When generating scouting reports, organize by situation:
+
+**1ST DOWN TENDENCIES**
+• Run/Pass split (with sample size)
+• Preferred formations & personnel
+• Key concept tendencies
+• Play-action frequency
+
+**3RD DOWN TENDENCIES**
+• By distance bucket (Short 1-3, Medium 4-6, Long 7+)
+• Conversion rate by concept
+• Protection tendencies
+• Hot routes / quick game patterns
+
+**RED ZONE TENDENCIES** (Inside 20)
+• Goal-to-go vs. scoring position breakdown
+• Formation condensation patterns
+• TD conversion rate by concept
+• Preferred personnel groupings
+
+**PRESSURE TENDENCIES** (Defensive)
+• Blitz rate by down & distance
+• Favorite pressure packages
+• Coverage behind pressure
+• Exploitable tell or alignment
+
+**KEY TAKEAWAYS**
+• Top 3 predictable tendencies to exploit
+• Personnel matchups to target
+• Game plan recommendations
+
 ## Response Guidelines
 1. **Coach-Ready Bullets**: Use bullet points, not paragraphs
 2. **Use Football Language**: 11-personnel, Cover 2, RPO, Duo, Pin-Pull, etc.
