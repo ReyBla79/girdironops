@@ -16,7 +16,7 @@ const OpsGMPanel = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi Coach! I'm Ops GM — your recruiting assistant. I can help you:\n\n• Understand why a player is ranked highly\n• Find similar players who entered recently\n• Create tasks for your staff\n\nWhat would you like to know?",
+      content: "I'm Ops GM — your football operations intelligence layer. I synthesize roster, recruiting, budget, forecast, and risk data.\n\nI can brief you on:\n• Player rankings and fit analysis\n• Recent portal activity\n• Task assignments for your staff\n\nWhat do you need?",
     },
   ]);
   const [input, setInput] = useState('');
