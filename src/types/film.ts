@@ -11,6 +11,12 @@ export interface FilmTimelineFilters {
   concept: string;
 }
 
+export interface PlayOverlays {
+  showTracks: boolean;
+  showSpeedTrails: boolean;
+  showAssignments: boolean;
+}
+
 export interface FilmAsset {
   filmId: string;
   title: string;
