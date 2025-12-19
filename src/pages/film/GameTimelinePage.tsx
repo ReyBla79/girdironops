@@ -4,21 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Plus, FileText, Play as PlayIcon } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Plus, FileText, Play as PlayIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { SEED_FILM_ASSETS, getPlaysForFilm, SEED_PLAY_TAGS, SEED_AI_NOTES_BY_PLAY, PLAY_TYPE_OPTIONS } from '@/demo/filmData';
+import { useAppStore } from '@/store/useAppStore';
 
 const GameTimelinePage = () => {
   const { filmId } = useParams();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    quarter: 'ALL',
-    down: 'ALL',
-    playType: 'ALL',
-    concept: '',
-  });
-  const [cutup, setCutup] = useState<string[]>([]);
+  const { 
+    filmUI, 
+    setFilmTimelineFilters, 
+    addPlayToCutup, 
+    removePlayFromCutup,
+    clearCutup,
+    setSelectedPlay 
+  } = useAppStore();
+  
+  const filters = filmUI.filmTimelineFilters;
+  const cutup = filmUI.cutupPlays;
 
   const film = SEED_FILM_ASSETS.find((f) => f.filmId === filmId);
   const plays = getPlaysForFilm(filmId || '');
@@ -31,13 +35,6 @@ const GameTimelinePage = () => {
     if (filters.concept && !play.aiConcept.toLowerCase().includes(filters.concept.toLowerCase())) return false;
     return true;
   });
-
-  const addToCutup = (playId: string) => {
-    if (!cutup.includes(playId)) {
-      setCutup([...cutup, playId]);
-      toast('Play added to cutup');
-    }
-  };
 
   if (!film) {
     return (
@@ -67,7 +64,7 @@ const GameTimelinePage = () => {
       <Card>
         <CardContent className="py-4">
           <div className="flex flex-wrap gap-4">
-            <Select value={filters.quarter} onValueChange={(v) => setFilters({ ...filters, quarter: v })}>
+            <Select value={filters.quarter} onValueChange={(v) => setFilmTimelineFilters({ quarter: v })}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Quarter" />
               </SelectTrigger>
@@ -80,7 +77,7 @@ const GameTimelinePage = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filters.down} onValueChange={(v) => setFilters({ ...filters, down: v })}>
+            <Select value={filters.down} onValueChange={(v) => setFilmTimelineFilters({ down: v })}>
               <SelectTrigger className="w-28">
                 <SelectValue placeholder="Down" />
               </SelectTrigger>
@@ -93,7 +90,7 @@ const GameTimelinePage = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filters.playType} onValueChange={(v) => setFilters({ ...filters, playType: v })}>
+            <Select value={filters.playType} onValueChange={(v) => setFilmTimelineFilters({ playType: v })}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Play Type" />
               </SelectTrigger>
@@ -107,7 +104,7 @@ const GameTimelinePage = () => {
             <Input
               placeholder="Search concept/tag..."
               value={filters.concept}
-              onChange={(e) => setFilters({ ...filters, concept: e.target.value })}
+              onChange={(e) => setFilmTimelineFilters({ concept: e.target.value })}
               className="w-48"
             />
           </div>
@@ -156,7 +153,7 @@ const GameTimelinePage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => addToCutup(play.playId)}
+                      onClick={() => addPlayToCutup(play.playId)}
                       disabled={cutup.includes(play.playId)}
                     >
                       <Plus className="w-4 h-4 mr-1" />
@@ -165,7 +162,10 @@ const GameTimelinePage = () => {
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => navigate(`/app/film/play/${play.playId}`)}
+                      onClick={() => {
+                        setSelectedPlay(play.playId);
+                        navigate(`/app/film/play/${play.playId}`);
+                      }}
                     >
                       <PlayIcon className="w-4 h-4 mr-1" />
                       View
@@ -181,14 +181,24 @@ const GameTimelinePage = () => {
       {/* Cutup Builder Dock */}
       {cutup.length > 0 && (
         <Card className="fixed bottom-4 right-4 w-80 shadow-xl border-primary">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Cutup Builder ({cutup.length} plays)</CardTitle>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={clearCutup}>
+              <X className="w-4 h-4" />
+            </Button>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="text-xs text-muted-foreground max-h-20 overflow-auto">
+            <div className="text-xs text-muted-foreground max-h-20 overflow-auto space-y-1">
               {cutup.map((id) => {
                 const p = plays.find((pl) => pl?.playId === id);
-                return <div key={id}>{p?.aiConcept} (Q{p?.quarter})</div>;
+                return (
+                  <div key={id} className="flex items-center justify-between">
+                    <span>{p?.aiConcept} (Q{p?.quarter})</span>
+                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removePlayFromCutup(id)}>
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                );
               })}
             </div>
             <div className="flex gap-2">
