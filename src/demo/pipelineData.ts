@@ -16,14 +16,14 @@ export const DEFAULT_PIPELINE_TIERS: PipelineTiers = {
 };
 
 export const SEED_GEO_HEAT: GeoHeat[] = [
-  { geoId: 'TX', label: 'Texas', energyScore: 88, statusBand: 'HOT', pipelineCount: 7, activeRecruits: 21, alertsOpen: 2, budgetExposure: 420000, roiScore: 77, topPositionGroup: 'OL', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' } },
-  { geoId: 'FL', label: 'Florida', energyScore: 79, statusBand: 'WARM', pipelineCount: 6, activeRecruits: 18, alertsOpen: 1, budgetExposure: 360000, roiScore: 72, topPositionGroup: 'DB', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'MED' } },
-  { geoId: 'CA', label: 'California', energyScore: 61, statusBand: 'WARM', pipelineCount: 4, activeRecruits: 9, alertsOpen: 3, budgetExposure: 310000, roiScore: 60, topPositionGroup: 'DB', forecastVolatility: { y1: 'MED', y2: 'MED', y3: 'HIGH' } },
-  { geoId: 'GA', label: 'Georgia', energyScore: 84, statusBand: 'WARM', pipelineCount: 5, activeRecruits: 15, alertsOpen: 2, budgetExposure: 280000, roiScore: 75, topPositionGroup: 'DL', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' } },
-  { geoId: 'OH', label: 'Ohio', energyScore: 52, statusBand: 'NEUTRAL', pipelineCount: 3, activeRecruits: 6, alertsOpen: 1, budgetExposure: 150000, roiScore: 58, topPositionGroup: 'LB', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'MED' } },
-  { geoId: 'LA', label: 'Louisiana', energyScore: 73, statusBand: 'WARM', pipelineCount: 3, activeRecruits: 8, alertsOpen: 1, budgetExposure: 210000, roiScore: 70, topPositionGroup: 'WR', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' } },
-  { geoId: 'AZ', label: 'Arizona', energyScore: 39, statusBand: 'COLD', pipelineCount: 2, activeRecruits: 3, alertsOpen: 1, budgetExposure: 90000, roiScore: 44, topPositionGroup: 'WR', forecastVolatility: { y1: 'MED', y2: 'MED', y3: 'HIGH' } },
-  { geoId: 'NV', label: 'Nevada', energyScore: 92, statusBand: 'HOT', pipelineCount: 4, activeRecruits: 12, alertsOpen: 0, budgetExposure: 180000, roiScore: 85, topPositionGroup: 'ALL', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'LOW' } },
+  { geoId: 'TX', label: 'Texas', energyScore: 88, statusBand: 'HOT', pipelineCount: 7, activeRecruits: 21, alertsOpen: 2, budgetExposure: 420000, roiScore: 77, topPositionGroup: 'OL', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' }, cx: 520, cy: 380 },
+  { geoId: 'FL', label: 'Florida', energyScore: 79, statusBand: 'WARM', pipelineCount: 6, activeRecruits: 18, alertsOpen: 1, budgetExposure: 360000, roiScore: 72, topPositionGroup: 'DB', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'MED' }, cx: 870, cy: 450 },
+  { geoId: 'CA', label: 'California', energyScore: 61, statusBand: 'WARM', pipelineCount: 4, activeRecruits: 9, alertsOpen: 3, budgetExposure: 310000, roiScore: 60, topPositionGroup: 'DB', forecastVolatility: { y1: 'MED', y2: 'MED', y3: 'HIGH' }, cx: 150, cy: 300 },
+  { geoId: 'GA', label: 'Georgia', energyScore: 84, statusBand: 'WARM', pipelineCount: 5, activeRecruits: 15, alertsOpen: 2, budgetExposure: 280000, roiScore: 75, topPositionGroup: 'DL', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' }, cx: 820, cy: 360 },
+  { geoId: 'OH', label: 'Ohio', energyScore: 52, statusBand: 'NEUTRAL', pipelineCount: 3, activeRecruits: 6, alertsOpen: 1, budgetExposure: 150000, roiScore: 58, topPositionGroup: 'LB', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'MED' }, cx: 760, cy: 240 },
+  { geoId: 'LA', label: 'Louisiana', energyScore: 73, statusBand: 'WARM', pipelineCount: 3, activeRecruits: 8, alertsOpen: 1, budgetExposure: 210000, roiScore: 70, topPositionGroup: 'WR', forecastVolatility: { y1: 'LOW', y2: 'MED', y3: 'MED' }, cx: 620, cy: 400 },
+  { geoId: 'AZ', label: 'Arizona', energyScore: 39, statusBand: 'COLD', pipelineCount: 2, activeRecruits: 3, alertsOpen: 1, budgetExposure: 90000, roiScore: 44, topPositionGroup: 'WR', forecastVolatility: { y1: 'MED', y2: 'MED', y3: 'HIGH' }, cx: 280, cy: 350 },
+  { geoId: 'NV', label: 'Nevada', energyScore: 92, statusBand: 'HOT', pipelineCount: 4, activeRecruits: 12, alertsOpen: 0, budgetExposure: 180000, roiScore: 85, topPositionGroup: 'ALL', forecastVolatility: { y1: 'LOW', y2: 'LOW', y3: 'LOW' }, cx: 220, cy: 260 },
 ];
 
 export const SEED_PIPELINE_PINS: PipelinePin[] = [
