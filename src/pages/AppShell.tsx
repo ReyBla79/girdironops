@@ -25,6 +25,7 @@ import OpsGMPanel from '@/components/OpsGMPanel';
 const NAV_ITEMS = [
   { to: '/app/today', icon: Calendar, label: 'Today', flag: 'daily_brief' },
   { to: '/app/gm', icon: LayoutDashboard, label: 'GM Center', flag: 'gm_mode' },
+  { to: '/app/pipelines/map', icon: Target, label: 'Recruiting Radar', flag: null },
   { to: '/app/portal', icon: Radio, label: 'Portal Live', flag: 'portal_live' },
   { to: '/app/players', icon: Users, label: 'Players', flag: 'players_module' },
   { to: '/app/roster', icon: ClipboardList, label: 'Roster', flag: 'roster_module' },
