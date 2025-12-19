@@ -362,7 +362,7 @@ export const useAppStore = create<AppStore>()(
       },
     }),
     {
-      name: 'wonrecruit-storage',
+      name: 'gridironops-storage',
     }
   )
 );
