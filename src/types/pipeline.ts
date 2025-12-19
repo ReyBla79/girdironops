@@ -26,6 +26,8 @@ export interface GeoHeat {
     y2: ForecastVolatility;
     y3: ForecastVolatility;
   };
+  cx?: number; // centroid x (SVG coords)
+  cy?: number; // centroid y (SVG coords)
 }
 
 export interface PipelinePin {
