@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { List, LayoutDashboard } from 'lucide-react';
+import { toast } from 'sonner';
 import USMapSVG from '@/components/pipeline/USMapSVG';
 import PipelineMapToolbar from '@/components/pipeline/PipelineMapToolbar';
 import PipelinePins from '@/components/pipeline/PipelinePins';
@@ -14,7 +16,7 @@ type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
 
 const PipelineMapPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tiers } = useAppStore();
+  const { tiers, setTier } = useAppStore();
   const [mapViewMode, setMapViewMode] = useState<'STATES' | 'PINS'>('STATES');
   const [positionFilter, setPositionFilter] = useState('ALL');
   const [search, setSearch] = useState('');
@@ -112,6 +114,30 @@ const PipelineMapPage: React.FC = () => {
             GM Center
           </Button>
         </div>
+      </div>
+
+      {/* Demo Tier Switcher */}
+      <div className="bg-muted/50 border border-border rounded-lg p-4 flex items-center justify-between">
+        <div>
+          <span className="font-semibold text-sm">Demo Tier Switcher</span>
+          <p className="text-xs text-muted-foreground">Flip tiers live during the meeting to show locked vs unlocked modules.</p>
+        </div>
+        <Select
+          value={currentTier}
+          onValueChange={(value: 'CORE' | 'GM' | 'ELITE') => {
+            setTier(value);
+            toast(value === 'CORE' ? 'Demo: CORE tier active.' : value === 'GM' ? 'Demo: GM tier active.' : 'Demo: ELITE tier active.');
+          }}
+        >
+          <SelectTrigger className="w-[280px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CORE">CORE (Strength + Alerts)</SelectItem>
+            <SelectItem value="GM">GM (Budget + Forecast)</SelectItem>
+            <SelectItem value="ELITE">ELITE (Ownership + ROI + Advanced Ops GM)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <TierBanner 
