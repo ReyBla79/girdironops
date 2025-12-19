@@ -1,1 +1,4 @@
 project_id = "ztsvltpimrjtimvisvys"
+
+[functions.ops-gm-chat]
+verify_jwt = false
