@@ -151,11 +151,11 @@ const MapDrawer: React.FC<MapDrawerProps> = ({
             {/* Budget Exposure (GM tier preview) */}
             {!tierUnlocked('GM') ? (
               <FeatureGateCard 
-                title="Budget & Forecast" 
-                copy="Unlock detailed budget exposure and forecast volatility in GM tier."
+                title="Budget / ROI Overlay" 
+                copy="Budget and ROI overlays unlock in GM/Elite tiers. Switch tiers to preview live."
                 tier="GM"
-                ctaPrimaryLabel="Unlock Budget Insights"
-                ctaSecondaryLabel="Unlock All Features"
+                ctaPrimaryLabel="Upgrade to GM"
+                ctaSecondaryLabel="Upgrade to Elite"
               />
             ) : (
               <Card>
