@@ -1,433 +1,484 @@
-import React, { useRef, useMemo, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, PerspectiveCamera, Environment } from '@react-three/drei';
-import * as THREE from 'three';
-import type { GeoHeat } from '@/types/pipeline';
+import React, { useMemo, useState } from "react";
 
-// Simplified US state positions (normalized to -5 to 5 range for 3D space)
-const STATE_POSITIONS: Record<string, { x: number; z: number; label: string }> = {
-  TX: { x: -1.5, z: 1.5, label: 'TX' },
-  CA: { x: -4.5, z: 0, label: 'CA' },
-  FL: { x: 2.5, z: 2.5, label: 'FL' },
-  GA: { x: 1.8, z: 1.2, label: 'GA' },
-  OH: { x: 1.2, z: -0.8, label: 'OH' },
-  PA: { x: 2.2, z: -1.2, label: 'PA' },
-  NY: { x: 2.8, z: -1.8, label: 'NY' },
-  IL: { x: 0.2, z: -0.5, label: 'IL' },
-  MI: { x: 0.8, z: -1.5, label: 'MI' },
-  NC: { x: 2.2, z: 0.5, label: 'NC' },
-  NJ: { x: 2.8, z: -1, label: 'NJ' },
-  VA: { x: 2, z: 0, label: 'VA' },
-  WA: { x: -4.2, z: -2.5, label: 'WA' },
-  AZ: { x: -3.5, z: 1.2, label: 'AZ' },
-  MA: { x: 3.5, z: -2, label: 'MA' },
-  TN: { x: 0.8, z: 0.8, label: 'TN' },
-  IN: { x: 0.5, z: -0.3, label: 'IN' },
-  MO: { x: -0.5, z: 0.2, label: 'MO' },
-  MD: { x: 2.5, z: -0.5, label: 'MD' },
-  WI: { x: 0, z: -1.5, label: 'WI' },
-  CO: { x: -2.5, z: 0, label: 'CO' },
-  AL: { x: 1.2, z: 1.5, label: 'AL' },
-  SC: { x: 2, z: 1, label: 'SC' },
-  LA: { x: -0.5, z: 2, label: 'LA' },
-  KY: { x: 1, z: 0.3, label: 'KY' },
-  OR: { x: -4.5, z: -1.8, label: 'OR' },
-  OK: { x: -1.5, z: 0.8, label: 'OK' },
-  CT: { x: 3.2, z: -1.5, label: 'CT' },
-  UT: { x: -3.2, z: -0.5, label: 'UT' },
-  IA: { x: -0.5, z: -1, label: 'IA' },
-  NV: { x: -4, z: 0.2, label: 'NV' },
-  AR: { x: -0.5, z: 1, label: 'AR' },
-  MS: { x: 0.5, z: 1.8, label: 'MS' },
-  KS: { x: -1.5, z: 0, label: 'KS' },
-  NM: { x: -2.8, z: 1.2, label: 'NM' },
-  NE: { x: -1.5, z: -0.8, label: 'NE' },
-  ID: { x: -3.8, z: -1.5, label: 'ID' },
-  WV: { x: 1.8, z: 0, label: 'WV' },
-  HI: { x: -4.5, z: 3, label: 'HI' },
-  NH: { x: 3.5, z: -2.3, label: 'NH' },
-  ME: { x: 4, z: -2.8, label: 'ME' },
-  MT: { x: -3, z: -2, label: 'MT' },
-  RI: { x: 3.5, z: -1.7, label: 'RI' },
-  DE: { x: 2.8, z: -0.6, label: 'DE' },
-  SD: { x: -1.5, z: -1.5, label: 'SD' },
-  ND: { x: -1.2, z: -2.2, label: 'ND' },
-  AK: { x: -5, z: -3, label: 'AK' },
-  VT: { x: 3.2, z: -2.5, label: 'VT' },
-  WY: { x: -2.8, z: -1, label: 'WY' },
-};
+type Tier = "CORE" | "GM" | "ELITE";
 
-// ESPN-style color palette
-const getESPNColor = (score: number): THREE.Color => {
-  if (score >= 80) return new THREE.Color('#c41e3a'); // ESPN Red - Hot
-  if (score >= 60) return new THREE.Color('#ff6b35'); // Orange - Warm
-  if (score >= 40) return new THREE.Color('#ffc107'); // Gold - Neutral
-  if (score >= 20) return new THREE.Color('#4a90d9'); // Blue - Cool
-  return new THREE.Color('#2d3748'); // Dark - Cold
-};
-
-const getGlowIntensity = (score: number): number => {
-  return 0.5 + (score / 100) * 2;
-};
-
-interface StatePillarProps {
-  position: [number, number, number];
-  height: number;
-  color: THREE.Color;
+type GeoHeat = {
+  geoId: string;
   label: string;
-  score: number;
-  isSelected: boolean;
-  onClick: () => void;
-}
-
-const StatePillar: React.FC<StatePillarProps> = ({
-  position,
-  height,
-  color,
-  label,
-  score,
-  isSelected,
-  onClick,
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      // Subtle breathing animation
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.02;
-      meshRef.current.scale.x = scale;
-      meshRef.current.scale.z = scale;
-    }
-    if (glowRef.current && isSelected) {
-      glowRef.current.rotation.y += 0.02;
-    }
-  });
-
-  const pillarHeight = Math.max(0.3, height * 3);
-
-  return (
-    <group position={position}>
-      {/* Base glow ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[0.35, 0.5, 32]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={0.3 + (score / 100) * 0.4}
-        />
-      </mesh>
-
-      {/* Main pillar */}
-      <mesh
-        ref={meshRef}
-        position={[0, pillarHeight / 2, 0]}
-        onClick={onClick}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[0.6, pillarHeight, 0.6]} />
-        <meshStandardMaterial
-          color={color}
-          metalness={0.6}
-          roughness={0.2}
-          emissive={color}
-          emissiveIntensity={isSelected ? 0.8 : 0.3}
-        />
-      </mesh>
-
-      {/* Top cap with ESPN shine */}
-      <mesh position={[0, pillarHeight + 0.05, 0]}>
-        <boxGeometry args={[0.65, 0.1, 0.65]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          metalness={0.9}
-          roughness={0.1}
-          emissive={color}
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-
-      {/* Selection ring */}
-      {isSelected && (
-        <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-          <ringGeometry args={[0.6, 0.8, 32]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
-        </mesh>
-      )}
-
-      {/* State label */}
-      <Text
-        position={[0, pillarHeight + 0.4, 0]}
-        fontSize={0.3}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/inter-bold.woff"
-      >
-        {label}
-      </Text>
-
-      {/* Score label */}
-      <Text
-        position={[0, pillarHeight + 0.7, 0]}
-        fontSize={0.2}
-        color={color}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {score}
-      </Text>
-    </group>
-  );
+  energyScore: number;
+  statusBand: "HOT" | "WARM" | "NEUTRAL" | "COLD" | "DEAD";
+  pipelineCount?: number;
+  activeRecruits?: number;
+  alertsOpen?: number;
+  budgetExposure?: number;
+  roiScore?: number;
+  topPositionGroup?: string;
+  forecastVolatility?: { y1: "LOW" | "MED" | "HIGH"; y2: "LOW" | "MED" | "HIGH"; y3: "LOW" | "MED" | "HIGH" };
 };
 
-interface GridFloorProps {
-  size?: number;
-}
-
-const GridFloor: React.FC<GridFloorProps> = ({ size = 12 }) => {
-  const gridRef = useRef<THREE.GridHelper>(null);
-
-  return (
-    <group>
-      {/* Base plane with ESPN dark gradient feel */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-        <planeGeometry args={[size, size]} />
-        <meshStandardMaterial
-          color="#0a0a0f"
-          metalness={0.8}
-          roughness={0.4}
-        />
-      </mesh>
-
-      {/* Grid overlay */}
-      <gridHelper
-        ref={gridRef}
-        args={[size, 20, '#1a1a2e', '#1a1a2e']}
-        position={[0, 0.01, 0]}
-      />
-
-      {/* Outer ring glow */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <ringGeometry args={[5.5, 6, 64]} />
-        <meshBasicMaterial color="#c41e3a" transparent opacity={0.3} />
-      </mesh>
-    </group>
-  );
+type PipelinePin = {
+  pipelineId: string;
+  name: string;
+  level: string;
+  positionGroup: string;
+  geoId: string;
+  x: number;
+  y: number;
+  pipelineScore: number;
+  status: "STRONG" | "COOLING" | "AT_RISK";
+  trend?: "UP" | "DOWN" | "FLAT";
+  activeRecruits?: number;
+  playersSignedLast5Years?: number;
+  alertsOpen?: number;
+  budgetModifier?: number;
+  roiScore?: number;
+  ownerStaffId?: string;
 };
 
-interface ESPNTitleProps {
+type PipelineAlert = {
+  alertId: string;
+  pipelineId: string;
+  geoId: string;
+  severity: "LOW" | "MED" | "HIGH";
   title: string;
-}
-
-const ESPNTitle: React.FC<ESPNTitleProps> = ({ title }) => {
-  return (
-    <group position={[0, 4, -5]}>
-      <Text
-        fontSize={0.6}
-        color="#c41e3a"
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/inter-bold.woff"
-      >
-        {title}
-      </Text>
-      <Text
-        position={[0, -0.5, 0]}
-        fontSize={0.25}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-      >
-        RECRUITING PIPELINE INTELLIGENCE
-      </Text>
-    </group>
-  );
+  message: string;
+  recommendedAction?: string;
 };
 
-interface LegendProps {
-  position: [number, number, number];
-}
-
-const Legend: React.FC<LegendProps> = ({ position }) => {
-  const levels = [
-    { label: 'HOT', color: '#c41e3a', score: '80+' },
-    { label: 'WARM', color: '#ff6b35', score: '60-79' },
-    { label: 'NEUTRAL', color: '#ffc107', score: '40-59' },
-    { label: 'COOL', color: '#4a90d9', score: '20-39' },
-    { label: 'COLD', color: '#2d3748', score: '0-19' },
-  ];
-
-  return (
-    <group position={position}>
-      <Text
-        position={[0, 1.2, 0]}
-        fontSize={0.2}
-        color="#ffffff"
-        anchorX="center"
-      >
-        PIPELINE STRENGTH
-      </Text>
-      {levels.map((level, i) => (
-        <group key={level.label} position={[0, 0.8 - i * 0.35, 0]}>
-          <mesh position={[-0.8, 0, 0]}>
-            <boxGeometry args={[0.2, 0.2, 0.1]} />
-            <meshBasicMaterial color={level.color} />
-          </mesh>
-          <Text
-            position={[-0.4, 0, 0]}
-            fontSize={0.12}
-            color="#ffffff"
-            anchorX="left"
-          >
-            {level.label}
-          </Text>
-          <Text
-            position={[0.5, 0, 0]}
-            fontSize={0.1}
-            color="#888888"
-            anchorX="left"
-          >
-            {level.score}
-          </Text>
-        </group>
-      ))}
-    </group>
-  );
+type ESPNTheme = {
+  enabled: boolean;
+  palette: {
+    bg: string;
+    glass: string;
+    rim: string;
+    hot: string;
+    warm: string;
+    neutral: string;
+    cold: string;
+    dead: string;
+  };
+  fx: {
+    rimGlow: { blur: number; opacity: number };
+    outerGlow: { blur: number; opacity: number };
+    innerBevel: { opacity: number };
+    dropShadow: { blur: number; opacity: number; dx: number; dy: number };
+    scanlines: { opacity: number };
+    noise: { opacity: number };
+  };
+  animation: { pulseHotZones: boolean; pulseSpeedMs: number };
 };
 
-interface SceneProps {
+type Props = {
   geoHeat: GeoHeat[];
-  selectedGeoId: string | null;
-  onStateClick: (geoId: string) => void;
+  pipelinePins: PipelinePin[];
+  pipelineAlerts: PipelineAlert[];
+  tier: Tier;
+  mapViewMode?: "STATES" | "PINS";
+  overlay: {
+    strength: boolean;
+    alerts: boolean;
+    budget: boolean;
+    forecast: boolean;
+    ownership: boolean;
+    roi: boolean;
+  };
+  positionFilter?: string;
+  search?: string;
+  theme: ESPNTheme;
+  statePaths?: Record<string, string>;
+  onStateClick?: (geoId: string) => void;
+  onPinClick?: (pipelineId: string) => void;
+  width?: number;
+  height?: number;
+};
+
+const FALLBACK_STATE_PATHS: Record<string, string> = {
+  TX: "M260,220 L360,220 L380,280 L300,320 L240,280 Z",
+  FL: "M420,320 L500,320 L520,340 L540,360 L520,380 L460,380 Z",
+  CA: "M80,220 L140,220 L160,280 L120,320 L60,280 Z",
+  GA: "M420,260 L470,260 L490,300 L450,330 L410,300 Z",
+  OH: "M360,180 L410,180 L430,210 L400,240 L360,220 Z"
+};
+
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
 }
 
-const Scene: React.FC<SceneProps> = ({ geoHeat, selectedGeoId, onStateClick }) => {
-  const pillars = useMemo(() => {
-    return geoHeat.map((geo) => {
-      const statePos = STATE_POSITIONS[geo.geoId];
-      if (!statePos) return null;
+function tierIndex(t: Tier) {
+  return t === "CORE" ? 0 : t === "GM" ? 1 : 2;
+}
 
-      const score = geo.energyScore;
-      const color = getESPNColor(score);
-      const height = score / 100;
+function requires(tier: Tier, requiresTier: Tier) {
+  return tierIndex(tier) >= tierIndex(requiresTier);
+}
 
-      return {
-        geoId: geo.geoId,
-        position: [statePos.x, 0, statePos.z] as [number, number, number],
-        height,
-        color,
-        label: statePos.label,
-        score,
-      };
-    }).filter(Boolean);
+function bandColor(theme: ESPNTheme, band: GeoHeat["statusBand"]) {
+  const p = theme.palette;
+  switch (band) {
+    case "HOT":
+      return p.hot;
+    case "WARM":
+      return p.warm;
+    case "NEUTRAL":
+      return p.neutral;
+    case "COLD":
+      return p.cold;
+    case "DEAD":
+    default:
+      return p.dead;
+  }
+}
+
+function statusStroke(theme: ESPNTheme, status: PipelinePin["status"]) {
+  if (status === "STRONG") return theme.palette.rim;
+  if (status === "COOLING") return theme.palette.warm;
+  return theme.palette.hot;
+}
+
+export default function USPipelineHeatMap3D_ESPN(props: Props) {
+  const {
+    geoHeat,
+    pipelinePins,
+    pipelineAlerts,
+    tier,
+    overlay,
+    mapViewMode = "STATES",
+    positionFilter = "ALL",
+    search = "",
+    theme,
+    statePaths = FALLBACK_STATE_PATHS,
+    onStateClick,
+    onPinClick,
+    width = 1100,
+    height = 620
+  } = props;
+
+  const [hoverState, setHoverState] = useState<string | null>(null);
+
+  const heatById = useMemo(() => {
+    const m = new Map<string, GeoHeat>();
+    geoHeat.forEach((g) => m.set(g.geoId, g));
+    return m;
   }, [geoHeat]);
 
+  const alertsByGeo = useMemo(() => {
+    const m = new Map<string, number>();
+    pipelineAlerts.forEach((a) => m.set(a.geoId, (m.get(a.geoId) || 0) + 1));
+    return m;
+  }, [pipelineAlerts]);
+
+  const filteredPins = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return pipelinePins.filter((p) => {
+      const positionOk = positionFilter === "ALL" ? true : p.positionGroup === positionFilter;
+      const searchOk = !q ? true : p.name.toLowerCase().includes(q) || p.pipelineId.toLowerCase().includes(q);
+      return positionOk && searchOk;
+    });
+  }, [pipelinePins, positionFilter, search]);
+
+  const budgetUnlocked = requires(tier, "GM") && overlay.budget;
+  const forecastUnlocked = requires(tier, "GM") && overlay.forecast;
+  const roiUnlocked = requires(tier, "ELITE") && overlay.roi;
+
+  const getStateFill = (geoId: string) => {
+    const g = heatById.get(geoId);
+    if (!g) return theme.palette.glass;
+    if (roiUnlocked) return bandColor(theme, scoreToBand(g.roiScore ?? 0));
+    if (budgetUnlocked) return bandColor(theme, scoreToBand(scoreFromBudget(g.budgetExposure ?? 0)));
+    if (forecastUnlocked) return bandColor(theme, volatilityToBand(g.forecastVolatility));
+    if (overlay.alerts) return bandColor(theme, alertsToBand(alertsByGeo.get(geoId) || 0));
+    return bandColor(theme, g.statusBand);
+  };
+
+  const getStateGlowStrength = (geoId: string) => {
+    const g = heatById.get(geoId);
+    const s = g?.energyScore ?? 0;
+    return clamp(s / 100, 0, 1);
+  };
+
   return (
-    <>
-      {/* Camera */}
-      <PerspectiveCamera makeDefault position={[8, 8, 8]} fov={50} />
+    <div
+      style={{
+        background: `radial-gradient(1200px 600px at 50% 20%, rgba(57,182,255,0.18), rgba(5,6,10,1) 60%)`,
+        borderRadius: 18,
+        padding: 16,
+        position: "relative",
+        overflow: "hidden"
+      }}
+    >
+      <div style={scanlines(theme)} />
+      <div style={noise(theme)} />
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width="100%"
+        height="auto"
+        style={{ display: "block" }}
+      >
+        <defs>
+          <filter id="espnDrop" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx={theme.fx.dropShadow.dx}
+              dy={theme.fx.dropShadow.dy}
+              stdDeviation={theme.fx.dropShadow.blur / 2}
+              floodColor={`rgba(0,0,0,${theme.fx.dropShadow.opacity})`}
+            />
+          </filter>
+          <filter id="espnGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation={theme.fx.outerGlow.blur / 3} result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="
+                1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.9 0"
+              result="glow"
+            />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="espnBevel" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="shadow" />
+            <feOffset dx="-2" dy="-2" result="offsetShadow" />
+            <feComposite in="offsetShadow" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="inner" />
+            <feColorMatrix
+              in="inner"
+              type="matrix"
+              values={`
+                1 0 0 0 0.2
+                0 1 0 0 0.6
+                0 0 1 0 1
+                0 0 0 ${theme.fx.innerBevel.opacity} 0`}
+              result="innerColor"
+            />
+            <feMerge>
+              <feMergeNode in="innerColor" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="rimGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation={theme.fx.rimGlow.blur / 4} result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="pinGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <radialGradient id="pulseGrad">
+            <stop offset="0%" stopColor={theme.palette.rim} stopOpacity="0.0" />
+            <stop offset="50%" stopColor={theme.palette.rim} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={theme.palette.rim} stopOpacity="0.0" />
+          </radialGradient>
+          <radialGradient id="pinGlass" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
+            <stop offset="35%" stopColor={theme.palette.rim} stopOpacity="0.20" />
+            <stop offset="100%" stopColor={theme.palette.glass} stopOpacity="0.95" />
+          </radialGradient>
+        </defs>
 
-      {/* Lighting - ESPN broadcast style */}
-      <ambientLight intensity={0.2} />
-      <directionalLight
-        position={[10, 15, 10]}
-        intensity={1.5}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-      />
-      <spotLight
-        position={[-10, 10, -10]}
-        intensity={0.5}
-        color="#c41e3a"
-        angle={0.3}
-      />
-      <pointLight position={[0, 5, 0]} intensity={0.8} color="#ffffff" />
+        {/* DEPTH LAYER */}
+        <g filter="url(#espnDrop)" opacity={0.95} transform="translate(0,10)">
+          {Object.entries(statePaths).map(([geoId, d]) => (
+            <path key={`depth-${geoId}`} d={d} fill="#05060a" opacity="0.95" />
+          ))}
+        </g>
 
-      {/* Environment */}
-      <fog attach="fog" args={['#0a0a0f', 10, 25]} />
+        {/* SURFACE LAYER */}
+        <g>
+          {Object.entries(statePaths).map(([geoId, d]) => {
+            const fill = getStateFill(geoId);
+            const glowStrength = getStateGlowStrength(geoId);
+            const isHot = (heatById.get(geoId)?.statusBand ?? "DEAD") === "HOT";
+            return (
+              <g key={`surface-${geoId}`}>
+                <path
+                  d={d}
+                  fill={fill}
+                  opacity={0.92}
+                  filter="url(#espnBevel)"
+                  onMouseEnter={() => setHoverState(geoId)}
+                  onMouseLeave={() => setHoverState(null)}
+                  onClick={() => onStateClick?.(geoId)}
+                  style={{ cursor: "pointer" }}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={theme.palette.rim}
+                  strokeOpacity={0.18 + 0.25 * glowStrength}
+                  strokeWidth={1.4}
+                  filter="url(#rimGlow)"
+                  pointerEvents="none"
+                />
+                {isHot && theme.animation.pulseHotZones && (
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={theme.palette.hot}
+                    strokeOpacity={0.22 + 0.18 * glowStrength}
+                    strokeWidth={2.2}
+                    filter="url(#espnGlow)"
+                    pointerEvents="none"
+                  />
+                )}
+                {hoverState === geoId && (
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeOpacity={0.25}
+                    strokeWidth={2.2}
+                    pointerEvents="none"
+                  />
+                )}
+              </g>
+            );
+          })}
+        </g>
 
-      {/* Floor */}
-      <GridFloor />
-
-      {/* State Pillars */}
-      {pillars.map((pillar) => pillar && (
-        <StatePillar
-          key={pillar.geoId}
-          position={pillar.position}
-          height={pillar.height}
-          color={pillar.color}
-          label={pillar.label}
-          score={pillar.score}
-          isSelected={selectedGeoId === pillar.geoId}
-          onClick={() => onStateClick(pillar.geoId)}
-        />
-      ))}
-
-      {/* Title */}
-      <ESPNTitle title="PIPELINE MAP" />
+        {/* PINS LAYER */}
+        {mapViewMode === "PINS" && (
+          <g>
+            {filteredPins.map((p) => {
+              const g = heatById.get(p.geoId);
+              const isHotZone = (g?.statusBand ?? "DEAD") === "HOT";
+              const r = clamp((p.activeRecruits ?? 2) * 2.2, 6, 14);
+              const stroke = statusStroke(theme, p.status);
+              return (
+                <g
+                  key={p.pipelineId}
+                  transform={`translate(${p.x},${p.y})`}
+                  onClick={() => onPinClick?.(p.pipelineId)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <ellipse cx="0" cy={r + 6} rx={r * 1.2} ry={r * 0.55} fill="rgba(0,0,0,0.40)" />
+                  {isHotZone && theme.animation.pulseHotZones && (
+                    <circle r={r * 2.6} fill="url(#pulseGrad)">
+                      <animate
+                        attributeName="r"
+                        values={`${r * 1.6};${r * 3.0};${r * 1.6}`}
+                        dur={`${theme.animation.pulseSpeedMs}ms`}
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.15;0.35;0.15"
+                        dur={`${theme.animation.pulseSpeedMs}ms`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )}
+                  <circle r={r} fill="url(#pinGlass)" filter="url(#pinGlow)" />
+                  <circle r={r} fill="none" stroke={stroke} strokeWidth="2" opacity="0.95" />
+                  {overlay.alerts && (p.alertsOpen ?? 0) > 0 && (
+                    <circle cx={r - 2} cy={-r + 2} r={4} fill={theme.palette.hot} opacity="0.95" />
+                  )}
+                  <text
+                    x={0}
+                    y={r + 20}
+                    textAnchor="middle"
+                    fontSize="12"
+                    fill="rgba(255,255,255,0.85)"
+                    style={{ userSelect: "none" }}
+                  >
+                    {p.positionGroup}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )}
+      </svg>
 
       {/* Legend */}
-      <Legend position={[5.5, 0.5, 0]} />
-
-      {/* Controls */}
-      <OrbitControls
-        enablePan={false}
-        minDistance={5}
-        maxDistance={18}
-        minPolarAngle={Math.PI / 6}
-        maxPolarAngle={Math.PI / 2.5}
-        autoRotate
-        autoRotateSpeed={0.3}
-      />
-    </>
-  );
-};
-
-export interface USPipelineHeatMap3D_ESPNProps {
-  geoHeat: GeoHeat[];
-  selectedGeoId: string | null;
-  onStateClick: (geoId: string) => void;
-  className?: string;
-}
-
-const USPipelineHeatMap3D_ESPN: React.FC<USPipelineHeatMap3D_ESPNProps> = ({
-  geoHeat,
-  selectedGeoId,
-  onStateClick,
-  className = '',
-}) => {
-  return (
-    <div className={`relative w-full h-full min-h-[500px] bg-[#0a0a0f] rounded-lg overflow-hidden ${className}`}>
-      {/* ESPN-style top bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c41e3a] via-[#ff6b35] to-[#c41e3a] z-10" />
-      
-      {/* Stats overlay */}
-      <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-sm rounded px-3 py-2 border border-[#c41e3a]/30">
-        <div className="text-xs text-[#c41e3a] font-bold tracking-wider">LIVE DATA</div>
-        <div className="text-white text-sm font-medium">{geoHeat.length} Regions Active</div>
-      </div>
-
-      {/* 3D Canvas */}
-      <Canvas shadows>
-        <Suspense fallback={null}>
-          <Scene
-            geoHeat={geoHeat}
-            selectedGeoId={selectedGeoId}
-            onStateClick={onStateClick}
-          />
-        </Suspense>
-      </Canvas>
-
-      {/* ESPN-style bottom bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end pb-2 px-4">
-        <div className="text-xs text-gray-400">
-          Drag to rotate • Scroll to zoom • Click state for details
-        </div>
+      <div style={legend(theme)}>
+        <LegendRow label="HOT" color={theme.palette.hot} />
+        <LegendRow label="WARM" color={theme.palette.warm} />
+        <LegendRow label="NEUTRAL" color={theme.palette.neutral} />
+        <LegendRow label="COLD" color={theme.palette.cold} />
+        <LegendRow label="DEAD" color={theme.palette.dead} />
       </div>
     </div>
   );
-};
+}
 
-export default USPipelineHeatMap3D_ESPN;
+function scoreToBand(score: number): GeoHeat["statusBand"] {
+  const s = clamp(score ?? 0, 0, 100);
+  if (s >= 85) return "HOT";
+  if (s >= 65) return "WARM";
+  if (s >= 45) return "NEUTRAL";
+  if (s >= 25) return "COLD";
+  return "DEAD";
+}
+
+function scoreFromBudget(budgetExposure: number) {
+  const s = clamp((budgetExposure / 500000) * 100, 0, 100);
+  return s;
+}
+
+function volatilityToBand(v?: GeoHeat["forecastVolatility"]): GeoHeat["statusBand"] {
+  const v3 = v?.y3 ?? "LOW";
+  if (v3 === "HIGH") return "HOT";
+  if (v3 === "MED") return "WARM";
+  return "NEUTRAL";
+}
+
+function alertsToBand(alertCount: number): GeoHeat["statusBand"] {
+  if (alertCount >= 3) return "HOT";
+  if (alertCount === 2) return "WARM";
+  if (alertCount === 1) return "NEUTRAL";
+  return "COLD";
+}
+
+function scanlines(theme: ESPNTheme): React.CSSProperties {
+  return {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    opacity: theme.fx.scanlines.opacity,
+    backgroundImage: "repeating-linear-gradient(to bottom, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 6px)"
+  };
+}
+
+function noise(theme: ESPNTheme): React.CSSProperties {
+  return {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    opacity: theme.fx.noise.opacity,
+    backgroundImage:
+      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E\")",
+    mixBlendMode: "overlay"
+  };
+}
+
+function legend(theme: ESPNTheme): React.CSSProperties {
+  return {
+    position: "absolute",
+    left: 16,
+    bottom: 16,
+    padding: "10px 12px",
+    borderRadius: 12,
+    background: "rgba(8,12,18,0.62)",
+    border: "1px solid rgba(57,182,255,0.25)",
+    backdropFilter: "blur(8px)"
+  };
+}
+
+function LegendRow({ label, color }: { label: string; color: string }) {
+  return (
+    <div style={{ display: "flex", gap: 10, alignItems: "center", margin: "6px 0" }}>
+      <span style={{ width: 10, height: 10, borderRadius: 99, background: color, boxShadow: `0 0 12px ${color}` }} />
+      <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>{label}</span>
+    </div>
+  );
+}
