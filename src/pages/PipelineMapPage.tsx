@@ -136,6 +136,8 @@ const PipelineMapPage: React.FC = () => {
           selectedGeoId={selectedGeoId}
           onStateClick={handleStateClick}
           overlayMode={activeOverlay}
+          showRecruitingFlow={true}
+          pipelinePins={SEED_PIPELINE_PINS}
         />
         {mapViewMode === 'PINS' && (
           <PipelinePins pins={filteredPins} onPinClick={handlePinClick} />

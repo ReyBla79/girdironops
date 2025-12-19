@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StatusBand, GeoHeat } from '@/types/pipeline';
+import type { GeoHeat, PipelinePin } from '@/types/pipeline';
 
 // US State paths - simplified for demo
 const US_STATES: Record<string, { path: string; cx: number; cy: number }> = {
@@ -55,6 +55,9 @@ const US_STATES: Record<string, { path: string; cx: number; cy: number }> = {
   WY: { path: "M260,170 L260,240 L350,240 L350,170 Z", cx: 305, cy: 205 },
 };
 
+// UNLV HQ location (Las Vegas, NV)
+const HQ = { x: 190, y: 280 };
+
 type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
 
 interface USMapSVGProps {
@@ -62,31 +65,27 @@ interface USMapSVGProps {
   selectedGeoId: string | null;
   onStateClick: (geoId: string) => void;
   overlayMode?: OverlayMode;
+  showRecruitingFlow?: boolean;
+  pipelinePins?: PipelinePin[];
 }
 
 // Thermal color scale - from cold (blue) to hot (red/white)
 const getThermalColor = (value: number, max: number = 100): string => {
   const normalized = Math.max(0, Math.min(1, value / max));
   
-  // Cold (deep blue) -> Cool (cyan) -> Warm (yellow) -> Hot (orange) -> Blazing (red/white)
   if (normalized < 0.2) {
-    // Deep blue to blue
     const t = normalized / 0.2;
     return `rgb(${Math.round(20 + t * 20)}, ${Math.round(40 + t * 60)}, ${Math.round(100 + t * 55)})`;
   } else if (normalized < 0.4) {
-    // Blue to cyan/teal
     const t = (normalized - 0.2) / 0.2;
     return `rgb(${Math.round(40 + t * 20)}, ${Math.round(100 + t * 80)}, ${Math.round(155 - t * 55)})`;
   } else if (normalized < 0.6) {
-    // Cyan to yellow
     const t = (normalized - 0.4) / 0.2;
     return `rgb(${Math.round(60 + t * 195)}, ${Math.round(180 + t * 55)}, ${Math.round(100 - t * 80)})`;
   } else if (normalized < 0.8) {
-    // Yellow to orange
     const t = (normalized - 0.6) / 0.2;
     return `rgb(${Math.round(255)}, ${Math.round(235 - t * 100)}, ${Math.round(20 - t * 20)})`;
   } else {
-    // Orange to red/white (blazing hot)
     const t = (normalized - 0.8) / 0.2;
     return `rgb(${Math.round(255)}, ${Math.round(135 - t * 100)}, ${Math.round(t * 80)})`;
   }
@@ -97,10 +96,8 @@ const getOverlayValue = (geo: GeoHeat, mode: OverlayMode): number => {
     case 'strength':
       return geo.energyScore;
     case 'alerts':
-      // Invert - more alerts = hotter (more attention needed)
       return Math.min(100, geo.alertsOpen * 30 + (geo.statusBand === 'COLD' || geo.statusBand === 'DEAD' ? 40 : 0));
     case 'budget':
-      // Normalize budget exposure (max ~500k in demo)
       return Math.min(100, (geo.budgetExposure / 5000));
     case 'roi':
       return geo.roiScore;
@@ -109,13 +106,51 @@ const getOverlayValue = (geo: GeoHeat, mode: OverlayMode): number => {
   }
 };
 
+// Generate curved arc path between two points
+const getArcPath = (from: { x: number; y: number }, to: { x: number; y: number }): string => {
+  const midX = (from.x + to.x) / 2;
+  const midY = (from.y + to.y) / 2;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  
+  // Control point offset perpendicular to the line, scaled by distance
+  const curvature = Math.min(dist * 0.3, 80);
+  const perpX = -dy / dist * curvature;
+  const perpY = dx / dist * curvature;
+  
+  const ctrlX = midX + perpX;
+  const ctrlY = midY + perpY - curvature * 0.5; // Bias upward for better visual
+
+  return `M ${from.x} ${from.y} Q ${ctrlX} ${ctrlY} ${to.x} ${to.y}`;
+};
+
 const USMapSVG: React.FC<USMapSVGProps> = ({ 
   geoHeat, 
   selectedGeoId, 
   onStateClick,
-  overlayMode = 'strength'
+  overlayMode = 'strength',
+  showRecruitingFlow = true,
+  pipelinePins = []
 }) => {
   const geoMap = new Map(geoHeat.map(g => [g.geoId, g]));
+
+  // Calculate flow arcs from pipelines to HQ
+  const flowArcs = pipelinePins
+    .filter(pin => pin.playersSignedLast5Years > 0 && pin.geoId !== 'NV')
+    .map(pin => {
+      const state = US_STATES[pin.geoId];
+      if (!state) return null;
+      return {
+        id: pin.pipelineId,
+        from: { x: state.cx, y: state.cy },
+        to: HQ,
+        thickness: Math.max(1, Math.min(6, pin.playersSignedLast5Years * 0.8)),
+        score: pin.pipelineScore,
+        signed: pin.playersSignedLast5Years,
+      };
+    })
+    .filter(Boolean);
 
   return (
     <svg 
@@ -150,10 +185,26 @@ const USMapSVG: React.FC<USMapSVGProps> = ({
           </feMerge>
         </filter>
 
+        {/* Arc glow */}
+        <filter id="arcGlow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
         {/* Radial gradient for thermal effect */}
         <radialGradient id="thermalCenter" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="white" stopOpacity="0.3"/>
           <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+
+        {/* HQ pulse gradient */}
+        <radialGradient id="hqPulse" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(var(--scarlet))" stopOpacity="0.8"/>
+          <stop offset="50%" stopColor="hsl(var(--scarlet))" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="hsl(var(--scarlet))" stopOpacity="0"/>
         </radialGradient>
 
         {/* Background gradient */}
@@ -166,6 +217,24 @@ const USMapSVG: React.FC<USMapSVGProps> = ({
         <pattern id="thermalGrid" patternUnits="userSpaceOnUse" width="20" height="20">
           <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
         </pattern>
+
+        {/* Animated arc gradient */}
+        <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="hsl(var(--scarlet))" stopOpacity="0.2">
+            <animate attributeName="stop-opacity" values="0.2;0.6;0.2" dur="2s" repeatCount="indefinite"/>
+          </stop>
+          <stop offset="50%" stopColor="hsl(var(--scarlet))" stopOpacity="0.8">
+            <animate attributeName="stop-opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+          </stop>
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.6">
+            <animate attributeName="stop-opacity" values="0.6;0.9;0.6" dur="2s" repeatCount="indefinite"/>
+          </stop>
+        </linearGradient>
+
+        {/* Flow animation marker */}
+        <marker id="flowDot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4">
+          <circle cx="5" cy="5" r="3" fill="hsl(var(--primary))"/>
+        </marker>
       </defs>
       
       {/* Dark background */}
@@ -229,6 +298,118 @@ const USMapSVG: React.FC<USMapSVGProps> = ({
           </g>
         );
       })}
+
+      {/* Recruiting Flow Arcs */}
+      {showRecruitingFlow && flowArcs.map((arc, index) => {
+        if (!arc) return null;
+        const path = getArcPath(arc.from, arc.to);
+        const animationDelay = index * 0.3;
+        
+        return (
+          <g key={arc.id} filter="url(#arcGlow)">
+            {/* Background arc (glow) */}
+            <path
+              d={path}
+              fill="none"
+              stroke="hsl(var(--scarlet))"
+              strokeWidth={arc.thickness + 4}
+              strokeOpacity={0.2}
+              strokeLinecap="round"
+            />
+            {/* Main arc */}
+            <path
+              d={path}
+              fill="none"
+              stroke="url(#arcGradient)"
+              strokeWidth={arc.thickness}
+              strokeLinecap="round"
+              strokeDasharray="8 4"
+              className="animate-pulse"
+              style={{
+                animationDelay: `${animationDelay}s`,
+              }}
+            >
+              <animate
+                attributeName="stroke-dashoffset"
+                from="24"
+                to="0"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
+            </path>
+            {/* Flow particles */}
+            <circle r="3" fill="hsl(var(--primary))">
+              <animateMotion
+                dur={`${2 + index * 0.2}s`}
+                repeatCount="indefinite"
+                path={path}
+              />
+              <animate
+                attributeName="opacity"
+                values="0;1;1;0"
+                dur={`${2 + index * 0.2}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
+            <circle r="2" fill="white" opacity="0.8">
+              <animateMotion
+                dur={`${2 + index * 0.2}s`}
+                repeatCount="indefinite"
+                path={path}
+                begin={`${0.5}s`}
+              />
+              <animate
+                attributeName="opacity"
+                values="0;0.8;0.8;0"
+                dur={`${2 + index * 0.2}s`}
+                repeatCount="indefinite"
+                begin={`${0.5}s`}
+              />
+            </circle>
+          </g>
+        );
+      })}
+
+      {/* HQ Marker (UNLV - Las Vegas) */}
+      {showRecruitingFlow && (
+        <g className="pointer-events-none">
+          {/* Outer pulse ring */}
+          <circle cx={HQ.x} cy={HQ.y} r="25" fill="url(#hqPulse)">
+            <animate attributeName="r" values="20;35;20" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          {/* Inner ring */}
+          <circle 
+            cx={HQ.x} 
+            cy={HQ.y} 
+            r="12" 
+            fill="hsl(var(--scarlet))" 
+            stroke="white" 
+            strokeWidth="2"
+            className="drop-shadow-lg"
+          />
+          {/* HQ Label */}
+          <text
+            x={HQ.x}
+            y={HQ.y + 1}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="fill-white text-xs font-bold"
+            style={{ fontSize: '8px' }}
+          >
+            HQ
+          </text>
+          <text
+            x={HQ.x}
+            y={HQ.y + 28}
+            textAnchor="middle"
+            className="fill-gray-300 font-semibold"
+            style={{ fontSize: '9px' }}
+          >
+            UNLV
+          </text>
+        </g>
+      )}
       
       {/* State labels for states with data */}
       {geoHeat.map(geo => {
@@ -274,9 +455,9 @@ const USMapSVG: React.FC<USMapSVGProps> = ({
       })}
 
       {/* Legend */}
-      <g transform="translate(30, 520)">
-        <rect x="0" y="0" width="200" height="50" rx="6" fill="rgba(0,0,0,0.7)" />
-        <text x="10" y="18" className="fill-gray-300" style={{ fontSize: '11px', fontWeight: 600 }}>
+      <g transform="translate(30, 510)">
+        <rect x="0" y="0" width="200" height="60" rx="6" fill="rgba(0,0,0,0.7)" />
+        <text x="10" y="16" className="fill-gray-300" style={{ fontSize: '11px', fontWeight: 600 }}>
           {overlayMode === 'strength' ? 'Energy Score' : 
            overlayMode === 'alerts' ? 'Alert Intensity' :
            overlayMode === 'budget' ? 'Budget Exposure' : 'ROI Score'}
@@ -291,9 +472,14 @@ const USMapSVG: React.FC<USMapSVGProps> = ({
             <stop offset="100%" stopColor={getThermalColor(100)} />
           </linearGradient>
         </defs>
-        <rect x="10" y="26" width="140" height="10" rx="2" fill="url(#legendGradient)" />
-        <text x="10" y="44" className="fill-gray-400" style={{ fontSize: '9px' }}>Cold</text>
-        <text x="150" y="44" className="fill-gray-400" style={{ fontSize: '9px' }} textAnchor="end">Hot</text>
+        <rect x="10" y="24" width="140" height="10" rx="2" fill="url(#legendGradient)" />
+        <text x="10" y="42" className="fill-gray-400" style={{ fontSize: '9px' }}>Cold</text>
+        <text x="150" y="42" className="fill-gray-400" style={{ fontSize: '9px' }} textAnchor="end">Hot</text>
+        {showRecruitingFlow && (
+          <text x="10" y="54" className="fill-gray-500" style={{ fontSize: '8px' }}>
+            ━━ Recruiting Flow (thickness = signed players)
+          </text>
+        )}
       </g>
     </svg>
   );
