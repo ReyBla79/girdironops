@@ -10,13 +10,13 @@ interface Message {
   actions?: { label: string; icon?: any; action: string; data?: any }[];
 }
 
-const CoachGPTPanel = () => {
+const OpsGMPanel = () => {
   const navigate = useNavigate();
   const { flags, players, addTask, userList, demoRole, addEvent } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi Coach! I'm CoachGPT — your recruiting assistant. I can help you:\n\n• Understand why a player is ranked highly\n• Find similar players who entered recently\n• Create tasks for your staff\n\nWhat would you like to know?",
+      content: "Hi Coach! I'm Ops GM — your recruiting assistant. I can help you:\n\n• Understand why a player is ranked highly\n• Find similar players who entered recently\n• Create tasks for your staff\n\nWhat would you like to know?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -54,7 +54,7 @@ const CoachGPTPanel = () => {
     // Log agent query
     addEvent({
       type: 'AGENT_QUERY',
-      message: `CoachGPT query: "${input}"`,
+      message: `Ops GM query: "${input}"`,
     });
 
     setTimeout(() => {
@@ -159,7 +159,7 @@ const CoachGPTPanel = () => {
         <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
           <Lock className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="font-display font-bold text-lg mb-2">CoachGPT Locked</h3>
+        <h3 className="font-display font-bold text-lg mb-2">Ops GM Locked</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Unlock AI-powered insights and task automation.
         </p>
@@ -178,7 +178,7 @@ const CoachGPTPanel = () => {
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <div>
-          <p className="font-semibold text-sm">CoachGPT</p>
+          <p className="font-semibold text-sm">Ops GM</p>
           <p className="text-xs text-muted-foreground">Demo Mode</p>
         </div>
       </div>
@@ -227,7 +227,7 @@ const CoachGPTPanel = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask about players..."
+            placeholder="Ask Ops GM..."
             className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:border-primary"
             disabled={isTyping}
           />
@@ -243,4 +243,4 @@ const CoachGPTPanel = () => {
   );
 };
 
-export default CoachGPTPanel;
+export default OpsGMPanel;
