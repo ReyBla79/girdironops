@@ -8,17 +8,35 @@ import { SEED_FILM_ANALYTICS } from '@/demo/filmData';
 import FeatureGateCard from '@/components/pipeline/FeatureGateCard';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', 'hsl(var(--destructive))'];
 
 const FilmAnalyticsPage = () => {
   const navigate = useNavigate();
   const { tiers } = useAppStore();
   const isPro = tiers.tier === 'GM' || tiers.tier === 'ELITE';
 
-  const runPassData = [
-    { name: 'Run', value: SEED_FILM_ANALYTICS.runPass.run },
-    { name: 'Pass', value: SEED_FILM_ANALYTICS.runPass.pass },
-  ];
+  // Transform analytics data for charts
+  const runPassData = SEED_FILM_ANALYTICS.runPass.map(item => ({
+    name: item.label,
+    value: item.value
+  }));
+
+  const conceptFreqData = SEED_FILM_ANALYTICS.conceptFreq.map(item => ({
+    concept: item.label,
+    count: item.value
+  }));
+
+  const defShellsData = SEED_FILM_ANALYTICS.defShells.map(item => ({
+    shell: item.label,
+    count: item.value
+  }));
+
+  // Calculate run direction totals for display
+  const runDirectionTotals = {
+    left: SEED_FILM_ANALYTICS.runDirectionHeat.reduce((sum, row) => sum + row[0], 0),
+    middle: SEED_FILM_ANALYTICS.runDirectionHeat.reduce((sum, row) => sum + row[1] + row[2], 0),
+    right: SEED_FILM_ANALYTICS.runDirectionHeat.reduce((sum, row) => sum + row[3], 0),
+  };
 
   return (
     <div className="space-y-6">
@@ -90,7 +108,7 @@ const FilmAnalyticsPage = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={SEED_FILM_ANALYTICS.conceptFreq}>
+                <BarChart data={conceptFreqData}>
                   <XAxis dataKey="concept" tick={{ fontSize: 10 }} />
                   <YAxis />
                   <Tooltip />
@@ -110,14 +128,14 @@ const FilmAnalyticsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-end h-32">
-                {Object.entries(SEED_FILM_ANALYTICS.runDirectionHeat).map(([dir, val]) => (
+                {Object.entries(runDirectionTotals).map(([dir, val]) => (
                   <div key={dir} className="flex flex-col items-center">
                     <div
                       className="w-12 bg-primary rounded-t"
-                      style={{ height: `${val * 2}px` }}
+                      style={{ height: `${val * 3}px` }}
                     />
                     <span className="text-xs mt-2 capitalize">{dir}</span>
-                    <span className="text-xs text-muted-foreground">{val}%</span>
+                    <span className="text-xs text-muted-foreground">{val}</span>
                   </div>
                 ))}
               </div>
@@ -134,7 +152,7 @@ const FilmAnalyticsPage = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={SEED_FILM_ANALYTICS.defShells} layout="vertical">
+                <BarChart data={defShellsData} layout="vertical">
                   <XAxis type="number" />
                   <YAxis dataKey="shell" type="category" tick={{ fontSize: 10 }} width={100} />
                   <Tooltip />
@@ -153,22 +171,24 @@ const FilmAnalyticsPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-1 text-center text-xs">
-                {['deep_left', 'deep_middle', 'deep_right', 'short_left', 'short_middle', 'short_right'].map((zone) => {
-                  const val = SEED_FILM_ANALYTICS.targetZoneHeat[zone] || 0;
-                  const opacity = Math.min(val / 25, 1);
-                  return (
-                    <div
-                      key={zone}
-                      className="aspect-square rounded flex items-center justify-center"
-                      style={{ backgroundColor: `hsl(var(--primary) / ${opacity})` }}
-                    >
-                      <span className="font-mono">{val}%</span>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-4 gap-1 text-center text-xs">
+                {SEED_FILM_ANALYTICS.targetZoneHeat.map((row, rowIdx) => (
+                  row.map((val, colIdx) => {
+                    const maxVal = Math.max(...SEED_FILM_ANALYTICS.targetZoneHeat.flat());
+                    const opacity = maxVal > 0 ? val / maxVal : 0;
+                    return (
+                      <div
+                        key={`${rowIdx}-${colIdx}`}
+                        className="aspect-square rounded flex items-center justify-center"
+                        style={{ backgroundColor: `hsl(var(--primary) / ${opacity})` }}
+                      >
+                        <span className="font-mono">{val}</span>
+                      </div>
+                    );
+                  })
+                ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">Deep → Short</p>
+              <p className="text-xs text-muted-foreground mt-2 text-center">Deep → Short (top to bottom)</p>
             </CardContent>
           </Card>
         </div>

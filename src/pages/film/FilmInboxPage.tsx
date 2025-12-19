@@ -19,9 +19,9 @@ const FilmInboxPage = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'PROCESSED':
+      case 'Processed':
         return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Processed</Badge>;
-      case 'PROCESSING':
+      case 'Processing':
         return <Badge variant="secondary"><Loader2 className="w-3 h-3 mr-1 animate-spin" />Processing</Badge>;
       default:
         return <Badge variant="outline"><AlertCircle className="w-3 h-3 mr-1" />Pending</Badge>;
@@ -85,23 +85,23 @@ const FilmInboxPage = () => {
             </TableHeader>
             <TableBody>
               {SEED_FILM_ASSETS.map((film) => (
-                <TableRow key={film.id}>
+                <TableRow key={film.filmId}>
                   <TableCell className="font-medium">{film.title}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{film.type}</Badge>
+                    <Badge variant="outline" className="capitalize">{film.type}</Badge>
                   </TableCell>
                   <TableCell>{film.opponent || '—'}</TableCell>
                   <TableCell>{film.date}</TableCell>
                   <TableCell>{film.angles.join(', ')}</TableCell>
                   <TableCell>{getStatusBadge(film.status)}</TableCell>
-                  <TableCell>{film.confidence > 0 ? `${film.confidence}%` : '—'}</TableCell>
+                  <TableCell>{film.confidence}</TableCell>
                   <TableCell>{film.playsDetected || '—'}</TableCell>
                   <TableCell>
-                    {film.status === 'PROCESSED' && (
+                    {film.status === 'Processed' && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/app/film/${film.id}`)}
+                        onClick={() => navigate(`/app/film/${film.filmId}`)}
                       >
                         Open Timeline
                       </Button>
