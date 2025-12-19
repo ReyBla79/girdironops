@@ -5,20 +5,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { SEED_REPORT_TEMPLATES, OPPONENT_OPTIONS } from '@/demo/filmData';
-import type { GeneratedReport } from '@/types/film';
+import { OPPONENT_OPTIONS } from '@/demo/filmData';
+import { useAppStore } from '@/store/useAppStore';
 
 const SITUATIONS = ['1st Down', '3rd Down', 'Red Zone', '2-Minute', 'Backed Up'];
 
 const ScoutReportPage = () => {
+  const { filmUI, generateScoutReportDemo, clearGeneratedReport } = useAppStore();
+  const generatedReport = filmUI.generatedReport;
+
   const [reportSettings, setReportSettings] = useState({
     opponent: OPPONENT_OPTIONS[0],
     situations: ['1st Down', '3rd Down'],
     includeClips: true,
   });
-  const [generatedReport, setGeneratedReport] = useState<GeneratedReport | null>(null);
 
   const toggleSituation = (sit: string) => {
     setReportSettings((prev) => ({
@@ -27,14 +29,6 @@ const ScoutReportPage = () => {
         ? prev.situations.filter((s) => s !== sit)
         : [...prev.situations, sit],
     }));
-  };
-
-  const handleGenerate = () => {
-    toast('Generating scout report (demo)...');
-    setTimeout(() => {
-      setGeneratedReport(SEED_REPORT_TEMPLATES.demoReport);
-      toast.success('Scout report generated!');
-    }, 1000);
   };
 
   return (
@@ -98,7 +92,7 @@ const ScoutReportPage = () => {
           </div>
 
           {/* Generate Button */}
-          <Button onClick={handleGenerate} className="w-full">
+          <Button onClick={generateScoutReportDemo} className="w-full">
             <FileText className="w-4 h-4 mr-2" />
             Generate Report (Demo)
           </Button>
@@ -110,10 +104,15 @@ const ScoutReportPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{generatedReport.title}</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => toast('Download started (demo)')}>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => toast('Download started (demo)')}>
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearGeneratedReport}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {generatedReport.sections.map((section, i) => (
