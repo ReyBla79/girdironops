@@ -10,6 +10,8 @@ import TierBanner from '@/components/pipeline/TierBanner';
 import { SEED_GEO_HEAT, SEED_PIPELINE_PINS, SEED_PIPELINE_ALERTS, SEED_STAFF_OWNERS, DEFAULT_PIPELINE_TIERS } from '@/demo/pipelineData';
 import type { PipelineTier } from '@/types/pipeline';
 
+type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
+
 const PipelineMapPage: React.FC = () => {
   const navigate = useNavigate();
   const [mapViewMode, setMapViewMode] = useState<'STATES' | 'PINS'>('STATES');
@@ -19,7 +21,7 @@ const PipelineMapPage: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [overlays, setOverlays] = useState({
     strength: true,
-    alerts: true,
+    alerts: false,
     budget: false,
     forecast: false,
     ownership: false,
@@ -27,6 +29,14 @@ const PipelineMapPage: React.FC = () => {
   });
 
   const currentTier: PipelineTier = DEFAULT_PIPELINE_TIERS.tier;
+
+  // Determine active overlay mode based on toggles
+  const activeOverlay: OverlayMode = useMemo(() => {
+    if (overlays.roi) return 'roi';
+    if (overlays.budget) return 'budget';
+    if (overlays.alerts) return 'alerts';
+    return 'strength';
+  }, [overlays]);
 
   const selectedGeo = useMemo(() => 
     SEED_GEO_HEAT.find(g => g.geoId === selectedGeoId) || null,
@@ -64,7 +74,21 @@ const PipelineMapPage: React.FC = () => {
   };
 
   const toggleOverlay = (key: keyof typeof overlays) => {
-    setOverlays(prev => ({ ...prev, [key]: !prev[key] }));
+    // For mutually exclusive overlays (strength, alerts, budget, roi)
+    const mutuallyExclusive = ['strength', 'alerts', 'budget', 'roi'];
+    if (mutuallyExclusive.includes(key)) {
+      setOverlays(prev => ({
+        ...prev,
+        strength: key === 'strength',
+        alerts: key === 'alerts',
+        budget: key === 'budget',
+        roi: key === 'roi',
+        forecast: prev.forecast,
+        ownership: prev.ownership,
+      }));
+    } else {
+      setOverlays(prev => ({ ...prev, [key]: !prev[key] }));
+    }
   };
 
   return (
@@ -106,11 +130,12 @@ const PipelineMapPage: React.FC = () => {
       />
 
       {/* Map Container */}
-      <div className="relative bg-card rounded-lg border border-border p-4 min-h-[500px]">
+      <div className="relative bg-card rounded-xl border border-border overflow-hidden min-h-[520px] shadow-2xl">
         <USMapSVG 
           geoHeat={SEED_GEO_HEAT}
           selectedGeoId={selectedGeoId}
           onStateClick={handleStateClick}
+          overlayMode={activeOverlay}
         />
         {mapViewMode === 'PINS' && (
           <PipelinePins pins={filteredPins} onPinClick={handlePinClick} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StatusBand } from '@/types/pipeline';
+import type { StatusBand, GeoHeat } from '@/types/pipeline';
 
 // US State paths - simplified for demo
 const US_STATES: Record<string, { path: string; cx: number; cy: number }> = {
@@ -55,28 +55,66 @@ const US_STATES: Record<string, { path: string; cx: number; cy: number }> = {
   WY: { path: "M260,170 L260,240 L350,240 L350,170 Z", cx: 305, cy: 205 },
 };
 
+type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
+
 interface USMapSVGProps {
-  geoHeat: { geoId: string; statusBand: StatusBand; energyScore: number }[];
+  geoHeat: GeoHeat[];
   selectedGeoId: string | null;
   onStateClick: (geoId: string) => void;
+  overlayMode?: OverlayMode;
 }
 
-const getHeatColor = (statusBand: StatusBand): string => {
-  switch (statusBand) {
-    case 'HOT': return 'hsl(var(--scarlet))';
-    case 'WARM': return 'hsl(var(--scarlet-dark))';
-    case 'NEUTRAL': return 'hsl(var(--unlv-gray))';
-    case 'COLD': return 'hsl(var(--unlv-gray-dark))';
-    case 'DEAD': return 'hsl(var(--muted))';
-    default: return 'hsl(var(--muted))';
+// Thermal color scale - from cold (blue) to hot (red/white)
+const getThermalColor = (value: number, max: number = 100): string => {
+  const normalized = Math.max(0, Math.min(1, value / max));
+  
+  // Cold (deep blue) -> Cool (cyan) -> Warm (yellow) -> Hot (orange) -> Blazing (red/white)
+  if (normalized < 0.2) {
+    // Deep blue to blue
+    const t = normalized / 0.2;
+    return `rgb(${Math.round(20 + t * 20)}, ${Math.round(40 + t * 60)}, ${Math.round(100 + t * 55)})`;
+  } else if (normalized < 0.4) {
+    // Blue to cyan/teal
+    const t = (normalized - 0.2) / 0.2;
+    return `rgb(${Math.round(40 + t * 20)}, ${Math.round(100 + t * 80)}, ${Math.round(155 - t * 55)})`;
+  } else if (normalized < 0.6) {
+    // Cyan to yellow
+    const t = (normalized - 0.4) / 0.2;
+    return `rgb(${Math.round(60 + t * 195)}, ${Math.round(180 + t * 55)}, ${Math.round(100 - t * 80)})`;
+  } else if (normalized < 0.8) {
+    // Yellow to orange
+    const t = (normalized - 0.6) / 0.2;
+    return `rgb(${Math.round(255)}, ${Math.round(235 - t * 100)}, ${Math.round(20 - t * 20)})`;
+  } else {
+    // Orange to red/white (blazing hot)
+    const t = (normalized - 0.8) / 0.2;
+    return `rgb(${Math.round(255)}, ${Math.round(135 - t * 100)}, ${Math.round(t * 80)})`;
   }
 };
 
-const getHeatOpacity = (energyScore: number): number => {
-  return Math.max(0.3, Math.min(1, energyScore / 100));
+const getOverlayValue = (geo: GeoHeat, mode: OverlayMode): number => {
+  switch (mode) {
+    case 'strength':
+      return geo.energyScore;
+    case 'alerts':
+      // Invert - more alerts = hotter (more attention needed)
+      return Math.min(100, geo.alertsOpen * 30 + (geo.statusBand === 'COLD' || geo.statusBand === 'DEAD' ? 40 : 0));
+    case 'budget':
+      // Normalize budget exposure (max ~500k in demo)
+      return Math.min(100, (geo.budgetExposure / 5000));
+    case 'roi':
+      return geo.roiScore;
+    default:
+      return geo.energyScore;
+  }
 };
 
-const USMapSVG: React.FC<USMapSVGProps> = ({ geoHeat, selectedGeoId, onStateClick }) => {
+const USMapSVG: React.FC<USMapSVGProps> = ({ 
+  geoHeat, 
+  selectedGeoId, 
+  onStateClick,
+  overlayMode = 'strength'
+}) => {
   const geoMap = new Map(geoHeat.map(g => [g.geoId, g]));
 
   return (
@@ -86,40 +124,109 @@ const USMapSVG: React.FC<USMapSVGProps> = ({ geoHeat, selectedGeoId, onStateClic
       style={{ maxHeight: '500px' }}
     >
       <defs>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        {/* Thermal glow filter */}
+        <filter id="thermalGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="8" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        
+        {/* Hot spot glow */}
+        <filter id="hotGlow">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
           <feMerge>
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
           </feMerge>
         </filter>
+
+        {/* Selection glow */}
+        <filter id="selectGlow">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feFlood floodColor="hsl(var(--primary))" floodOpacity="0.8"/>
+          <feComposite in2="blur" operator="in"/>
+          <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        {/* Radial gradient for thermal effect */}
+        <radialGradient id="thermalCenter" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+
+        {/* Background gradient */}
         <linearGradient id="mapBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(var(--background))" />
-          <stop offset="100%" stopColor="hsl(var(--card))" />
+          <stop offset="0%" stopColor="hsl(220, 20%, 8%)" />
+          <stop offset="100%" stopColor="hsl(220, 25%, 5%)" />
         </linearGradient>
+
+        {/* Grid pattern for thermal effect */}
+        <pattern id="thermalGrid" patternUnits="userSpaceOnUse" width="20" height="20">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
+        </pattern>
       </defs>
       
-      {/* Background */}
+      {/* Dark background */}
       <rect width="960" height="600" fill="url(#mapBg)" rx="8" />
-      
-      {/* States */}
+      <rect width="960" height="600" fill="url(#thermalGrid)" rx="8" />
+
+      {/* Thermal blur layer (background glow) */}
+      <g filter="url(#thermalGlow)" opacity="0.6">
+        {geoHeat.map(geo => {
+          const state = US_STATES[geo.geoId];
+          if (!state) return null;
+          const value = getOverlayValue(geo, overlayMode);
+          const color = getThermalColor(value);
+          return (
+            <path
+              key={`blur-${geo.geoId}`}
+              d={state.path}
+              fill={color}
+              opacity={0.4 + (value / 100) * 0.4}
+            />
+          );
+        })}
+      </g>
+
+      {/* States base layer */}
       {Object.entries(US_STATES).map(([stateId, { path }]) => {
         const geo = geoMap.get(stateId);
         const isSelected = selectedGeoId === stateId;
         const hasData = !!geo;
         
+        const value = hasData ? getOverlayValue(geo, overlayMode) : 0;
+        const color = hasData ? getThermalColor(value) : 'rgb(30, 35, 45)';
+        const isHot = value >= 75;
+        
         return (
-          <path
-            key={stateId}
-            d={path}
-            fill={hasData ? getHeatColor(geo.statusBand) : 'hsl(var(--muted))'}
-            fillOpacity={hasData ? getHeatOpacity(geo.energyScore) : 0.2}
-            stroke={isSelected ? 'hsl(var(--primary))' : 'hsl(var(--border))'}
-            strokeWidth={isSelected ? 3 : 1}
-            className={`transition-all duration-300 ${hasData ? 'cursor-pointer hover:brightness-110' : ''}`}
-            filter={isSelected ? 'url(#glow)' : undefined}
-            onClick={() => hasData && onStateClick(stateId)}
-          />
+          <g key={stateId}>
+            <path
+              d={path}
+              fill={color}
+              fillOpacity={hasData ? 0.7 + (value / 100) * 0.3 : 0.15}
+              stroke={isSelected ? 'hsl(var(--primary))' : hasData ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)'}
+              strokeWidth={isSelected ? 3 : 1}
+              className={`transition-all duration-500 ${hasData ? 'cursor-pointer' : ''}`}
+              filter={isSelected ? 'url(#selectGlow)' : isHot ? 'url(#hotGlow)' : undefined}
+              onClick={() => hasData && onStateClick(stateId)}
+              style={{
+                animation: isHot && hasData ? 'pulse 2s ease-in-out infinite' : undefined,
+              }}
+            />
+            {/* Hot spot center glow */}
+            {hasData && value >= 80 && (
+              <ellipse
+                cx={US_STATES[stateId].cx}
+                cy={US_STATES[stateId].cy}
+                rx="15"
+                ry="12"
+                fill="url(#thermalCenter)"
+                className="pointer-events-none animate-pulse"
+              />
+            )}
+          </g>
         );
       })}
       
@@ -127,31 +234,67 @@ const USMapSVG: React.FC<USMapSVGProps> = ({ geoHeat, selectedGeoId, onStateClic
       {geoHeat.map(geo => {
         const state = US_STATES[geo.geoId];
         if (!state) return null;
+        const value = getOverlayValue(geo, overlayMode);
+        const isHot = value >= 70;
+        
         return (
-          <g key={`label-${geo.geoId}`}>
+          <g key={`label-${geo.geoId}`} className="pointer-events-none">
+            {/* Label background for readability */}
+            <rect
+              x={state.cx - 16}
+              y={state.cy - 10}
+              width="32"
+              height="24"
+              rx="4"
+              fill="rgba(0,0,0,0.6)"
+              className="opacity-80"
+            />
             <text
               x={state.cx}
-              y={state.cy}
+              y={state.cy - 1}
               textAnchor="middle"
               dominantBaseline="middle"
-              className="fill-foreground text-xs font-bold pointer-events-none"
-              style={{ fontSize: '11px' }}
+              className={`text-xs font-bold ${isHot ? 'fill-white' : 'fill-gray-200'}`}
+              style={{ fontSize: '10px', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
             >
               {geo.geoId}
             </text>
             <text
               x={state.cx}
-              y={state.cy + 12}
+              y={state.cy + 9}
               textAnchor="middle"
               dominantBaseline="middle"
-              className="fill-muted-foreground text-xs pointer-events-none"
+              className={`text-xs font-semibold ${isHot ? 'fill-yellow-300' : 'fill-gray-400'}`}
               style={{ fontSize: '9px' }}
             >
-              {geo.energyScore}
+              {Math.round(value)}
             </text>
           </g>
         );
       })}
+
+      {/* Legend */}
+      <g transform="translate(30, 520)">
+        <rect x="0" y="0" width="200" height="50" rx="6" fill="rgba(0,0,0,0.7)" />
+        <text x="10" y="18" className="fill-gray-300" style={{ fontSize: '11px', fontWeight: 600 }}>
+          {overlayMode === 'strength' ? 'Energy Score' : 
+           overlayMode === 'alerts' ? 'Alert Intensity' :
+           overlayMode === 'budget' ? 'Budget Exposure' : 'ROI Score'}
+        </text>
+        {/* Color scale */}
+        <defs>
+          <linearGradient id="legendGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={getThermalColor(0)} />
+            <stop offset="25%" stopColor={getThermalColor(25)} />
+            <stop offset="50%" stopColor={getThermalColor(50)} />
+            <stop offset="75%" stopColor={getThermalColor(75)} />
+            <stop offset="100%" stopColor={getThermalColor(100)} />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="26" width="140" height="10" rx="2" fill="url(#legendGradient)" />
+        <text x="10" y="44" className="fill-gray-400" style={{ fontSize: '9px' }}>Cold</text>
+        <text x="150" y="44" className="fill-gray-400" style={{ fontSize: '9px' }} textAnchor="end">Hot</text>
+      </g>
     </svg>
   );
 };
