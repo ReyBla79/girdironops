@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer, PipelineTier } from '@/types';
 import type { BeforeAfterState } from '@/types/beforeAfter';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
@@ -28,6 +28,7 @@ interface AppStore extends AppState {
   logout: () => void;
   toggleFlag: (flag: keyof FeatureFlags) => void;
   resetFlags: () => void;
+  setTier: (tier: PipelineTier) => void;
   addEvent: (event: Omit<DemoEvent, 'id' | 'ts'>) => void;
   addTask: (task: Omit<Task, 'id' | 'ts'>) => void;
   updateTaskStatus: (taskId: string, status: Task['status']) => void;
@@ -55,6 +56,10 @@ export const useAppStore = create<AppStore>()(
       demoRole: null,
       programId: null,
       flags: DEFAULT_FLAGS,
+      tiers: {
+        tier: 'CORE' as PipelineTier,
+        tierOrder: ['CORE', 'GM', 'ELITE'] as PipelineTier[],
+      },
       players: SEED_PLAYERS,
       events: SEED_EVENTS,
       tasks: SEED_TASKS,
@@ -92,6 +97,13 @@ export const useAppStore = create<AppStore>()(
 
       resetFlags: () => {
         set({ flags: DEFAULT_FLAGS });
+      },
+
+      setTier: (tier) => {
+        set((state) => ({
+          tiers: { ...state.tiers, tier },
+          flags: { ...state.flags, tier },
+        }));
       },
 
       addEvent: (event) => {

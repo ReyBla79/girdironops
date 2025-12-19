@@ -76,6 +76,11 @@ export interface DemoUser {
 
 export type PipelineTier = 'CORE' | 'GM' | 'ELITE';
 
+export interface Tiers {
+  tier: PipelineTier;
+  tierOrder: PipelineTier[];
+}
+
 export interface FeatureFlags {
   base_platform: boolean;
   daily_brief: boolean;
@@ -293,6 +298,7 @@ export interface AppState {
   demoRole: Role | null;
   programId: string | null;
   flags: FeatureFlags;
+  tiers: Tiers;
   players: Player[];
   events: DemoEvent[];
   forecast: BudgetForecast;
