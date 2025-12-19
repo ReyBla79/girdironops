@@ -22,6 +22,8 @@ import BudgetSimulatorPage from "./pages/BudgetSimulatorPage";
 import ForecastPage from "./pages/ForecastPage";
 import GMCenterPage from "./pages/GMCenterPage";
 import PipelineMapPage from "./pages/PipelineMapPage";
+import PipelineListPage from "./pages/PipelineListPage";
+import PipelineDetailPage from "./pages/PipelineDetailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -151,7 +153,8 @@ const App = () => (
               }
             />
             <Route path="pipelines/map" element={<PipelineMapPage />} />
-            <Route path="pipelines" element={<PipelineMapPage />} />
+            <Route path="pipelines/:id" element={<PipelineDetailPage />} />
+            <Route path="pipelines" element={<PipelineListPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
