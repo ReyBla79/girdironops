@@ -27,6 +27,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   risk_heatmaps: true,
   gm_mode: true,
   wow_button: true,
+  tier: 'CORE',
 };
 
 export const DEMO_USERS: DemoUser[] = [
