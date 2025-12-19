@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { List, LayoutDashboard, Box, Layers } from 'lucide-react';
+import { List, LayoutDashboard } from 'lucide-react';
 import USMapSVG from '@/components/pipeline/USMapSVG';
 import USPipelineHeatMapWebGL_ESPN from '@/components/maps/USPipelineHeatMapWebGL_ESPN';
 import PipelineMapToolbar from '@/components/pipeline/PipelineMapToolbar';
@@ -120,27 +120,6 @@ const PipelineMapPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* 2D / 3D Toggle */}
-          <div className="flex rounded-lg border border-border overflow-hidden">
-            <Button 
-              variant={mapDimension === '2D' ? 'default' : 'ghost'} 
-              size="sm"
-              className="rounded-none"
-              onClick={() => setMapDimension('2D')}
-            >
-              <Layers className="w-4 h-4 mr-1" />
-              2D
-            </Button>
-            <Button 
-              variant={mapDimension === '3D' ? 'default' : 'ghost'} 
-              size="sm"
-              className="rounded-none"
-              onClick={() => setMapDimension('3D')}
-            >
-              <Box className="w-4 h-4 mr-1" />
-              3D
-            </Button>
-          </div>
           <Button variant="outline" onClick={() => navigate('/app/pipelines')}>
             <List className="w-4 h-4 mr-2" />
             Pipeline List
@@ -161,6 +140,8 @@ const PipelineMapPage: React.FC = () => {
       <PipelineMapToolbar
         mapViewMode={mapViewMode}
         setMapViewMode={setMapViewMode}
+        mapDimension={mapDimension}
+        setMapDimension={setMapDimension}
         positionFilter={positionFilter}
         setPositionFilter={setPositionFilter}
         search={search}

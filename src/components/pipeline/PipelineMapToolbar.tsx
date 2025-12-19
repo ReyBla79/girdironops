@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Map, MapPin, Search, Lock } from 'lucide-react';
+import { Map, MapPin, Search, Lock, Layers, Box } from 'lucide-react';
 import type { PipelineTier } from '@/types/pipeline';
 
 interface OverlaysState {
@@ -18,6 +18,8 @@ interface OverlaysState {
 interface PipelineMapToolbarProps {
   mapViewMode: 'STATES' | 'PINS';
   setMapViewMode: (mode: 'STATES' | 'PINS') => void;
+  mapDimension: '2D' | '3D';
+  setMapDimension: (mode: '2D' | '3D') => void;
   positionFilter: string;
   setPositionFilter: (filter: string) => void;
   search: string;
@@ -43,6 +45,8 @@ const POSITION_OPTIONS = [
 const PipelineMapToolbar: React.FC<PipelineMapToolbarProps> = ({
   mapViewMode,
   setMapViewMode,
+  mapDimension,
+  setMapDimension,
   positionFilter,
   setPositionFilter,
   search,
@@ -67,27 +71,51 @@ const PipelineMapToolbar: React.FC<PipelineMapToolbarProps> = ({
 
   return (
     <div className="flex flex-wrap items-center gap-3 p-4 bg-card rounded-lg border border-border mb-4">
-      {/* View Mode Toggle */}
+      {/* 2D/3D Map Mode Toggle */}
       <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
         <Button
-          variant={mapViewMode === 'STATES' ? 'default' : 'ghost'}
+          variant={mapDimension === '2D' ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => setMapViewMode('STATES')}
+          onClick={() => setMapDimension('2D')}
           className="gap-1"
         >
-          <Map className="w-4 h-4" />
-          States
+          <Layers className="w-4 h-4" />
+          2D
         </Button>
         <Button
-          variant={mapViewMode === 'PINS' ? 'default' : 'ghost'}
+          variant={mapDimension === '3D' ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => setMapViewMode('PINS')}
+          onClick={() => setMapDimension('3D')}
           className="gap-1"
         >
-          <MapPin className="w-4 h-4" />
-          Pins
+          <Box className="w-4 h-4" />
+          3D
         </Button>
       </div>
+
+      {/* View Mode Toggle (2D only) */}
+      {mapDimension === '2D' && (
+        <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
+          <Button
+            variant={mapViewMode === 'STATES' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setMapViewMode('STATES')}
+            className="gap-1"
+          >
+            <Map className="w-4 h-4" />
+            States
+          </Button>
+          <Button
+            variant={mapViewMode === 'PINS' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setMapViewMode('PINS')}
+            className="gap-1"
+          >
+            <MapPin className="w-4 h-4" />
+            Pins
+          </Button>
+        </div>
+      )}
 
       {/* Overlays */}
       <div className="flex items-center gap-2 flex-wrap">
