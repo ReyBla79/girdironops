@@ -21,6 +21,7 @@ import BudgetPage from "./pages/BudgetPage";
 import BudgetSimulatorPage from "./pages/BudgetSimulatorPage";
 import ForecastPage from "./pages/ForecastPage";
 import GMCenterPage from "./pages/GMCenterPage";
+import PipelineMapPage from "./pages/PipelineMapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -149,6 +150,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="pipelines/map" element={<PipelineMapPage />} />
+            <Route path="pipelines" element={<PipelineMapPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
