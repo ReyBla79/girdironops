@@ -16,6 +16,7 @@ import {
   FlaskConical,
   Network,
   Wallet,
+  Film,
   LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { to: '/app/gm', icon: LayoutDashboard, label: 'GM Center', flag: 'gm_mode' },
   { to: '/app/pipelines/map', icon: Target, label: 'Recruiting Radar', flag: null },
   { to: '/app/portal', icon: Radio, label: 'Portal Live', flag: 'portal_live' },
+  { to: '/app/film', icon: Film, label: 'Film Inbox', flag: null },
   { to: '/app/players', icon: Users, label: 'Players', flag: 'players_module' },
   { to: '/app/roster', icon: ClipboardList, label: 'Roster', flag: 'roster_module' },
   { to: '/app/fit-lab', icon: FlaskConical, label: 'Fit Lab', flag: 'fit_lab' },

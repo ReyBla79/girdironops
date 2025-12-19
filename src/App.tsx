@@ -26,6 +26,15 @@ import PipelineListPage from "./pages/PipelineListPage";
 import PipelineDetailPage from "./pages/PipelineDetailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+// Film Intelligence pages
+import FilmInboxPage from "./pages/film/FilmInboxPage";
+import GameTimelinePage from "./pages/film/GameTimelinePage";
+import PlayDetailPage from "./pages/film/PlayDetailPage";
+import FilmAnalyticsPage from "./pages/film/FilmAnalyticsPage";
+import ScoutReportPage from "./pages/film/ScoutReportPage";
+import OpsGMFilmPage from "./pages/film/OpsGMFilmPage";
+import PlayerDevPage from "./pages/film/PlayerDevPage";
+import FilmSettingsPage from "./pages/film/FilmSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -155,6 +164,15 @@ const App = () => (
             <Route path="pipelines/map" element={<PipelineMapPage />} />
             <Route path="pipelines/:id" element={<PipelineDetailPage />} />
             <Route path="pipelines" element={<PipelineListPage />} />
+            {/* Film Intelligence routes */}
+            <Route path="film" element={<FilmInboxPage />} />
+            <Route path="film/:filmId" element={<GameTimelinePage />} />
+            <Route path="film/play/:playId" element={<PlayDetailPage />} />
+            <Route path="film/analytics" element={<FilmAnalyticsPage />} />
+            <Route path="film/report" element={<ScoutReportPage />} />
+            <Route path="film/opsgm" element={<OpsGMFilmPage />} />
+            <Route path="film/player-dev" element={<PlayerDevPage />} />
+            <Route path="film/settings" element={<FilmSettingsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
