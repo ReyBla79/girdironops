@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import CoachGPTPanel from '@/components/CoachGPTPanel';
+import OpsGMPanel from '@/components/OpsGMPanel';
 
 const NAV_ITEMS = [
   { to: '/app/today', icon: Calendar, label: 'Today', flag: 'daily_brief' },
@@ -165,25 +165,25 @@ const AppShell = () => {
             <Outlet />
           </main>
 
-          {/* CoachGPT Panel - Desktop */}
+          {/* Ops GM Panel - Desktop */}
           <div className="hidden lg:block w-80 border-l border-border bg-card overflow-auto">
-            <CoachGPTPanel />
+            <OpsGMPanel />
           </div>
         </div>
       </div>
 
-      {/* CoachGPT Panel - Mobile */}
+      {/* Ops GM Panel - Mobile */}
       {gptOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setGptOpen(false)} />
           <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-card border-l border-border overflow-auto">
             <div className="p-4 border-b border-border flex items-center justify-between">
-              <span className="font-semibold">CoachGPT</span>
+              <span className="font-semibold">Ops GM</span>
               <button onClick={() => setGptOpen(false)}>
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <CoachGPTPanel />
+            <OpsGMPanel />
           </div>
         </div>
       )}
