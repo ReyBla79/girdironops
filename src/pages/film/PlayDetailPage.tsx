@@ -6,7 +6,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Play, Lock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
-import { SEED_PLAYS } from '@/demo/filmData';
+import { 
+  getEnrichedPlay, 
+  SEED_PLAY_TAGS, 
+  SEED_AI_NOTES_BY_PLAY, 
+  SEED_RECOMMENDED_ACTIONS_BY_PLAY,
+  SEED_TRACKING_BY_PLAY,
+  SEED_ASSIGNMENT_INFERENCE_BY_PLAY,
+  SEED_FILM_PLAYERS
+} from '@/demo/filmData';
 import { useAppStore } from '@/store/useAppStore';
 import FeatureGateCard from '@/components/pipeline/FeatureGateCard';
 
@@ -20,9 +28,22 @@ const PlayDetailPage = () => {
     showAssignments: false,
   });
 
-  const play = SEED_PLAYS.find((p) => p.playId === playId);
+  const play = getEnrichedPlay(playId || '');
   const isPro = tiers.tier === 'GM' || tiers.tier === 'ELITE';
   const isElite = tiers.tier === 'ELITE';
+
+  // Get enriched data
+  const tags = SEED_PLAY_TAGS[playId || ''] || [];
+  const aiNotes = SEED_AI_NOTES_BY_PLAY[playId || ''] || [];
+  const recommendedActions = SEED_RECOMMENDED_ACTIONS_BY_PLAY[playId || ''] || [];
+  const tracking = SEED_TRACKING_BY_PLAY[playId || ''];
+  const assignmentInference = SEED_ASSIGNMENT_INFERENCE_BY_PLAY[playId || ''];
+
+  // Helper to get player name
+  const getPlayerName = (playerId: string) => {
+    const player = SEED_FILM_PLAYERS.find(p => p.playerId === playerId);
+    return player?.name || playerId;
+  };
 
   if (!play) {
     return (
@@ -130,10 +151,11 @@ const PlayDetailPage = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {play.tags.map((tag) => (
-                <Badge key={tag} variant="outline">{tag}</Badge>
+              {tags.map((tag, i) => (
+                <Badge key={i} variant="outline">{tag.tag}</Badge>
               ))}
               <Badge variant="outline">{play.defShell}</Badge>
+              <Badge variant="outline">{play.formation}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -143,7 +165,17 @@ const PlayDetailPage = () => {
             <CardTitle className="text-sm">Ops GM Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{play.aiNotes}</p>
+            {aiNotes.length > 0 ? (
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {aiNotes.map((note, i) => (
+                  <li key={i}>• {note}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {play.result.type} for {play.result.yards} yards
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -153,16 +185,20 @@ const PlayDetailPage = () => {
           </CardHeader>
           <CardContent>
             <ul className="text-sm space-y-1">
-              {play.recommendedActions.map((action, i) => (
-                <li key={i} className="text-muted-foreground">• {action}</li>
-              ))}
+              {recommendedActions.length > 0 ? (
+                recommendedActions.map((action, i) => (
+                  <li key={i} className="text-muted-foreground">• {action}</li>
+                ))
+              ) : (
+                <li className="text-muted-foreground">• Review play execution</li>
+              )}
             </ul>
           </CardContent>
         </Card>
       </div>
 
       {/* Tracking Summary (PRO) */}
-      {isPro && play.trackingSummary && (
+      {isPro && tracking && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
@@ -171,55 +207,76 @@ const PlayDetailPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Avg Speed</p>
-                <p className="text-lg font-semibold">{play.trackingSummary.avgSpeed} mph</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Max Speed</p>
-                <p className="text-lg font-semibold">{play.trackingSummary.maxSpeed} mph</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Distance</p>
-                <p className="text-lg font-semibold">{play.trackingSummary.totalDistance} yds</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Top Performer</p>
-                <p className="text-sm">{play.trackingSummary.topPlayer}</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {tracking.summary.teamMaxSpeedYdsPerSec && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Team Max Speed</p>
+                  <p className="text-lg font-semibold">{tracking.summary.teamMaxSpeedYdsPerSec} yds/s</p>
+                </div>
+              )}
+              {tracking.summary.rbMaxSpeedYdsPerSec && (
+                <div>
+                  <p className="text-xs text-muted-foreground">RB Max Speed</p>
+                  <p className="text-lg font-semibold">{tracking.summary.rbMaxSpeedYdsPerSec} yds/s</p>
+                </div>
+              )}
+              {tracking.summary.qbTimeToThrowSec && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Time to Throw</p>
+                  <p className="text-lg font-semibold">{tracking.summary.qbTimeToThrowSec}s</p>
+                </div>
+              )}
+              {tracking.summary.separationAtTargetYards && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Separation</p>
+                  <p className="text-lg font-semibold">{tracking.summary.separationAtTargetYards} yds</p>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Player Tracking</p>
+              {tracking.players.map((p, i) => (
+                <div key={i} className="flex justify-between items-center text-sm bg-muted/50 px-3 py-2 rounded">
+                  <span className="font-medium">{getPlayerName(p.playerId)}</span>
+                  <span className="text-muted-foreground">
+                    Max: {p.maxSpeed} yds/s • Dist: {p.distance} yds
+                  </span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Assignment Inference (ELITE) */}
-      {isElite && play.assignmentInference && (
+      {isElite && assignmentInference && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               Assignment Inference
               <Badge className="bg-amber-600">ELITE</Badge>
-              {play.assignmentInference.bustDetected ? (
-                <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Bust Detected</Badge>
+              {assignmentInference.flags.length > 0 ? (
+                <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Bust Risk</Badge>
               ) : (
                 <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Clean</Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {play.assignmentInference.bustReason && (
-              <p className="text-sm text-destructive mb-3">{play.assignmentInference.bustReason}</p>
-            )}
-            <div className="space-y-2">
-              {play.assignmentInference.assignments.map((a, i) => (
-                <div key={i} className="flex justify-between items-center text-sm">
-                  <span>{a.player}</span>
-                  <span className="text-muted-foreground">{a.task}</span>
-                  <Badge variant="outline">{a.grade}</Badge>
+            <div className="space-y-3">
+              {assignmentInference.notes.map((note, i) => (
+                <p key={i} className="text-sm text-muted-foreground">• {note}</p>
+              ))}
+              {assignmentInference.flags.map((flag, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>{getPlayerName(flag.playerId)}: {flag.reason}</span>
                 </div>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Confidence: {Math.round(assignmentInference.confidence * 100)}%
+            </p>
           </CardContent>
         </Card>
       )}

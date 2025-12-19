@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { SEED_GENERATED_REPORT, OPPONENT_OPTIONS } from '@/demo/filmData';
+import { SEED_REPORT_TEMPLATES, OPPONENT_OPTIONS } from '@/demo/filmData';
 import type { GeneratedReport } from '@/types/film';
 
 const SITUATIONS = ['1st Down', '3rd Down', 'Red Zone', '2-Minute', 'Backed Up'];
@@ -32,7 +32,7 @@ const ScoutReportPage = () => {
   const handleGenerate = () => {
     toast('Generating scout report (demo)...');
     setTimeout(() => {
-      setGeneratedReport(SEED_GENERATED_REPORT);
+      setGeneratedReport(SEED_REPORT_TEMPLATES.demoReport);
       toast.success('Scout report generated!');
     }, 1000);
   };
@@ -130,7 +130,7 @@ const ScoutReportPage = () => {
               </div>
             ))}
             <p className="text-xs text-muted-foreground border-t pt-4">
-              Generated: {new Date(generatedReport.generatedAt).toLocaleString()}
+              Generated: {new Date().toLocaleString()}
             </p>
           </CardContent>
         </Card>

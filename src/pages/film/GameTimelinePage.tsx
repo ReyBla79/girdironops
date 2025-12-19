@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Plus, FileText, Play as PlayIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { SEED_FILM_ASSETS, SEED_PLAYS } from '@/demo/filmData';
+import { SEED_FILM_ASSETS, getPlaysForFilm, SEED_PLAY_TAGS, SEED_AI_NOTES_BY_PLAY, PLAY_TYPE_OPTIONS } from '@/demo/filmData';
 
 const GameTimelinePage = () => {
   const { filmId } = useParams();
@@ -20,10 +20,11 @@ const GameTimelinePage = () => {
   });
   const [cutup, setCutup] = useState<string[]>([]);
 
-  const film = SEED_FILM_ASSETS.find((f) => f.id === filmId);
-  const plays = SEED_PLAYS.filter((p) => p.filmId === filmId);
+  const film = SEED_FILM_ASSETS.find((f) => f.filmId === filmId);
+  const plays = getPlaysForFilm(filmId || '');
 
   const filteredPlays = plays.filter((play) => {
+    if (!play) return false;
     if (filters.quarter !== 'ALL' && play.quarter !== parseInt(filters.quarter)) return false;
     if (filters.down !== 'ALL' && play.down !== parseInt(filters.down)) return false;
     if (filters.playType !== 'ALL' && play.aiPlayType !== filters.playType) return false;
@@ -97,10 +98,9 @@ const GameTimelinePage = () => {
                 <SelectValue placeholder="Play Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All Types</SelectItem>
-                <SelectItem value="RUN">Run</SelectItem>
-                <SelectItem value="PASS">Pass</SelectItem>
-                <SelectItem value="RPO">RPO</SelectItem>
+                {PLAY_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt} value={opt}>{opt === 'ALL' ? 'All Types' : opt}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -116,57 +116,66 @@ const GameTimelinePage = () => {
 
       {/* Play Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {filteredPlays.map((play) => (
-          <Card key={play.playId} className="hover:border-primary/50 transition-colors">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    Q{play.quarter} {play.clock} • {play.down}&{play.distance} @ {play.yardline}
-                  </p>
-                  <h3 className="font-semibold text-lg">{play.aiConcept}</h3>
+        {filteredPlays.map((play) => {
+          if (!play) return null;
+          const tags = SEED_PLAY_TAGS[play.playId] || [];
+          const aiNotes = SEED_AI_NOTES_BY_PLAY[play.playId] || [];
+          
+          return (
+            <Card key={play.playId} className="hover:border-primary/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="font-mono text-sm text-muted-foreground">
+                      Q{play.quarter} {play.clock} • {play.down}&{play.distance} @ {play.yardline}
+                    </p>
+                    <h3 className="font-semibold text-lg">{play.aiConcept}</h3>
+                  </div>
+                  <Badge variant={play.aiPlayType === 'RUN' ? 'default' : 'secondary'}>
+                    {play.aiPlayType}
+                  </Badge>
                 </div>
-                <Badge variant={play.aiPlayType === 'RUN' ? 'default' : 'secondary'}>
-                  {play.aiPlayType}
-                </Badge>
-              </div>
 
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="outline">{play.defShell}</Badge>
-                {play.tags.slice(0, 2).map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                ))}
-              </div>
-
-              <p className="text-sm text-muted-foreground mb-3">{play.aiNotes}</p>
-
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Confidence: {play.confidence}%
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => addToCutup(play.playId)}
-                    disabled={cutup.includes(play.playId)}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Cutup
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => navigate(`/app/film/play/${play.playId}`)}
-                  >
-                    <PlayIcon className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Badge variant="outline">{play.defShell}</Badge>
+                  <Badge variant="outline">{play.formation}</Badge>
+                  {tags.slice(0, 2).map((tag, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">{tag.tag}</Badge>
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                <p className="text-sm text-muted-foreground mb-3">
+                  {aiNotes[0] || `${play.result.type} for ${play.result.yards} yards`}
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Confidence: {Math.round(play.confidence * 100)}%
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => addToCutup(play.playId)}
+                      disabled={cutup.includes(play.playId)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Cutup
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => navigate(`/app/film/play/${play.playId}`)}
+                    >
+                      <PlayIcon className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Cutup Builder Dock */}
@@ -178,7 +187,7 @@ const GameTimelinePage = () => {
           <CardContent className="space-y-2">
             <div className="text-xs text-muted-foreground max-h-20 overflow-auto">
               {cutup.map((id) => {
-                const p = plays.find((pl) => pl.playId === id);
+                const p = plays.find((pl) => pl?.playId === id);
                 return <div key={id}>{p?.aiConcept} (Q{p?.quarter})</div>;
               })}
             </div>
