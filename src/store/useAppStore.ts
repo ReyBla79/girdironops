@@ -1,16 +1,30 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer, PipelineTier } from '@/types';
+import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer, PipelineTier, FilmUIState } from '@/types';
 import type { BeforeAfterState } from '@/types/beforeAfter';
+import type { FilmTimelineFilters } from '@/types/film';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
 import { CALCULATOR_CONFIG } from '@/demo/calculatorConfig';
+import { SEED_REPORT_TEMPLATES } from '@/demo/filmData';
 import {
   findReplacementCandidate,
   calculatePlayerCost,
   generateBeforeAfterSummary
 } from '@/lib/budgetCalculator';
+
+// Default film UI state
+const DEFAULT_FILM_UI: FilmUIState = {
+  filmTimelineFilters: {
+    quarter: 'ALL',
+    down: 'ALL',
+    playType: 'ALL',
+    concept: '',
+  },
+  cutupPlays: [],
+  generatedReport: null,
+};
 const DEFAULT_WOW_SCENARIO: WowScenario = {
   id: 'wow1',
   label: 'One-Click WOW: Fix OL Depth + Keep Budget Clean',
@@ -45,6 +59,13 @@ interface AppStore extends AppState {
   closeWowModal: () => void;
   applySimulation: () => void;
   undoSimulation: () => void;
+  // Film Intelligence actions
+  addPlayToCutup: (playId: string) => void;
+  removePlayFromCutup: (playId: string) => void;
+  clearCutup: () => void;
+  setFilmTimelineFilters: (filters: Partial<FilmTimelineFilters>) => void;
+  generateScoutReportDemo: () => void;
+  clearGeneratedReport: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -80,6 +101,7 @@ export const useAppStore = create<AppStore>()(
       wowScenario: DEFAULT_WOW_SCENARIO,
       wowModalOpen: false,
       beforeAfter: null,
+      filmUI: DEFAULT_FILM_UI,
 
       login: (role, programId) => {
         set({ demoAuthed: true, demoRole: role, programId });
@@ -236,6 +258,7 @@ export const useAppStore = create<AppStore>()(
           uiMode: 'COACH',
           wowModalOpen: false,
           beforeAfter: null,
+          filmUI: DEFAULT_FILM_UI,
         });
       },
 
@@ -371,6 +394,67 @@ export const useAppStore = create<AppStore>()(
 
       undoSimulation: () => {
         set({ beforeAfter: null, wowModalOpen: false });
+      },
+
+      // Film Intelligence actions
+      addPlayToCutup: (playId) => {
+        set((state) => {
+          if (state.filmUI.cutupPlays.includes(playId)) return state;
+          return {
+            filmUI: {
+              ...state.filmUI,
+              cutupPlays: [...state.filmUI.cutupPlays, playId],
+            },
+          };
+        });
+      },
+
+      removePlayFromCutup: (playId) => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            cutupPlays: state.filmUI.cutupPlays.filter((id) => id !== playId),
+          },
+        }));
+      },
+
+      clearCutup: () => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            cutupPlays: [],
+          },
+        }));
+      },
+
+      setFilmTimelineFilters: (filters) => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            filmTimelineFilters: {
+              ...state.filmUI.filmTimelineFilters,
+              ...filters,
+            },
+          },
+        }));
+      },
+
+      generateScoutReportDemo: () => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            generatedReport: SEED_REPORT_TEMPLATES.demoReport,
+          },
+        }));
+      },
+
+      clearGeneratedReport: () => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            generatedReport: null,
+          },
+        }));
       },
     }),
     {

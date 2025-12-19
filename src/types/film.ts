@@ -4,6 +4,13 @@ export type PlayType = 'RUN' | 'PASS' | 'RPO' | 'PA' | 'SCREEN' | 'ST';
 export type TrendDirection = 'UP' | 'DOWN' | 'FLAT';
 export type TagSource = 'ai' | 'coach';
 
+export interface FilmTimelineFilters {
+  quarter: string;
+  down: string;
+  playType: string;
+  concept: string;
+}
+
 export interface FilmAsset {
   filmId: string;
   title: string;

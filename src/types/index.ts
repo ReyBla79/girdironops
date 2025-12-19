@@ -292,6 +292,13 @@ export interface OutreachLog {
 }
 
 import type { BeforeAfterState as BeforeAfterStateType } from './beforeAfter';
+import type { GeneratedReport, FilmTimelineFilters } from './film';
+
+export interface FilmUIState {
+  filmTimelineFilters: FilmTimelineFilters;
+  cutupPlays: string[];
+  generatedReport: GeneratedReport | null;
+}
 
 export interface AppState {
   demoAuthed: boolean;
@@ -319,4 +326,6 @@ export interface AppState {
   wowScenario: WowScenario;
   wowModalOpen: boolean;
   beforeAfter: BeforeAfterStateType | null;
+  // Film Intelligence state
+  filmUI: FilmUIState;
 }
