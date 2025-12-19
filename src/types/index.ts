@@ -292,12 +292,15 @@ export interface OutreachLog {
 }
 
 import type { BeforeAfterState as BeforeAfterStateType } from './beforeAfter';
-import type { GeneratedReport, FilmTimelineFilters } from './film';
+import type { GeneratedReport, FilmTimelineFilters, PlayOverlays } from './film';
 
 export interface FilmUIState {
   filmTimelineFilters: FilmTimelineFilters;
   cutupPlays: string[];
   generatedReport: GeneratedReport | null;
+  selectedFilmId: string | null;
+  selectedPlayId: string | null;
+  playOverlays: PlayOverlays;
 }
 
 export interface AppState {

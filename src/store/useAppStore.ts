@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { toast } from 'sonner';
 import { AppState, Player, DemoEvent, Task, Role, FeatureFlags, PositionGroup, ContactAccessRequest, OutreachLog, UIMode, WowScenario, RosterPlayer, PipelineTier, FilmUIState } from '@/types';
 import type { BeforeAfterState } from '@/types/beforeAfter';
-import type { FilmTimelineFilters } from '@/types/film';
+import type { FilmTimelineFilters, PlayOverlays } from '@/types/film';
 import { DEFAULT_FLAGS, DEMO_USERS, SEED_PLAYERS, SEED_EVENTS, SEED_TASKS, DEMO_PROGRAM_DNA, ADDITIONAL_PLAYER_NAMES, POSITIONS, ORIGINS } from '@/demo/demoData';
 import { SEED_ROSTER, SEED_NEEDS, SEED_BUDGET, ROSTER_META, SEED_FORECAST, SEED_RISK_HEATMAP } from '@/demo/rosterData';
 import { SEED_COACHES } from '@/demo/coachData';
@@ -24,6 +25,13 @@ const DEFAULT_FILM_UI: FilmUIState = {
   },
   cutupPlays: [],
   generatedReport: null,
+  selectedFilmId: null,
+  selectedPlayId: null,
+  playOverlays: {
+    showTracks: false,
+    showSpeedTrails: false,
+    showAssignments: false,
+  },
 };
 const DEFAULT_WOW_SCENARIO: WowScenario = {
   id: 'wow1',
@@ -66,6 +74,9 @@ interface AppStore extends AppState {
   setFilmTimelineFilters: (filters: Partial<FilmTimelineFilters>) => void;
   generateScoutReportDemo: () => void;
   clearGeneratedReport: () => void;
+  setSelectedFilm: (filmId: string | null) => void;
+  setSelectedPlay: (playId: string | null) => void;
+  setPlayOverlays: (overlays: Partial<PlayOverlays>) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -398,15 +409,18 @@ export const useAppStore = create<AppStore>()(
 
       // Film Intelligence actions
       addPlayToCutup: (playId) => {
-        set((state) => {
-          if (state.filmUI.cutupPlays.includes(playId)) return state;
-          return {
-            filmUI: {
-              ...state.filmUI,
-              cutupPlays: [...state.filmUI.cutupPlays, playId],
-            },
-          };
-        });
+        const state = get();
+        if (state.filmUI.cutupPlays.includes(playId)) {
+          toast.info('Play already in cutup.');
+          return;
+        }
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            cutupPlays: [...state.filmUI.cutupPlays, playId],
+          },
+        }));
+        toast.success('Added play to cutup (demo).');
       },
 
       removePlayFromCutup: (playId) => {
@@ -416,6 +430,7 @@ export const useAppStore = create<AppStore>()(
             cutupPlays: state.filmUI.cutupPlays.filter((id) => id !== playId),
           },
         }));
+        toast.info('Removed play from cutup.');
       },
 
       clearCutup: () => {
@@ -425,6 +440,7 @@ export const useAppStore = create<AppStore>()(
             cutupPlays: [],
           },
         }));
+        toast.info('Cutup cleared.');
       },
 
       setFilmTimelineFilters: (filters) => {
@@ -440,12 +456,17 @@ export const useAppStore = create<AppStore>()(
       },
 
       generateScoutReportDemo: () => {
+        const template = SEED_REPORT_TEMPLATES.demoReport || {
+          title: 'Opponent Scout Report (Demo)',
+          sections: [{ heading: 'No template found', bullets: ['Add store.reportTemplates.demoReport to seed data.'] }],
+        };
         set((state) => ({
           filmUI: {
             ...state.filmUI,
-            generatedReport: SEED_REPORT_TEMPLATES.demoReport,
+            generatedReport: template,
           },
         }));
+        toast.success('Scout report generated (demo).');
       },
 
       clearGeneratedReport: () => {
@@ -453,6 +474,49 @@ export const useAppStore = create<AppStore>()(
           filmUI: {
             ...state.filmUI,
             generatedReport: null,
+          },
+        }));
+      },
+
+      setSelectedFilm: (filmId) => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            selectedFilmId: filmId,
+            filmTimelineFilters: state.filmUI.filmTimelineFilters || {
+              quarter: 'ALL',
+              down: 'ALL',
+              playType: 'ALL',
+              concept: '',
+            },
+          },
+        }));
+        toast.info(filmId ? `Selected film: ${filmId}` : 'Film cleared.');
+      },
+
+      setSelectedPlay: (playId) => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            selectedPlayId: playId,
+            playOverlays: state.filmUI.playOverlays || {
+              showTracks: false,
+              showSpeedTrails: false,
+              showAssignments: false,
+            },
+          },
+        }));
+        toast.info(playId ? `Selected play: ${playId}` : 'Play cleared.');
+      },
+
+      setPlayOverlays: (overlays) => {
+        set((state) => ({
+          filmUI: {
+            ...state.filmUI,
+            playOverlays: {
+              ...state.filmUI.playOverlays,
+              ...overlays,
+            },
           },
         }));
       },
