@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { List, LayoutDashboard } from 'lucide-react';
+import { List, LayoutDashboard, Box, Layers } from 'lucide-react';
 import USMapSVG from '@/components/pipeline/USMapSVG';
+import USPipelineHeatMapWebGL_ESPN from '@/components/maps/USPipelineHeatMapWebGL_ESPN';
 import PipelineMapToolbar from '@/components/pipeline/PipelineMapToolbar';
 import PipelinePins from '@/components/pipeline/PipelinePins';
 import MapDrawer from '@/components/pipeline/MapDrawer';
@@ -13,10 +14,25 @@ import { SEED_GEO_HEAT, SEED_PIPELINE_PINS, SEED_PIPELINE_ALERTS, SEED_STAFF_OWN
 
 type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
 
+// ESPN Theme for 3D map
+const ESPN_THEME = {
+  palette: {
+    bg: '#05060a',
+    glass: 'rgba(20,25,35,0.85)',
+    rim: '#39b6ff',
+    hot: '#ff4136',
+    warm: '#ff851b',
+    neutral: '#ffdc00',
+    cold: '#0074d9',
+    dead: '#2d3748',
+  },
+};
+
 const PipelineMapPage: React.FC = () => {
   const navigate = useNavigate();
   const { tiers } = useAppStore();
   const [mapViewMode, setMapViewMode] = useState<'STATES' | 'PINS'>('STATES');
+  const [mapDimension, setMapDimension] = useState<'2D' | '3D'>('2D');
   const [positionFilter, setPositionFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [selectedGeoId, setSelectedGeoId] = useState<string | null>(null);
@@ -104,6 +120,27 @@ const PipelineMapPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          {/* 2D / 3D Toggle */}
+          <div className="flex rounded-lg border border-border overflow-hidden">
+            <Button 
+              variant={mapDimension === '2D' ? 'default' : 'ghost'} 
+              size="sm"
+              className="rounded-none"
+              onClick={() => setMapDimension('2D')}
+            >
+              <Layers className="w-4 h-4 mr-1" />
+              2D
+            </Button>
+            <Button 
+              variant={mapDimension === '3D' ? 'default' : 'ghost'} 
+              size="sm"
+              className="rounded-none"
+              onClick={() => setMapDimension('3D')}
+            >
+              <Box className="w-4 h-4 mr-1" />
+              3D
+            </Button>
+          </div>
           <Button variant="outline" onClick={() => navigate('/app/pipelines')}>
             <List className="w-4 h-4 mr-2" />
             Pipeline List
@@ -135,16 +172,27 @@ const PipelineMapPage: React.FC = () => {
 
       {/* Map Container */}
       <div className="relative bg-card rounded-xl border border-border overflow-hidden min-h-[520px] shadow-2xl">
-        <USMapSVG 
-          geoHeat={SEED_GEO_HEAT}
-          selectedGeoId={selectedGeoId}
-          onStateClick={handleStateClick}
-          overlayMode={activeOverlay}
-          showRecruitingFlow={true}
-          pipelinePins={SEED_PIPELINE_PINS}
-        />
-        {mapViewMode === 'PINS' && (
-          <PipelinePins pins={filteredPins} onPinClick={handlePinClick} />
+        {mapDimension === '2D' ? (
+          <>
+            <USMapSVG 
+              geoHeat={SEED_GEO_HEAT}
+              selectedGeoId={selectedGeoId}
+              onStateClick={handleStateClick}
+              overlayMode={activeOverlay}
+              showRecruitingFlow={true}
+              pipelinePins={SEED_PIPELINE_PINS}
+            />
+            {mapViewMode === 'PINS' && (
+              <PipelinePins pins={filteredPins} onPinClick={handlePinClick} />
+            )}
+          </>
+        ) : (
+          <USPipelineHeatMapWebGL_ESPN
+            geoHeat={SEED_GEO_HEAT}
+            theme={ESPN_THEME}
+            onStateClick={handleStateClick}
+            height={520}
+          />
         )}
       </div>
 
