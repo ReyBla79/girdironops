@@ -3,7 +3,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -13,9 +12,10 @@ import {
   DollarSign,
   Target,
   Zap,
-  Lock,
   ArrowRight
 } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
+import FeatureGateCard from './FeatureGateCard';
 import type { GeoHeat, PipelinePin, PipelineAlert, StaffOwner, PipelineTier } from '@/types/pipeline';
 
 interface MapDrawerProps {
@@ -25,22 +25,9 @@ interface MapDrawerProps {
   geoPipelines: PipelinePin[];
   geoAlerts: PipelineAlert[];
   staffOwners: StaffOwner[];
-  currentTier: PipelineTier;
+  currentTier?: PipelineTier; // Optional - will use store if not provided
   onPipelineClick: (pipelineId: string) => void;
 }
-
-const FeatureGateCard: React.FC<{ title: string; copy: string; tier: PipelineTier }> = ({ title, copy, tier }) => (
-  <Card className="border-dashed border-2 border-muted bg-muted/20">
-    <CardContent className="p-4 flex items-center gap-3">
-      <Lock className="w-8 h-8 text-muted-foreground" />
-      <div className="flex-1">
-        <h4 className="font-semibold text-sm">{title}</h4>
-        <p className="text-xs text-muted-foreground">{copy}</p>
-      </div>
-      <Badge variant="outline">{tier}</Badge>
-    </CardContent>
-  </Card>
-);
 
 const getStatusColor = (band: string) => {
   switch (band) {
@@ -65,9 +52,12 @@ const MapDrawer: React.FC<MapDrawerProps> = ({
   geoPipelines,
   geoAlerts,
   staffOwners,
-  currentTier,
+  currentTier: propTier,
   onPipelineClick,
 }) => {
+  const { tiers } = useAppStore();
+  const currentTier = propTier || tiers.tier;
+  
   if (!selectedGeo) return null;
 
   const tierUnlocked = (required: PipelineTier) => {

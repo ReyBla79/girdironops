@@ -7,13 +7,14 @@ import PipelineMapToolbar from '@/components/pipeline/PipelineMapToolbar';
 import PipelinePins from '@/components/pipeline/PipelinePins';
 import MapDrawer from '@/components/pipeline/MapDrawer';
 import TierBanner from '@/components/pipeline/TierBanner';
-import { SEED_GEO_HEAT, SEED_PIPELINE_PINS, SEED_PIPELINE_ALERTS, SEED_STAFF_OWNERS, DEFAULT_PIPELINE_TIERS } from '@/demo/pipelineData';
-import type { PipelineTier } from '@/types/pipeline';
+import { useAppStore } from '@/store/useAppStore';
+import { SEED_GEO_HEAT, SEED_PIPELINE_PINS, SEED_PIPELINE_ALERTS, SEED_STAFF_OWNERS } from '@/demo/pipelineData';
 
 type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
 
 const PipelineMapPage: React.FC = () => {
   const navigate = useNavigate();
+  const { tiers } = useAppStore();
   const [mapViewMode, setMapViewMode] = useState<'STATES' | 'PINS'>('STATES');
   const [positionFilter, setPositionFilter] = useState('ALL');
   const [search, setSearch] = useState('');
@@ -28,7 +29,7 @@ const PipelineMapPage: React.FC = () => {
     roi: false,
   });
 
-  const currentTier: PipelineTier = DEFAULT_PIPELINE_TIERS.tier;
+  const currentTier = tiers.tier;
 
   // Determine active overlay mode based on toggles
   const activeOverlay: OverlayMode = useMemo(() => {
