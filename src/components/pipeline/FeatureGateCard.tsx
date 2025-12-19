@@ -12,13 +12,17 @@ interface FeatureGateCardProps {
   copy: string;
   tier: PipelineTier;
   showCTA?: boolean;
+  ctaPrimaryLabel?: string;
+  ctaSecondaryLabel?: string;
 }
 
 const FeatureGateCard: React.FC<FeatureGateCardProps> = ({ 
   title, 
   copy, 
   tier,
-  showCTA = true 
+  showCTA = true,
+  ctaPrimaryLabel,
+  ctaSecondaryLabel
 }) => {
   const { tiers, setTier } = useAppStore();
   const currentTier = tiers.tier;
@@ -67,7 +71,7 @@ const FeatureGateCard: React.FC<FeatureGateCardProps> = ({
                       className="gap-1.5"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Upgrade to GM
+                      {ctaPrimaryLabel || 'Upgrade to GM'}
                     </Button>
                   )}
                   {showEliteButton && currentTier !== 'ELITE' && (
@@ -78,7 +82,7 @@ const FeatureGateCard: React.FC<FeatureGateCardProps> = ({
                       className="gap-1.5"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Upgrade to ELITE
+                      {ctaSecondaryLabel || 'Upgrade to ELITE'}
                     </Button>
                   )}
                 </div>

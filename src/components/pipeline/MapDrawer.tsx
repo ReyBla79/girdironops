@@ -154,6 +154,8 @@ const MapDrawer: React.FC<MapDrawerProps> = ({
                 title="Budget & Forecast" 
                 copy="Unlock detailed budget exposure and forecast volatility in GM tier."
                 tier="GM"
+                ctaPrimaryLabel="Unlock Budget Insights"
+                ctaSecondaryLabel="Unlock All Features"
               />
             ) : (
               <Card>
@@ -180,6 +182,8 @@ const MapDrawer: React.FC<MapDrawerProps> = ({
                 title="ROI Intelligence" 
                 copy="ROI overlay and scoring unlock in ELITE tier."
                 tier="ELITE"
+                ctaPrimaryLabel="Unlock ROI Analytics"
+                ctaSecondaryLabel="Unlock Elite Features"
               />
             )}
           </TabsContent>
