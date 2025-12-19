@@ -14,7 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      film_assets: {
+        Row: {
+          confidence_score: number | null
+          duration_seconds: number | null
+          id: string
+          status: string | null
+          team_id: string | null
+          type: string | null
+          uploaded_at: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          duration_seconds?: number | null
+          id?: string
+          status?: string | null
+          team_id?: string | null
+          type?: string | null
+          uploaded_at?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          duration_seconds?: number | null
+          id?: string
+          status?: string | null
+          team_id?: string | null
+          type?: string | null
+          uploaded_at?: string | null
+        }
+        Relationships: []
+      }
+      play_tags: {
+        Row: {
+          id: string
+          play_id: string | null
+          source: string | null
+          tag: string | null
+        }
+        Insert: {
+          id?: string
+          play_id?: string | null
+          source?: string | null
+          tag?: string | null
+        }
+        Update: {
+          id?: string
+          play_id?: string | null
+          source?: string | null
+          tag?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_tags_play_id_fkey"
+            columns: ["play_id"]
+            isOneToOne: false
+            referencedRelation: "plays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playbook_concepts: {
+        Row: {
+          ai_label: string | null
+          coach_label: string | null
+          id: string
+          team_id: string | null
+        }
+        Insert: {
+          ai_label?: string | null
+          coach_label?: string | null
+          id?: string
+          team_id?: string | null
+        }
+        Update: {
+          ai_label?: string | null
+          coach_label?: string | null
+          id?: string
+          team_id?: string | null
+        }
+        Relationships: []
+      }
+      player_development: {
+        Row: {
+          confidence: number | null
+          id: string
+          issue: string | null
+          player_id: string | null
+          recommended_drill: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          id?: string
+          issue?: string | null
+          player_id?: string | null
+          recommended_drill?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          id?: string
+          issue?: string | null
+          player_id?: string | null
+          recommended_drill?: string | null
+        }
+        Relationships: []
+      }
+      player_tracks: {
+        Row: {
+          avg_speed: number | null
+          distance: number | null
+          heatmap: Json | null
+          id: string
+          max_speed: number | null
+          play_id: string | null
+          player_id: string | null
+        }
+        Insert: {
+          avg_speed?: number | null
+          distance?: number | null
+          heatmap?: Json | null
+          id?: string
+          max_speed?: number | null
+          play_id?: string | null
+          player_id?: string | null
+        }
+        Update: {
+          avg_speed?: number | null
+          distance?: number | null
+          heatmap?: Json | null
+          id?: string
+          max_speed?: number | null
+          play_id?: string | null
+          player_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_tracks_play_id_fkey"
+            columns: ["play_id"]
+            isOneToOne: false
+            referencedRelation: "plays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plays: {
+        Row: {
+          confidence: number | null
+          distance: number | null
+          down: number | null
+          film_id: string | null
+          id: string
+          play_type: string | null
+          quarter: number | null
+          yardline: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          distance?: number | null
+          down?: number | null
+          film_id?: string | null
+          id?: string
+          play_type?: string | null
+          quarter?: number | null
+          yardline?: number | null
+        }
+        Update: {
+          confidence?: number | null
+          distance?: number | null
+          down?: number | null
+          film_id?: string | null
+          id?: string
+          play_type?: string | null
+          quarter?: number | null
+          yardline?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plays_film_id_fkey"
+            columns: ["film_id"]
+            isOneToOne: false
+            referencedRelation: "film_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
