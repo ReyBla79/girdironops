@@ -176,14 +176,36 @@ const MapDrawer: React.FC<MapDrawerProps> = ({
               </Card>
             )}
 
+            {/* Forecast (GM tier) */}
+            {!tierUnlocked('GM') && (
+              <FeatureGateCard 
+                title="Forecast Overlay"
+                copy="Forecast overlays unlock in GM tier. Switch tiers to preview live."
+                tier="GM"
+                ctaPrimaryLabel="Upgrade to GM"
+                ctaSecondaryLabel="Upgrade to Elite"
+              />
+            )}
+
+            {/* Ownership (ELITE tier) */}
+            {!tierUnlocked('ELITE') && (
+              <FeatureGateCard 
+                title="Ownership Overlay"
+                copy="Ownership overlays unlock in ELITE tier. Switch tiers to preview live."
+                tier="ELITE"
+                ctaPrimaryLabel="Upgrade to GM"
+                ctaSecondaryLabel="Upgrade to Elite"
+              />
+            )}
+
             {/* ROI (ELITE tier) */}
             {!tierUnlocked('ELITE') && (
               <FeatureGateCard 
-                title="ROI Intelligence" 
-                copy="ROI overlay and scoring unlock in ELITE tier."
+                title="ROI Overlay"
+                copy="ROI overlays unlock in ELITE tier. Switch tiers to preview live."
                 tier="ELITE"
-                ctaPrimaryLabel="Unlock ROI Analytics"
-                ctaSecondaryLabel="Unlock Elite Features"
+                ctaPrimaryLabel="Upgrade to GM"
+                ctaSecondaryLabel="Upgrade to Elite"
               />
             )}
           </TabsContent>
