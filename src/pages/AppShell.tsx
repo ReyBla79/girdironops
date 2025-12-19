@@ -118,7 +118,7 @@ const AppShell = () => {
           <div className="p-3 border-t border-sidebar-border">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground w-full transition-all border border-destructive/30"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-warning/15 text-warning hover:bg-warning hover:text-warning-foreground w-full transition-all border border-warning/40"
             >
               <LogOut className="w-5 h-5" />
               <span>Exit Demo</span>
