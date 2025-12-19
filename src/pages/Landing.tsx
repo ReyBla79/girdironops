@@ -61,7 +61,7 @@ const Landing = () => {
             <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
               <Target className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">WONRecruit</span>
+            <span className="font-display font-bold text-xl">Gridiron Ops</span>
           </div>
           <Button variant="hero" size="sm" onClick={() => navigate('/login')}>
             Enter Demo
@@ -87,7 +87,7 @@ const Landing = () => {
               <span className="text-gradient">it's overloaded.</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              WONRecruit Football turns portal chaos into a daily decision board — built for speed, clarity, and compliance.
+              Gridiron Ops turns portal chaos into a daily decision board — built for speed, clarity, and compliance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button variant="hero" size="xl" onClick={() => navigate('/login')}>
@@ -183,13 +183,13 @@ const Landing = () => {
               <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
                 <Target className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-xl">WONRecruit</span>
+              <span className="font-display font-bold text-xl">Gridiron Ops</span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
               Demo uses a simulated dataset (no live portal feeds).
             </p>
             <p className="text-sm text-muted-foreground">
-              © 2024 WONRecruit. All rights reserved.
+              © 2024 Gridiron Ops. All rights reserved.
             </p>
           </div>
         </div>

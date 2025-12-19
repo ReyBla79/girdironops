@@ -32,7 +32,7 @@ const Login = () => {
             <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center shadow-glow">
               <Target className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-3xl">WONRecruit</span>
+            <span className="font-display font-bold text-3xl">Gridiron Ops</span>
           </div>
           <h1 className="font-display text-2xl font-bold mb-2">Enter UNLV Live Demo</h1>
           <p className="text-muted-foreground">Select your role to explore the platform</p>

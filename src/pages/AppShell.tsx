@@ -75,7 +75,7 @@ const AppShell = () => {
               <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
                 <Target className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-lg">WONRecruit</span>
+              <span className="font-display font-bold text-lg">Gridiron Ops</span>
             </div>
             <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5" />
