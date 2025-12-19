@@ -189,7 +189,7 @@ const Landing = () => {
               Demo uses a simulated dataset (no live portal feeds).
             </p>
             <p className="text-sm text-muted-foreground">
-              © 2024 Gridiron Ops. All rights reserved.
+              © 2026 Gridiron Ops. All rights reserved.
             </p>
           </div>
         </div>
