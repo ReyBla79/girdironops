@@ -15,8 +15,21 @@ import {
   Users,
   AlertTriangle,
   Mail,
-  Phone
+  Phone,
+  MapPin,
+  DollarSign,
+  TrendingUp,
+  Video
 } from 'lucide-react';
+import { 
+  PageMetaComponent,
+  OrganizationJsonLd, 
+  WebApplicationJsonLd, 
+  FAQJsonLd,
+  LandingAIContent,
+  LANDING_FAQ,
+  SITE_CONFIG
+} from '@/lib/seo';
 
 const PROBLEM_SOLUTION_BENEFIT = [
   {
@@ -51,176 +64,404 @@ const PROBLEM_SOLUTION_BENEFIT = [
   }
 ];
 
+const FEATURES = [
+  {
+    icon: RefreshCw,
+    title: 'Transfer Portal Tracker',
+    description: 'Real-time NCAA Transfer Portal monitoring with instant alerts when players enter or withdraw.',
+    link: '/app/portal'
+  },
+  {
+    icon: DollarSign,
+    title: 'NIL Budget Planning',
+    description: 'Position-based market rate guidance and roster cost forecasting for compliant NIL offers.',
+    link: '/app/budget'
+  },
+  {
+    icon: MapPin,
+    title: 'Recruiting Pipeline Map',
+    description: 'Interactive 3D heat maps showing prospect density and pipeline ROI across all 50 states.',
+    link: '/app/pipelines/map'
+  },
+  {
+    icon: Users,
+    title: 'Coach Network Discovery',
+    description: 'Map coaching relationships and identify warm introduction paths for prospect outreach.',
+    link: '/app/network'
+  },
+  {
+    icon: Video,
+    title: 'Film Intelligence',
+    description: 'AI-powered play detection, automatic tagging, and scout report generation from game film.',
+    link: '/app/film'
+  },
+  {
+    icon: TrendingUp,
+    title: 'Roster Forecasting',
+    description: 'Multi-year roster projections modeling scholarship distribution and attrition.',
+    link: '/app/forecast'
+  }
+];
+
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen gradient-hero">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-              <Target className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-xl">Gridiron Ops</span>
-          </div>
-          <Button variant="hero" size="sm" onClick={() => navigate('/login')}>
-            Enter Demo
-          </Button>
-        </div>
-      </nav>
+    <>
+      {/* SEO Components */}
+      <PageMetaComponent />
+      <OrganizationJsonLd />
+      <WebApplicationJsonLd />
+      <FAQJsonLd />
+      
+      {/* AI-Readable Content (Hidden) */}
+      <LandingAIContent />
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 gradient-glow opacity-50" />
-        <div className="container mx-auto max-w-5xl relative">
-          <div className="text-center space-y-6 animate-slide-up">
-            <div className="flex flex-wrap justify-center gap-2">
-              {['Portal Clarity', 'Time Back', 'Compliance-First'].map((badge) => (
-                <span key={badge} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border text-sm">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">{badge}</span>
-                </span>
-              ))}
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight">
-              Recruiting isn't broken —{' '}
-              <span className="text-gradient">it's overloaded.</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Gridiron Ops turns portal chaos into a daily decision board — built for speed, clarity, and compliance.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button variant="hero" size="xl" onClick={() => navigate('/login')}>
-                Enter Live Demo
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-              <Button variant="heroOutline" size="xl" onClick={() => navigate('/login')}>
-                View Today Board
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem → Solution → Benefit Grid */}
-      <section className="py-24 px-6 border-t border-border/50">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="font-display text-3xl font-bold text-center mb-12">
-            Problem → Solution → Benefit
-          </h2>
-          
-          {/* Table Header */}
-          <div className="hidden md:grid md:grid-cols-3 gap-4 mb-4 px-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
-              <AlertTriangle className="w-4 h-4" /> Problem
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Zap className="w-4 h-4" /> Solution
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-success">
-              <CheckCircle className="w-4 h-4" /> Benefit
-            </div>
-          </div>
-
-          {/* Rows */}
-          <div className="space-y-3">
-            {PROBLEM_SOLUTION_BENEFIT.map((row, i) => (
-              <div 
-                key={i} 
-                className="grid md:grid-cols-3 gap-4 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors animate-fade-in"
-                style={{ animationDelay: `${i * 0.1}s` }}
+      <div className="min-h-screen gradient-hero">
+        {/* Navigation */}
+        <header role="banner">
+          <nav 
+            className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
+            aria-label="Main navigation"
+          >
+            <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+              <Link 
+                to="/" 
+                className="flex items-center gap-2"
+                aria-label="Gridiron Ops Home"
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-destructive font-bold text-lg md:hidden">✕</span>
-                  <p className="text-sm text-muted-foreground">{row.problem}</p>
+                <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
+                  <Target className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-primary font-bold text-lg md:hidden">→</span>
-                  <p className="text-sm">{row.solution}</p>
+                <span className="font-display font-bold text-xl">Gridiron Ops</span>
+              </Link>
+              <Button variant="hero" size="sm" onClick={() => navigate('/login')}>
+                Enter Demo
+              </Button>
+            </div>
+          </nav>
+        </header>
+
+        <main id="main-content" role="main">
+          {/* Hero Section */}
+          <section 
+            className="relative pt-32 pb-24 px-6 overflow-hidden"
+            aria-labelledby="hero-heading"
+          >
+            <div className="absolute inset-0 gradient-glow opacity-50" aria-hidden="true" />
+            <div className="container mx-auto max-w-5xl relative">
+              <div className="text-center space-y-6 animate-slide-up">
+                <div className="flex flex-wrap justify-center gap-2" role="list" aria-label="Platform benefits">
+                  {['Portal Clarity', 'Time Back', 'Compliance-First'].map((badge) => (
+                    <span 
+                      key={badge} 
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border text-sm"
+                      role="listitem"
+                    >
+                      <Zap className="w-4 h-4 text-primary" aria-hidden="true" />
+                      <span className="text-muted-foreground">{badge}</span>
+                    </span>
+                  ))}
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5 md:hidden" />
-                  <p className="text-sm text-success">{row.benefit}</p>
+                <h1 
+                  id="hero-heading"
+                  className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight"
+                >
+                  Recruiting isn't broken —{' '}
+                  <span className="text-gradient">it's overloaded.</span>
+                </h1>
+                <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+                  Gridiron Ops turns NCAA Transfer Portal chaos into a daily decision board — built for speed, clarity, and compliance.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                  <Button variant="hero" size="xl" onClick={() => navigate('/login')}>
+                    Enter Live Demo
+                    <ChevronRight className="w-5 h-5" aria-hidden="true" />
+                  </Button>
+                  <Button variant="heroOutline" size="xl" onClick={() => navigate('/login')}>
+                    View Today Board
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust & Compliance Strip */}
-      <section className="py-16 px-6 border-t border-border/50 bg-success/5">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="w-20 h-20 rounded-2xl bg-success/20 flex items-center justify-center shrink-0">
-              <Shield className="w-10 h-10 text-success" />
             </div>
-            <div>
-              <h3 className="font-display text-2xl font-bold mb-4">Compliance-first by design</h3>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {[
-                  'No bulk exporting of contacts',
-                  'Locked contacts (approval required)',
-                  'Audit trail for actions',
-                  'NIL visibility restricted by role'
-                ].map((bullet, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Lock className="w-4 h-4 text-success" />
-                    {bullet}
-                  </div>
+          </section>
+
+          {/* Features Grid Section */}
+          <section 
+            className="py-24 px-6 border-t border-border/50 bg-card/30"
+            aria-labelledby="features-heading"
+          >
+            <div className="container mx-auto max-w-6xl">
+              <header className="text-center mb-16">
+                <h2 
+                  id="features-heading"
+                  className="font-display text-3xl md:text-4xl font-bold mb-4"
+                >
+                  Everything Your Recruiting Operation Needs
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  From Transfer Portal tracking to AI-powered film analysis, Gridiron Ops unifies your entire recruiting workflow.
+                </p>
+              </header>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {FEATURES.map((feature, i) => (
+                  <article 
+                    key={feature.title}
+                    className="group p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    <div className="w-12 h-12 rounded-lg gradient-accent flex items-center justify-center mb-4 group-hover:shadow-scarlet transition-shadow">
+                      <feature.icon className="w-6 h-6 text-primary-foreground" aria-hidden="true" />
+                    </div>
+                    <h3 className="font-display text-xl font-bold mb-2">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-4">{feature.description}</p>
+                    <Link 
+                      to={feature.link}
+                      className="inline-flex items-center gap-1 text-primary text-sm hover:underline"
+                    >
+                      Learn more <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                    </Link>
+                  </article>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-border/50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-                  <Target className="w-5 h-5 text-primary-foreground" />
+          {/* Problem → Solution → Benefit Grid */}
+          <section 
+            className="py-24 px-6 border-t border-border/50"
+            aria-labelledby="psb-heading"
+          >
+            <div className="container mx-auto max-w-6xl">
+              <header className="text-center mb-12">
+                <h2 
+                  id="psb-heading"
+                  className="font-display text-3xl font-bold"
+                >
+                  Problem → Solution → Benefit
+                </h2>
+                <p className="text-muted-foreground mt-2">
+                  Real challenges faced by college football programs, solved.
+                </p>
+              </header>
+              
+              {/* Table Header */}
+              <div className="hidden md:grid md:grid-cols-3 gap-4 mb-4 px-4" role="row" aria-hidden="true">
+                <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                  <AlertTriangle className="w-4 h-4" /> Problem
                 </div>
-                <span className="font-display font-bold text-xl">Gridiron Ops</span>
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Zap className="w-4 h-4" /> Solution
+                </div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-success">
+                  <CheckCircle className="w-4 h-4" /> Benefit
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground text-center">
-                Demo uses a simulated dataset (no live portal feeds).
-              </p>
-              <p className="text-sm text-muted-foreground">
-                © 2026 Gridiron Ops. All rights reserved.
-              </p>
+
+              {/* Rows */}
+              <div className="space-y-3" role="list">
+                {PROBLEM_SOLUTION_BENEFIT.map((row, i) => (
+                  <article 
+                    key={i}
+                    role="listitem"
+                    className="grid md:grid-cols-3 gap-4 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors animate-fade-in"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-destructive font-bold text-lg md:hidden" aria-hidden="true">✕</span>
+                      <p className="text-sm text-muted-foreground">{row.problem}</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-primary font-bold text-lg md:hidden" aria-hidden="true">→</span>
+                      <p className="text-sm">{row.solution}</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5 md:hidden" aria-hidden="true" />
+                      <p className="text-sm text-success">{row.benefit}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
-            
-            {/* Contact Information */}
-            <div className="border-t border-border/50 pt-6">
-              <p className="text-sm text-muted-foreground text-center">
-                For Licensing and Acquisition information, please contact Coach Brey via{' '}
-                <a 
-                  href="mailto:coachbrey@wontrack.com" 
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
+          </section>
+
+          {/* FAQ Section */}
+          <section 
+            className="py-24 px-6 border-t border-border/50 bg-card/30"
+            aria-labelledby="faq-heading"
+          >
+            <div className="container mx-auto max-w-4xl">
+              <header className="text-center mb-12">
+                <h2 
+                  id="faq-heading"
+                  className="font-display text-3xl font-bold mb-4"
                 >
-                  <Mail className="w-3 h-3" />
-                  email
-                </a>{' '}
-                or{' '}
-                <a 
-                  href="sms:+19172460975" 
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
-                >
-                  <Phone className="w-3 h-3" />
-                  SMS
-                </a>.
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-muted-foreground">
+                  Common questions about Gridiron Ops and college football recruiting technology.
+                </p>
+              </header>
+
+              <div className="space-y-4">
+                {LANDING_FAQ.map((faq, i) => (
+                  <details 
+                    key={i}
+                    className="group p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+                  >
+                    <summary className="font-display font-bold cursor-pointer list-none flex items-center justify-between">
+                      <span>{faq.question}</span>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-open:rotate-90 transition-transform" aria-hidden="true" />
+                    </summary>
+                    <p className="mt-4 text-muted-foreground">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Trust & Compliance Strip */}
+          <section 
+            className="py-16 px-6 border-t border-border/50 bg-success/5"
+            aria-labelledby="compliance-heading"
+          >
+            <div className="container mx-auto max-w-4xl">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="w-20 h-20 rounded-2xl bg-success/20 flex items-center justify-center shrink-0" aria-hidden="true">
+                  <Shield className="w-10 h-10 text-success" />
+                </div>
+                <div>
+                  <h2 
+                    id="compliance-heading"
+                    className="font-display text-2xl font-bold mb-4"
+                  >
+                    Compliance-first by design
+                  </h2>
+                  <ul className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      'No bulk exporting of contacts',
+                      'Locked contacts (approval required)',
+                      'Audit trail for actions',
+                      'NIL visibility restricted by role'
+                    ].map((bullet, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Lock className="w-4 h-4 text-success" aria-hidden="true" />
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section 
+            className="py-24 px-6 border-t border-border/50"
+            aria-labelledby="cta-heading"
+          >
+            <div className="container mx-auto max-w-3xl text-center">
+              <h2 
+                id="cta-heading"
+                className="font-display text-3xl md:text-4xl font-bold mb-6"
+              >
+                Ready to Transform Your Recruiting?
+              </h2>
+              <p className="text-muted-foreground text-lg mb-8">
+                Join leading college football programs using Gridiron Ops to stay ahead in the Transfer Portal era.
               </p>
+              <Button variant="hero" size="xl" onClick={() => navigate('/login')}>
+                Start Free Demo
+                <ChevronRight className="w-5 h-5" aria-hidden="true" />
+              </Button>
+            </div>
+          </section>
+        </main>
+
+        {/* Footer */}
+        <footer 
+          className="py-12 px-6 border-t border-border/50"
+          role="contentinfo"
+        >
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <Link 
+                  to="/" 
+                  className="flex items-center gap-2"
+                  aria-label="Gridiron Ops Home"
+                >
+                  <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
+                    <Target className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="font-display font-bold text-xl">Gridiron Ops</span>
+                </Link>
+                <p className="text-sm text-muted-foreground text-center">
+                  Demo uses a simulated dataset (no live portal feeds).
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  © 2026 Gridiron Ops. All rights reserved.
+                </p>
+              </div>
+              
+              {/* Internal Links for SEO */}
+              <nav aria-label="Footer navigation" className="border-t border-border/50 pt-6">
+                <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                  <li>
+                    <Link to="/login" className="hover:text-primary transition-colors">
+                      Sign In
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/app/portal" className="hover:text-primary transition-colors">
+                      Transfer Portal
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/app/pipelines/map" className="hover:text-primary transition-colors">
+                      Recruiting Map
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/app/budget" className="hover:text-primary transition-colors">
+                      NIL Budget
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/app/film" className="hover:text-primary transition-colors">
+                      Film Analysis
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+              
+              {/* Contact Information */}
+              <div className="border-t border-border/50 pt-6">
+                <address className="text-sm text-muted-foreground text-center not-italic">
+                  For Licensing and Acquisition information, please contact Coach Brey via{' '}
+                  <a 
+                    href="mailto:coachbrey@wontrack.com" 
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Mail className="w-3 h-3" aria-hidden="true" />
+                    email
+                  </a>{' '}
+                  or{' '}
+                  <a 
+                    href="sms:+19172460975" 
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Phone className="w-3 h-3" aria-hidden="true" />
+                    SMS
+                  </a>.
+                </address>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   );
 };
 
