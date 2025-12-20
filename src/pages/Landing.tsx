@@ -207,15 +207,14 @@ const Landing = () => {
                   <Mail className="w-3 h-3" />
                   email
                 </a>{' '}
-                at coachbrey@wontrack.com or via{' '}
+                or{' '}
                 <a 
                   href="sms:+19172460975" 
                   className="inline-flex items-center gap-1 text-primary hover:underline"
                 >
                   <Phone className="w-3 h-3" />
                   SMS
-                </a>{' '}
-                at (917) 246-0975.
+                </a>.
               </p>
             </div>
           </div>
