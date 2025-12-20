@@ -167,14 +167,14 @@ const Landing = () => {
                   id="hero-heading"
                   className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight"
                 >
-                  Recruiting isn't broken —{' '}
-                  <span className="text-gradient">it's overloaded.</span>
+                  College Football Operations, Recruiting, and Film Intelligence —{' '}
+                  <span className="text-gradient">Unified</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
                   Gridiron Ops turns NCAA Transfer Portal chaos into a daily decision board — built for speed, clarity, and compliance.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Button variant="hero" size="xl" onClick={() => navigate('/login')}>
+                  <Button variant="hero" size="xl" onClick={() => navigate('/demo')}>
                     Enter Live Demo
                     <ChevronRight className="w-5 h-5" aria-hidden="true" />
                   </Button>
@@ -197,7 +197,7 @@ const Landing = () => {
                   id="features-heading"
                   className="font-display text-3xl md:text-4xl font-bold mb-4"
                 >
-                  Everything Your Recruiting Operation Needs
+                  Built for NCAA Programs Competing Every Week
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                   From Transfer Portal tracking to AI-powered film analysis, Gridiron Ops unifies your entire recruiting workflow.
@@ -239,7 +239,7 @@ const Landing = () => {
                   id="psb-heading"
                   className="font-display text-3xl font-bold"
                 >
-                  Problem → Solution → Benefit
+                  Recruiting, Film, and Roster Decisions — Automated
                 </h2>
                 <p className="text-muted-foreground mt-2">
                   Real challenges faced by college football programs, solved.
@@ -297,7 +297,7 @@ const Landing = () => {
                   id="faq-heading"
                   className="font-display text-3xl font-bold mb-4"
                 >
-                  Frequently Asked Questions
+                  Designed for Modern College Football Staffs
                 </h2>
                 <p className="text-muted-foreground">
                   Common questions about Gridiron Ops and college football recruiting technology.
@@ -409,28 +409,38 @@ const Landing = () => {
               <nav aria-label="Footer navigation" className="border-t border-border/50 pt-6">
                 <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link to="/login" className="hover:text-primary transition-colors">
-                      Sign In
+                    <Link to="/college-football-recruiting" className="hover:text-primary transition-colors">
+                      College Football Recruiting
                     </Link>
                   </li>
                   <li>
-                    <Link to="/app/portal" className="hover:text-primary transition-colors">
-                      Transfer Portal
+                    <Link to="/ncaa-transfer-portal-ops" className="hover:text-primary transition-colors">
+                      NCAA Transfer Portal
                     </Link>
                   </li>
                   <li>
-                    <Link to="/app/pipelines/map" className="hover:text-primary transition-colors">
-                      Recruiting Map
+                    <Link to="/college-football-film-intelligence" className="hover:text-primary transition-colors">
+                      Film Intelligence
                     </Link>
                   </li>
                   <li>
-                    <Link to="/app/budget" className="hover:text-primary transition-colors">
-                      NIL Budget
+                    <Link to="/college-football-operations" className="hover:text-primary transition-colors">
+                      Football Operations
                     </Link>
                   </li>
                   <li>
-                    <Link to="/app/film" className="hover:text-primary transition-colors">
-                      Film Analysis
+                    <Link to="/demo" className="hover:text-primary transition-colors">
+                      Try Demo
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/pricing" className="hover:text-primary transition-colors">
+                      Pricing
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/faq" className="hover:text-primary transition-colors">
+                      FAQ
                     </Link>
                   </li>
                 </ul>

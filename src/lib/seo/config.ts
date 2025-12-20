@@ -31,24 +31,24 @@ export interface PageMeta {
  */
 export const ROUTE_META: Record<string, PageMeta> = {
   '/': {
-    title: 'Gridiron Ops | College Football Recruiting Intelligence Platform',
-    description: 'Gridiron Ops transforms NCAA Transfer Portal chaos into actionable recruiting intelligence. Real-time player tracking, NIL compliance tools, and AI-powered insights for college football programs.',
+    title: 'College Football Operations & Recruiting Software | Gridiron Ops',
+    description: 'Gridiron Ops is the all-in-one platform for college football recruiting, film intelligence, Transfer Portal tracking, and NCAA program operations.',
     keywords: [
-      'college football recruiting',
+      'college football operations software',
+      'NCAA college football analytics',
+      'college football recruiting technology',
       'NCAA Transfer Portal',
       'NIL compliance',
       'recruiting software',
       'college football analytics',
       'transfer portal tracker',
       'CFP recruiting',
-      'football recruiting platform',
-      'NCAA compliance tools',
-      'college football operations'
+      'football recruiting platform'
     ],
     path: '/',
     ogType: 'website',
     structuredDataType: 'WebApplication',
-    aiSummary: `Gridiron Ops is a college football recruiting intelligence platform designed for NCAA Division I programs. It provides: (1) Real-time Transfer Portal tracking with daily updates on player entries/exits, (2) NIL compliance tools with market-rate guidance, (3) Recruiting pipeline management with geographic visualization, (4) Coach network discovery for relationship mapping, (5) Film intelligence with AI-powered play tagging, and (6) Budget forecasting for roster management. The platform emphasizes compliance-first design with audit trails and role-based access controls.`
+    aiSummary: `Gridiron Ops is the all-in-one platform for college football recruiting, film intelligence, Transfer Portal tracking, and NCAA program operations. Built for NCAA programs competing every week, it automates recruiting, film, and roster decisions for modern college football staffs. Core capabilities include: (1) Real-time Transfer Portal tracking, (2) NIL compliance tools with market-rate guidance, (3) Recruiting pipeline management with geographic visualization, (4) Coach network discovery, (5) Film intelligence with AI-powered play tagging, and (6) Budget forecasting. The platform emphasizes compliance-first design with audit trails and role-based access controls.`
   },
   '/login': {
     title: 'Sign In | Gridiron Ops - College Football Recruiting Platform',
@@ -248,67 +248,67 @@ export const ROUTE_META: Record<string, PageMeta> = {
     aiSummary: 'NCAA compliance management dashboard featuring contact approval workflows, activity audit trails, NIL disclosure tracking, and role-based access controls for recruiting operations.'
   },
   '/college-football-operations': {
-    title: 'College Football Operations Software | Gridiron Ops',
-    description: 'Streamline your college football program operations with Gridiron Ops. From recruiting coordination to roster management, NIL compliance to film analysis.',
-    keywords: ['college football operations', 'football program management', 'recruiting software', 'athletic operations', 'CFB operations'],
+    title: 'College Football Operations Software for NCAA Programs | Gridiron Ops',
+    description: 'Manage recruiting, film, roster movement, and staff workflows in one NCAA-ready college football operations platform.',
+    keywords: ['college football operations software', 'director of football operations tools', 'college football staff efficiency', 'NCAA football operations', 'CFB operations'],
     path: '/college-football-operations',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Gridiron Ops provides comprehensive operations software for college football programs, including recruiting coordination, roster management, NIL compliance tracking, and film analysis tools designed for NCAA Division I athletic departments.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'The operating system for college football programs. Gridiron Ops centralizes recruiting, film, and roster workflows while reducing staff workload without adding headcount. Built for NCAA compliance and real-world operations.'
   },
   '/college-football-recruiting': {
-    title: 'College Football Recruiting Software | Gridiron Ops',
-    description: 'Transform your college football recruiting with AI-powered tools. Track prospects, manage pipelines, analyze film, and stay NCAA compliant.',
-    keywords: ['college football recruiting', 'recruiting software', 'prospect tracking', 'recruiting pipeline', 'CFB recruiting tools', 'NCAA recruiting'],
+    title: 'NCAA College Football Recruiting Software | Gridiron Ops',
+    description: 'Automate NCAA college football recruiting with AI-powered evaluation, roster alignment, and portal-aware workflows.',
+    keywords: ['NCAA college football recruiting', 'college football recruiting software', 'recruiting automation NCAA', 'prospect tracking', 'recruiting pipeline', 'CFB recruiting tools'],
     path: '/college-football-recruiting',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'College football recruiting platform featuring prospect database management, geographic pipeline visualization, coach network mapping, and compliance-first design for NCAA programs.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'NCAA college football recruiting automated and aligned. Identify players that fit your system and roster needs, reduce recruiting chaos across HS, JUCO, and portal, and make faster, clearer recruiting decisions.'
   },
   '/ncaa-transfer-portal-ops': {
-    title: 'NCAA Transfer Portal Operations & Tracking | Gridiron Ops',
-    description: 'Real-time NCAA Transfer Portal tracking and operations. Get instant alerts, filter by position and conference, and evaluate transfer fits for your program.',
-    keywords: ['NCAA Transfer Portal', 'transfer portal tracking', 'portal operations', 'college transfers', 'transfer portal alerts', 'CFB transfers'],
+    title: 'NCAA Transfer Portal Recruiting & Analytics | Gridiron Ops',
+    description: 'Track and evaluate NCAA Transfer Portal players with recruiting intelligence, film context, and roster-fit insights.',
+    keywords: ['NCAA Transfer Portal software', 'college football transfer portal tracking', 'transfer portal recruiting tools', 'portal operations', 'transfer portal alerts'],
     path: '/ncaa-transfer-portal-ops',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Real-time NCAA Transfer Portal tracking system with instant entry/exit alerts, position and conference filtering, eligibility verification, and roster fit scoring for college football programs.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'NCAA Transfer Portal operations — clarity before chaos. Track, evaluate, and prioritize portal players faster. Reduce missed opportunities during portal windows. Built for roster volatility in modern college football.'
   },
   '/college-football-film-intelligence': {
-    title: 'College Football Film Intelligence & Analysis | Gridiron Ops',
-    description: 'AI-powered film analysis for college football. Automatic play detection, tendency tracking, and scout report generation from game film.',
-    keywords: ['football film analysis', 'college football video', 'film intelligence', 'play breakdown', 'scout reports', 'game film analytics'],
+    title: 'College Football Film Analysis Software | Gridiron Ops',
+    description: 'AI-powered college football film analysis with automatic tagging, cutups, and scouting reports. Built for weekly game prep and recruiting evaluation.',
+    keywords: ['college football film analysis', 'football cutups automation', 'NCAA scouting reports', 'film intelligence', 'play breakdown', 'game film analytics'],
     path: '/college-football-film-intelligence',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Film intelligence platform using AI to analyze college football game film. Features automatic play detection, formation recognition, tendency analysis, and automated scout report generation.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'College football film intelligence automated from upload. Automatic tagging, cutups, and scouting reports. Built for weekly game prep and recruiting evaluation. Works with standard game and practice film.'
   },
   '/automatic-play-recognition-football': {
-    title: 'Automatic Play Recognition for Football | AI Film Analysis | Gridiron Ops',
-    description: 'AI-powered automatic play recognition for college football film. Detect formations, identify plays, and tag game film in seconds.',
-    keywords: ['automatic play recognition', 'AI football analysis', 'play detection', 'formation recognition', 'football AI', 'computer vision football'],
+    title: 'Automatic Play Recognition for College Football | Gridiron Ops',
+    description: 'AI-powered automatic play recognition identifies run, pass, and special teams plays. Detect custom play types and formations. Eliminate manual tagging.',
+    keywords: ['automatic play recognition football', 'run pass recognition NCAA', 'play detection', 'formation recognition', 'football AI', 'computer vision football'],
     path: '/automatic-play-recognition-football',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Automatic play recognition system using computer vision and AI to detect formations, identify play types, and auto-tag college football game film, reducing manual film review time by 90%.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'Automatic play recognition for college football. Identify run, pass, special teams automatically. Detect custom play types and formations. Eliminate manual tagging from your film workflow.'
   },
   '/football-tendency-analytics': {
-    title: 'Football Tendency Analytics | Game Planning Intelligence | Gridiron Ops',
-    description: 'Advanced football tendency analytics for game planning. Analyze opponent patterns by down, distance, field position, and game situation.',
-    keywords: ['tendency analytics', 'football game planning', 'opponent analysis', 'situational football', 'play calling analytics', 'CFB analytics'],
+    title: 'Football Tendency Analytics for NCAA Programs | Gridiron Ops',
+    description: 'Advanced football tendency analysis software for game planning. Analyze offensive and defensive tendencies by down, distance, and situation.',
+    keywords: ['football tendency analysis software', 'offensive defensive tendencies NCAA', 'game planning analytics', 'situational football', 'play calling analytics'],
     path: '/football-tendency-analytics',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Football tendency analytics platform providing situational analysis by down, distance, field position, and game context. Helps coordinators identify opponent patterns and optimize game plans.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'Football tendency analytics for NCAA programs. Analyze offensive and defensive tendencies by down, distance, field position, and game situation. Know what your opponent will do before they do it.'
   },
   '/player-tracking-from-video': {
-    title: 'Player Tracking from Video | Football Motion Analytics | Gridiron Ops',
-    description: 'Track player movement and performance from game film. Speed, distance, route tracking, and performance metrics without on-field sensors.',
-    keywords: ['player tracking', 'video analytics', 'motion tracking football', 'route tracking', 'player performance', 'speed metrics football'],
+    title: 'Player Tracking from Standard Football Video | Gridiron Ops',
+    description: 'Extract speed, distance, and movement data from standard game film. No sensors required. AI-powered player tracking for college football.',
+    keywords: ['football player tracking from video', 'speed distance tracking football', 'motion tracking football', 'route tracking', 'player performance analytics'],
     path: '/player-tracking-from-video',
     ogType: 'website',
-    structuredDataType: 'WebPage',
-    aiSummary: 'Video-based player tracking system that extracts speed, distance, and route data from standard game film without requiring on-field sensors or specialized equipment.'
+    structuredDataType: 'SoftwareApplication',
+    aiSummary: 'Player tracking from standard football video. Extract speed, distance, and route data from broadcast and All-22 footage without requiring on-field sensors or specialized equipment.'
   },
   '/demo': {
     title: 'Try Gridiron Ops Demo | College Football Recruiting Platform',

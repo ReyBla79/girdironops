@@ -46,8 +46,8 @@ const CollegeFootballOperationsPage = () => {
     <>
       <PageMetaComponent />
       <WebPageJsonLd 
-        title="College Football Operations Software | Gridiron Ops"
-        description="Streamline your college football program operations with unified recruiting management, staff coordination, and compliance tracking."
+        title="College Football Operations Software for NCAA Programs | Gridiron Ops"
+        description="Manage recruiting, film, roster movement, and staff workflows in one NCAA-ready college football operations platform."
         path="/college-football-operations"
       />
       <BreadcrumbJsonLd items={[
@@ -82,12 +82,12 @@ const CollegeFootballOperationsPage = () => {
                 <span className="text-muted-foreground">Football Operations Platform</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6">
-                College Football Operations{' '}
-                <span className="text-gradient">Simplified</span>
+                The Operating System for{' '}
+                <span className="text-gradient">College Football Programs</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Gridiron Ops is the complete operations platform for NCAA Division I football programs. 
-                Unify recruiting, compliance, staff coordination, and analytics in one powerful system.
+                Gridiron Ops centralizes recruiting, film, and roster workflows. 
+                Built for NCAA compliance and real-world operations.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="hero" size="xl" onClick={() => navigate('/demo')}>
@@ -104,7 +104,7 @@ const CollegeFootballOperationsPage = () => {
           <section className="py-20 px-6 border-t border-border/50">
             <div className="container mx-auto max-w-4xl">
               <h2 className="font-display text-3xl font-bold text-center mb-8">
-                What is College Football Operations?
+                Reduce Staff Workload Without Adding Headcount
               </h2>
               <div className="prose prose-invert max-w-none">
                 <p className="text-lg text-muted-foreground mb-6">
@@ -116,8 +116,7 @@ const CollegeFootballOperationsPage = () => {
                 <p className="text-lg text-muted-foreground mb-6">
                   In the modern era of the Transfer Portal and NIL, football operations has become 
                   exponentially more complex. Programs need real-time information, coordinated workflows, 
-                  and compliant processes to stay competitive. Gridiron Ops was built specifically to 
-                  address these challenges.
+                  and compliant processes to stay competitive.
                 </p>
               </div>
             </div>
@@ -127,7 +126,7 @@ const CollegeFootballOperationsPage = () => {
           <section className="py-20 px-6 border-t border-border/50 bg-card/30">
             <div className="container mx-auto max-w-6xl">
               <h2 className="font-display text-3xl font-bold text-center mb-4">
-                Operations Features
+                Centralize Recruiting, Film, and Roster Workflows
               </h2>
               <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
                 Everything your football operations staff needs to run an efficient, compliant program.
@@ -153,7 +152,7 @@ const CollegeFootballOperationsPage = () => {
           <section className="py-20 px-6 border-t border-border/50">
             <div className="container mx-auto max-w-4xl">
               <h2 className="font-display text-3xl font-bold text-center mb-12">
-                Who Uses Gridiron Ops?
+                Built for NCAA Compliance and Real-World Operations
               </h2>
               <div className="space-y-6">
                 {[
@@ -196,9 +195,10 @@ const CollegeFootballOperationsPage = () => {
           <div className="container mx-auto max-w-6xl">
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mb-6">
               <Link to="/" className="hover:text-primary">Home</Link>
-              <Link to="/college-football-recruiting" className="hover:text-primary">Recruiting</Link>
-              <Link to="/ncaa-transfer-portal-ops" className="hover:text-primary">Transfer Portal</Link>
+              <Link to="/college-football-recruiting" className="hover:text-primary">College Football Recruiting</Link>
+              <Link to="/ncaa-transfer-portal-ops" className="hover:text-primary">NCAA Transfer Portal</Link>
               <Link to="/college-football-film-intelligence" className="hover:text-primary">Film Intelligence</Link>
+              <Link to="/demo" className="hover:text-primary">Try Demo</Link>
               <Link to="/pricing" className="hover:text-primary">Pricing</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
             </nav>

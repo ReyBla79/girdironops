@@ -100,12 +100,12 @@ const NCAATransferPortalOpsPage = () => {
                 <span className="text-muted-foreground">Transfer Portal Intelligence</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6">
-                NCAA Transfer Portal{' '}
-                <span className="text-gradient">Operations</span>
+                NCAA Transfer Portal Operations —{' '}
+                <span className="text-gradient">Clarity Before Chaos</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                The Transfer Portal moves fast. Gridiron Ops gives you real-time tracking, instant alerts, 
-                and intelligent filtering so you never miss a game-changing prospect.
+                Track, evaluate, and prioritize portal players faster. Reduce missed opportunities during portal windows. 
+                Built for roster volatility in modern college football.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="hero" size="xl" onClick={() => navigate('/demo')}>
@@ -216,9 +216,11 @@ const NCAATransferPortalOpsPage = () => {
           <div className="container mx-auto max-w-6xl">
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mb-6">
               <Link to="/" className="hover:text-primary">Home</Link>
-              <Link to="/college-football-operations" className="hover:text-primary">Operations</Link>
-              <Link to="/college-football-recruiting" className="hover:text-primary">Recruiting</Link>
+              <Link to="/college-football-recruiting" className="hover:text-primary">College Football Recruiting</Link>
               <Link to="/college-football-film-intelligence" className="hover:text-primary">Film Intelligence</Link>
+              <Link to="/football-tendency-analytics" className="hover:text-primary">Tendency Analytics</Link>
+              <Link to="/college-football-operations" className="hover:text-primary">Football Operations</Link>
+              <Link to="/demo" className="hover:text-primary">Try Demo</Link>
               <Link to="/pricing" className="hover:text-primary">Pricing</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
             </nav>

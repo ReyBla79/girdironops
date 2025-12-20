@@ -46,8 +46,8 @@ const CollegeFootballRecruitingPage = () => {
     <>
       <PageMetaComponent />
       <WebPageJsonLd 
-        title="College Football Recruiting Software | Gridiron Ops"
-        description="Modern recruiting platform for NCAA football programs. Track prospects, manage pipelines, and win more commitments."
+        title="NCAA College Football Recruiting Software | Gridiron Ops"
+        description="Automate NCAA college football recruiting with AI-powered evaluation, roster alignment, and portal-aware workflows."
         path="/college-football-recruiting"
       />
       <BreadcrumbJsonLd items={[
@@ -81,12 +81,12 @@ const CollegeFootballRecruitingPage = () => {
                 <span className="text-muted-foreground">Recruiting Intelligence</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6">
-                College Football Recruiting{' '}
-                <span className="text-gradient">Reimagined</span>
+                NCAA College Football Recruiting —{' '}
+                <span className="text-gradient">Automated and Aligned</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Win the recruiting battle with real-time prospect tracking, intelligent pipeline management, 
-                and AI-powered insights that help you find, evaluate, and land top talent.
+                Identify players that fit your system and roster needs. Reduce recruiting chaos across HS, JUCO, and portal. 
+                Make faster, clearer recruiting decisions.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="hero" size="xl" onClick={() => navigate('/demo')}>
@@ -99,11 +99,10 @@ const CollegeFootballRecruitingPage = () => {
             </div>
           </section>
 
-          {/* The Recruiting Challenge */}
           <section className="py-20 px-6 border-t border-border/50">
             <div className="container mx-auto max-w-4xl">
               <h2 className="font-display text-3xl font-bold text-center mb-8">
-                The Modern Recruiting Challenge
+                Identify Players That Fit Your System and Roster Needs
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="p-6 rounded-xl bg-destructive/10 border border-destructive/30">
@@ -164,7 +163,7 @@ const CollegeFootballRecruitingPage = () => {
           <section className="py-20 px-6 border-t border-border/50 bg-card/30">
             <div className="container mx-auto max-w-6xl">
               <h2 className="font-display text-3xl font-bold text-center mb-4">
-                Recruiting Capabilities
+                Reduce Recruiting Chaos Across HS, JUCO, and Portal
               </h2>
               <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
                 Everything you need to run a modern, competitive recruiting operation.
@@ -187,7 +186,7 @@ const CollegeFootballRecruitingPage = () => {
           <section className="py-20 px-6 border-t border-border/50">
             <div className="container mx-auto max-w-4xl text-center">
               <h2 className="font-display text-3xl font-bold mb-8">
-                Integrated with Your Entire Operation
+                Make Faster, Clearer Recruiting Decisions
               </h2>
               <p className="text-muted-foreground text-lg mb-8">
                 Recruiting doesn't exist in a vacuum. Gridiron Ops connects your recruiting workflow 
@@ -227,9 +226,10 @@ const CollegeFootballRecruitingPage = () => {
           <div className="container mx-auto max-w-6xl">
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mb-6">
               <Link to="/" className="hover:text-primary">Home</Link>
-              <Link to="/college-football-operations" className="hover:text-primary">Operations</Link>
-              <Link to="/ncaa-transfer-portal-ops" className="hover:text-primary">Transfer Portal</Link>
+              <Link to="/ncaa-transfer-portal-ops" className="hover:text-primary">NCAA Transfer Portal</Link>
               <Link to="/college-football-film-intelligence" className="hover:text-primary">Film Intelligence</Link>
+              <Link to="/college-football-operations" className="hover:text-primary">Football Operations</Link>
+              <Link to="/demo" className="hover:text-primary">Try Demo</Link>
               <Link to="/pricing" className="hover:text-primary">Pricing</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
             </nav>
