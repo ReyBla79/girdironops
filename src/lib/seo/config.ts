@@ -247,6 +247,105 @@ export const ROUTE_META: Record<string, PageMeta> = {
     structuredDataType: 'WebPage',
     aiSummary: 'NCAA compliance management dashboard featuring contact approval workflows, activity audit trails, NIL disclosure tracking, and role-based access controls for recruiting operations.'
   },
+  '/college-football-operations': {
+    title: 'College Football Operations Software | Gridiron Ops',
+    description: 'Streamline your college football program operations with Gridiron Ops. From recruiting coordination to roster management, NIL compliance to film analysis.',
+    keywords: ['college football operations', 'football program management', 'recruiting software', 'athletic operations', 'CFB operations'],
+    path: '/college-football-operations',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Gridiron Ops provides comprehensive operations software for college football programs, including recruiting coordination, roster management, NIL compliance tracking, and film analysis tools designed for NCAA Division I athletic departments.'
+  },
+  '/college-football-recruiting': {
+    title: 'College Football Recruiting Software | Gridiron Ops',
+    description: 'Transform your college football recruiting with AI-powered tools. Track prospects, manage pipelines, analyze film, and stay NCAA compliant.',
+    keywords: ['college football recruiting', 'recruiting software', 'prospect tracking', 'recruiting pipeline', 'CFB recruiting tools', 'NCAA recruiting'],
+    path: '/college-football-recruiting',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'College football recruiting platform featuring prospect database management, geographic pipeline visualization, coach network mapping, and compliance-first design for NCAA programs.'
+  },
+  '/ncaa-transfer-portal-ops': {
+    title: 'NCAA Transfer Portal Operations & Tracking | Gridiron Ops',
+    description: 'Real-time NCAA Transfer Portal tracking and operations. Get instant alerts, filter by position and conference, and evaluate transfer fits for your program.',
+    keywords: ['NCAA Transfer Portal', 'transfer portal tracking', 'portal operations', 'college transfers', 'transfer portal alerts', 'CFB transfers'],
+    path: '/ncaa-transfer-portal-ops',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Real-time NCAA Transfer Portal tracking system with instant entry/exit alerts, position and conference filtering, eligibility verification, and roster fit scoring for college football programs.'
+  },
+  '/college-football-film-intelligence': {
+    title: 'College Football Film Intelligence & Analysis | Gridiron Ops',
+    description: 'AI-powered film analysis for college football. Automatic play detection, tendency tracking, and scout report generation from game film.',
+    keywords: ['football film analysis', 'college football video', 'film intelligence', 'play breakdown', 'scout reports', 'game film analytics'],
+    path: '/college-football-film-intelligence',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Film intelligence platform using AI to analyze college football game film. Features automatic play detection, formation recognition, tendency analysis, and automated scout report generation.'
+  },
+  '/automatic-play-recognition-football': {
+    title: 'Automatic Play Recognition for Football | AI Film Analysis | Gridiron Ops',
+    description: 'AI-powered automatic play recognition for college football film. Detect formations, identify plays, and tag game film in seconds.',
+    keywords: ['automatic play recognition', 'AI football analysis', 'play detection', 'formation recognition', 'football AI', 'computer vision football'],
+    path: '/automatic-play-recognition-football',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Automatic play recognition system using computer vision and AI to detect formations, identify play types, and auto-tag college football game film, reducing manual film review time by 90%.'
+  },
+  '/football-tendency-analytics': {
+    title: 'Football Tendency Analytics | Game Planning Intelligence | Gridiron Ops',
+    description: 'Advanced football tendency analytics for game planning. Analyze opponent patterns by down, distance, field position, and game situation.',
+    keywords: ['tendency analytics', 'football game planning', 'opponent analysis', 'situational football', 'play calling analytics', 'CFB analytics'],
+    path: '/football-tendency-analytics',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Football tendency analytics platform providing situational analysis by down, distance, field position, and game context. Helps coordinators identify opponent patterns and optimize game plans.'
+  },
+  '/player-tracking-from-video': {
+    title: 'Player Tracking from Video | Football Motion Analytics | Gridiron Ops',
+    description: 'Track player movement and performance from game film. Speed, distance, route tracking, and performance metrics without on-field sensors.',
+    keywords: ['player tracking', 'video analytics', 'motion tracking football', 'route tracking', 'player performance', 'speed metrics football'],
+    path: '/player-tracking-from-video',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Video-based player tracking system that extracts speed, distance, and route data from standard game film without requiring on-field sensors or specialized equipment.'
+  },
+  '/demo': {
+    title: 'Try Gridiron Ops Demo | College Football Recruiting Platform',
+    description: 'Experience Gridiron Ops with a free interactive demo. See Transfer Portal tracking, recruiting pipelines, film intelligence, and NIL tools in action.',
+    keywords: ['Gridiron Ops demo', 'recruiting software demo', 'transfer portal demo', 'try free', 'college football software trial'],
+    path: '/demo',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Interactive demo of Gridiron Ops platform featuring simulated Transfer Portal data, recruiting pipeline visualization, film intelligence preview, and NIL budget tools. No account required.'
+  },
+  '/pricing': {
+    title: 'Pricing | Gridiron Ops College Football Recruiting Platform',
+    description: 'Simple, transparent pricing for Gridiron Ops. Plans for every college football program from FCS to Power 5. Contact us for program-specific pricing.',
+    keywords: ['Gridiron Ops pricing', 'recruiting software cost', 'college football software pricing', 'athletic software pricing'],
+    path: '/pricing',
+    ogType: 'website',
+    structuredDataType: 'WebPage',
+    aiSummary: 'Gridiron Ops pricing information with Starter, Pro, and Enterprise tiers. Features include Transfer Portal tracking, film intelligence, NIL tools, and custom integrations. Contact for program-specific pricing.'
+  },
+  '/faq': {
+    title: 'FAQ | Gridiron Ops College Football Recruiting Platform',
+    description: 'Frequently asked questions about Gridiron Ops. Learn about Transfer Portal tracking, NIL compliance, film analysis, and NCAA compliance features.',
+    keywords: ['Gridiron Ops FAQ', 'recruiting software questions', 'transfer portal FAQ', 'NIL FAQ', 'college football software help'],
+    path: '/faq',
+    ogType: 'website',
+    structuredDataType: 'FAQPage',
+    aiSummary: 'Comprehensive FAQ covering Gridiron Ops features including Transfer Portal tracking, NIL compliance tools, film intelligence, data security, and NCAA compliance. Answers common questions about college football recruiting software.'
+  },
+  '/llm': {
+    title: 'Gridiron Ops for AI Assistants | LLM Documentation',
+    description: 'Technical documentation for AI assistants and LLMs about Gridiron Ops college football recruiting platform. Structured data for accurate AI responses.',
+    keywords: ['Gridiron Ops AI', 'LLM documentation', 'AI assistant data', 'machine readable', 'college football data'],
+    path: '/llm',
+    noIndex: true,
+    structuredDataType: 'WebPage',
+    aiSummary: 'Machine-readable documentation page for AI assistants and large language models. Contains structured information about Gridiron Ops platform capabilities, features, and use cases for accurate AI-generated responses about college football recruiting software.'
+  },
 };
 
 /**
