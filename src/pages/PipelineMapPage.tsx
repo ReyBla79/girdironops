@@ -11,6 +11,7 @@ import TierBanner from '@/components/pipeline/TierBanner';
 import DemoTierSwitcher from '@/components/DemoTierSwitcher';
 import { useAppStore } from '@/store/useAppStore';
 import { SEED_GEO_HEAT, SEED_PIPELINE_PINS, SEED_PIPELINE_ALERTS, SEED_STAFF_OWNERS } from '@/demo/pipelineData';
+import { positionMatchesFilter } from '@/demo/positionConfig';
 
 type OverlayMode = 'strength' | 'alerts' | 'budget' | 'roi';
 
@@ -64,7 +65,7 @@ const PipelineMapPage: React.FC = () => {
   const filteredPins = useMemo(() => {
     let pins = SEED_PIPELINE_PINS;
     if (positionFilter !== 'ALL') {
-      pins = pins.filter(p => p.positionGroup === positionFilter);
+      pins = pins.filter(p => positionMatchesFilter(p.positionGroup, positionFilter));
     }
     if (search) {
       pins = pins.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
