@@ -31,15 +31,49 @@ interface PipelineMapToolbarProps {
 
 const POSITION_OPTIONS = [
   { value: 'ALL', label: 'All Positions' },
+  // Offense - Skill
   { value: 'QB', label: 'QB' },
-  { value: 'OL', label: 'OL' },
-  { value: 'DL', label: 'DL' },
-  { value: 'LB', label: 'LB' },
-  { value: 'DB', label: 'DB' },
-  { value: 'WR', label: 'WR' },
   { value: 'RB', label: 'RB' },
+  { value: 'FB', label: 'FB' },
+  { value: 'WR', label: 'WR' },
   { value: 'TE', label: 'TE' },
-  { value: 'ST', label: 'ST' },
+  // Offense - OL
+  { value: 'LT', label: 'LT' },
+  { value: 'LG', label: 'LG' },
+  { value: 'C', label: 'C' },
+  { value: 'RG', label: 'RG' },
+  { value: 'RT', label: 'RT' },
+  { value: 'OL', label: 'OL' },
+  // Defense - DL
+  { value: 'DE', label: 'DE' },
+  { value: 'DT', label: 'DT' },
+  { value: 'NT', label: 'NT' },
+  { value: 'EDGE', label: 'EDGE' },
+  { value: 'DL', label: 'DL' },
+  // Defense - LB
+  { value: 'ILB', label: 'ILB' },
+  { value: 'OLB', label: 'OLB' },
+  { value: 'MLB', label: 'MLB' },
+  { value: 'MIKE', label: 'MIKE' },
+  { value: 'WILL', label: 'WILL' },
+  { value: 'SAM', label: 'SAM' },
+  { value: 'LB', label: 'LB' },
+  // Defense - DB
+  { value: 'CB', label: 'CB' },
+  { value: 'NB', label: 'NB' },
+  { value: 'S', label: 'S' },
+  { value: 'FS', label: 'FS' },
+  { value: 'SS', label: 'SS' },
+  { value: 'DB', label: 'DB' },
+  // Special Teams
+  { value: 'K', label: 'K' },
+  { value: 'P', label: 'P' },
+  { value: 'LS', label: 'LS' },
+  { value: 'H', label: 'H' },
+  { value: 'KR', label: 'KR' },
+  { value: 'PR', label: 'PR' },
+  { value: 'GUN', label: 'GUN' },
+  { value: 'PP', label: 'PP' },
 ];
 
 const PipelineMapToolbar: React.FC<PipelineMapToolbarProps> = ({
