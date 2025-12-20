@@ -35,6 +35,18 @@ import ScoutReportPage from "./pages/film/ScoutReportPage";
 import OpsGMFilmPage from "./pages/film/OpsGMFilmPage";
 import PlayerDevPage from "./pages/film/PlayerDevPage";
 import FilmSettingsPage from "./pages/film/FilmSettingsPage";
+// SEO Landing Pages
+import CollegeFootballOperationsPage from "./pages/seo/CollegeFootballOperationsPage";
+import CollegeFootballRecruitingPage from "./pages/seo/CollegeFootballRecruitingPage";
+import NCAATransferPortalOpsPage from "./pages/seo/NCAATransferPortalOpsPage";
+import CollegeFootballFilmIntelligencePage from "./pages/seo/CollegeFootballFilmIntelligencePage";
+import AutomaticPlayRecognitionPage from "./pages/seo/AutomaticPlayRecognitionPage";
+import FootballTendencyAnalyticsPage from "./pages/seo/FootballTendencyAnalyticsPage";
+import PlayerTrackingFromVideoPage from "./pages/seo/PlayerTrackingFromVideoPage";
+import DemoPage from "./pages/seo/DemoPage";
+import PricingPage from "./pages/seo/PricingPage";
+import FAQPage from "./pages/seo/FAQPage";
+import LLMPage from "./pages/seo/LLMPage";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +59,18 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          {/* SEO Landing Pages */}
+          <Route path="/college-football-operations" element={<CollegeFootballOperationsPage />} />
+          <Route path="/college-football-recruiting" element={<CollegeFootballRecruitingPage />} />
+          <Route path="/ncaa-transfer-portal-ops" element={<NCAATransferPortalOpsPage />} />
+          <Route path="/college-football-film-intelligence" element={<CollegeFootballFilmIntelligencePage />} />
+          <Route path="/automatic-play-recognition-football" element={<AutomaticPlayRecognitionPage />} />
+          <Route path="/football-tendency-analytics" element={<FootballTendencyAnalyticsPage />} />
+          <Route path="/player-tracking-from-video" element={<PlayerTrackingFromVideoPage />} />
+          <Route path="/demo" element={<DemoPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/llm" element={<LLMPage />} />
           <Route
             path="/app"
             element={
