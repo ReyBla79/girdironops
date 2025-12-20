@@ -13,7 +13,9 @@ import {
   Search,
   Film,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 const PROBLEM_SOLUTION_BENEFIT = [
@@ -178,19 +180,44 @@ const Landing = () => {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-border/50">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-                <Target className="w-5 h-5 text-primary-foreground" />
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
+                  <Target className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="font-display font-bold text-xl">Gridiron Ops</span>
               </div>
-              <span className="font-display font-bold text-xl">Gridiron Ops</span>
+              <p className="text-sm text-muted-foreground text-center">
+                Demo uses a simulated dataset (no live portal feeds).
+              </p>
+              <p className="text-sm text-muted-foreground">
+                © 2026 Gridiron Ops. All rights reserved.
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground text-center">
-              Demo uses a simulated dataset (no live portal feeds).
-            </p>
-            <p className="text-sm text-muted-foreground">
-              © 2026 Gridiron Ops. All rights reserved.
-            </p>
+            
+            {/* Contact Information */}
+            <div className="border-t border-border/50 pt-6">
+              <p className="text-sm text-muted-foreground text-center">
+                For Licensing and Acquisition information, please contact Coach Brey via{' '}
+                <a 
+                  href="mailto:coachbrey@wontrack.com" 
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <Mail className="w-3 h-3" />
+                  email
+                </a>{' '}
+                at coachbrey@wontrack.com or via{' '}
+                <a 
+                  href="sms:+19172460975" 
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <Phone className="w-3 h-3" />
+                  SMS
+                </a>{' '}
+                at (917) 246-0975.
+              </p>
+            </div>
           </div>
         </div>
       </footer>
