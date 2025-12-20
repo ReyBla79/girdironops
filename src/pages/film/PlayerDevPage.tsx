@@ -2,21 +2,17 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Minus, Lock } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { SEED_PLAYER_DEVELOPMENT } from '@/demo/filmData';
 import FeatureGateCard from '@/components/pipeline/FeatureGateCard';
-
-const POSITION_OPTIONS = [
-  'ALL',
-  'QB', 'RB', 'FB', 'WR', 'TE',
-  'LT', 'LG', 'C', 'RG', 'RT', 'OL',
-  'DE', 'DT', 'NT', 'EDGE', 'DL',
-  'ILB', 'OLB', 'MLB', 'MIKE', 'WILL', 'SAM', 'LB',
-  'CB', 'NB', 'S', 'FS', 'SS', 'DB',
-  'K', 'P', 'LS', 'H', 'KR', 'PR', 'GUN', 'PP',
-];
+import { 
+  POSITION_OPTIONS, 
+  POSITION_GROUP_OPTIONS, 
+  positionMatchesFilter, 
+  getPositionFilterLabel 
+} from '@/demo/positionConfig';
 
 const PlayerDevPage = () => {
   const { tiers } = useAppStore();
@@ -25,7 +21,7 @@ const PlayerDevPage = () => {
 
   const filteredPlayers = useMemo(() => {
     if (positionFilter === 'ALL') return SEED_PLAYER_DEVELOPMENT;
-    return SEED_PLAYER_DEVELOPMENT.filter(p => p.position === positionFilter);
+    return SEED_PLAYER_DEVELOPMENT.filter(p => positionMatchesFilter(p.position, positionFilter));
   }, [positionFilter]);
 
   const getTrendIcon = (trend: string) => {
@@ -51,15 +47,23 @@ const PlayerDevPage = () => {
         </div>
         {isElite && (
           <Select value={positionFilter} onValueChange={setPositionFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Position" />
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Position">{getPositionFilterLabel(positionFilter)}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
-              {POSITION_OPTIONS.map(pos => (
-                <SelectItem key={pos} value={pos}>
-                  {pos === 'ALL' ? 'All Positions' : pos}
-                </SelectItem>
-              ))}
+            <SelectContent className="max-h-80">
+              <SelectItem value="ALL">All Positions</SelectItem>
+              <SelectGroup>
+                <SelectLabel>Position Groups</SelectLabel>
+                {POSITION_GROUP_OPTIONS.filter(g => g !== 'ALL').map(group => (
+                  <SelectItem key={group} value={group}>{group}</SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel>Individual Positions</SelectLabel>
+                {POSITION_OPTIONS.filter(p => p !== 'ALL').map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         )}
