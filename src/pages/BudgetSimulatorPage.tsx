@@ -9,6 +9,15 @@ import { useState, useMemo } from 'react';
 import { Player, RosterPlayer, PositionGroup } from '@/types';
 import LockedCardUpsell from '@/components/LockedCardUpsell';
 
+// Format currency with smart M/K notation
+const formatBudget = (value: number): string => {
+  const absValue = Math.abs(value);
+  if (absValue >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}M`;
+  }
+  return `$${(value / 1000).toFixed(0)}K`;
+};
+
 const BudgetSimulatorPage = () => {
   const navigate = useNavigate();
   const { budget, roster, players, selectedProspectId, selectProspect, flags } = useAppStore();
@@ -174,8 +183,8 @@ const BudgetSimulatorPage = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="p-4 bg-secondary rounded-lg text-center">
               <p className="text-sm text-muted-foreground mb-1">Current Spending</p>
-              <p className="text-2xl font-bold">${(currentSpent / 1000).toFixed(0)}K</p>
-              <p className="text-sm text-muted-foreground">Remaining: ${(remainingBefore / 1000).toFixed(0)}K</p>
+              <p className="text-2xl font-bold">{formatBudget(currentSpent)}</p>
+              <p className="text-sm text-muted-foreground">Remaining: {formatBudget(remainingBefore)}</p>
             </div>
 
             <div className="p-4 bg-secondary rounded-lg text-center flex flex-col items-center justify-center">
@@ -187,7 +196,7 @@ const BudgetSimulatorPage = () => {
                     <TrendingDown className="w-6 h-6 text-chart-1 mb-1" />
                   )}
                   <p className={`text-xl font-bold ${budgetDelta > 0 ? 'text-destructive' : 'text-chart-1'}`}>
-                    {budgetDelta > 0 ? '+' : ''}{(budgetDelta / 1000).toFixed(0)}K
+                    {budgetDelta > 0 ? '+' : ''}{formatBudget(budgetDelta)}
                   </p>
                   <p className="text-sm text-muted-foreground">Impact</p>
                 </>
@@ -198,9 +207,9 @@ const BudgetSimulatorPage = () => {
 
             <div className={`p-4 rounded-lg text-center ${remainingAfter < 0 ? 'bg-destructive/10' : 'bg-chart-1/10'}`}>
               <p className="text-sm text-muted-foreground mb-1">Projected Spending</p>
-              <p className="text-2xl font-bold">${(simulatedSpent / 1000).toFixed(0)}K</p>
+              <p className="text-2xl font-bold">{formatBudget(simulatedSpent)}</p>
               <p className={`text-sm ${remainingAfter < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                Remaining: ${(remainingAfter / 1000).toFixed(0)}K
+                Remaining: {formatBudget(remainingAfter)}
               </p>
             </div>
           </div>
@@ -208,7 +217,7 @@ const BudgetSimulatorPage = () => {
           {remainingAfter < 0 && (
             <div className="mt-4 p-3 bg-destructive/10 rounded-lg flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-destructive" />
-              <span className="text-sm">Budget exceeded by ${(Math.abs(remainingAfter) / 1000).toFixed(0)}K. Consider removing a player below.</span>
+              <span className="text-sm">Budget exceeded by {formatBudget(Math.abs(remainingAfter))}. Consider removing a player below.</span>
             </div>
           )}
         </CardContent>
