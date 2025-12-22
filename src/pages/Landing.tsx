@@ -168,10 +168,10 @@ const Landing = () => {
                   className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight"
                 >
                   College Football Operations, Recruiting, and Film Intelligence —{' '}
-                  <span className="text-gradient">Unified</span>
+                  <span className="text-gradient">Unified.</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-                  Gridiron Ops turns NCAA Transfer Portal chaos into a daily decision board — built for speed, clarity, and compliance.
+                  Gridiron Ops is the decision system built for modern college football programs—bringing recruiting boards, roster management, transfer movement, and film intelligence into one daily workflow.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Button variant="hero" size="xl" onClick={() => navigate('/demo')}>
