@@ -235,16 +235,53 @@ const PlayerProfile = () => {
           <Film className="w-5 h-5 text-primary" />
           Film
         </h3>
+
         {player.filmLinks.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {player.filmLinks.map((link, i) => (
-              <span 
-                key={i}
-                className="px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground cursor-pointer hover:bg-secondary/80"
-              >
-                {link.label}
-              </span>
-            ))}
+          <div className="space-y-4">
+            {player.filmLinks.map((link, i) => {
+              const url = (link.url || '').trim();
+              const isPlaceholder = !url || url === '#';
+              const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+
+              if (!isPlaceholder && isVideo) {
+                return (
+                  <div key={i} className="space-y-2">
+                    <div className="text-sm font-medium">{link.label}</div>
+                    <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                      <video
+                        className="w-full h-auto"
+                        controls
+                        preload="metadata"
+                        src={url}
+                      />
+                    </div>
+                  </div>
+                );
+              }
+
+              if (!isPlaceholder) {
+                return (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground hover:bg-secondary/80 transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                );
+              }
+
+              return (
+                <span
+                  key={i}
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-secondary text-sm text-muted-foreground opacity-70"
+                >
+                  {link.label}
+                </span>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No film available</p>
