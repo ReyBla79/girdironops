@@ -83,7 +83,7 @@ export const SEED_PLAYERS: Player[] = [
     ],
     flags: ["Medical: Clean", "Academics: OK", "Eligibility verified (demo)"],
     filmLinks: [
-      { label: "2025 Cutups (placeholder)", url: "#" },
+      { label: "2025 Cutups", url: "/videos/malik-neighbors-2025-cutups.mp4" },
       { label: "Pass Pro Snaps (placeholder)", url: "#" },
     ],
     nilRange: { low: 150000, mid: 225000, high: 350000, rationale: "P5 starter level tackle, high demand" },
