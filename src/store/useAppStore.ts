@@ -523,6 +523,21 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'gridironops-storage',
+      version: 2,
+      migrate: (persistedState: any) => {
+        // Keep user state, but ensure seeded player film links stay in sync across builds.
+        try {
+          const seedP1 = SEED_PLAYERS.find((p) => p.id === 'p1');
+          if (seedP1 && Array.isArray(persistedState?.players)) {
+            persistedState.players = persistedState.players.map((p: any) =>
+              p?.id === 'p1' ? { ...p, filmLinks: seedP1.filmLinks } : p
+            );
+          }
+        } catch {
+          // ignore migration errors
+        }
+        return persistedState;
+      },
     }
   )
 );
