@@ -7,7 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Play, DollarSign, Users, TrendingUp, Calculator, RefreshCw } from 'lucide-react';
+import { DollarSign, Users, TrendingUp, Calculator, RefreshCw, BarChart3 } from 'lucide-react';
+import { 
+  runValueEngine, 
+  FootballPlayerInput,
+  PolicyWeights,
+  PolicyMultipliers,
+  PolicyGuardrails,
+  DEFAULT_WEIGHTS,
+  DEFAULT_POSITION_MULTIPLIERS,
+  DEFAULT_GUARDRAILS,
+} from '@/lib/footballValueEngine';
 
 interface ValueSnapshot {
   id: string;
@@ -69,17 +79,15 @@ export default function GridironDashboardPage() {
       if (seasons && seasons.length > 0) {
         setSeasonId(seasons[0].id);
 
-        // Load pool
         const { data: poolData } = await supabase
           .from('fb_revshare_pools')
           .select('pool_amount, reserved_amount')
           .eq('program_id', programs[0].id)
           .eq('season_id', seasons[0].id)
-          .single();
+          .maybeSingle();
 
         if (poolData) setPool(poolData);
 
-        // Load policy
         const { data: policyData } = await supabase
           .from('fb_revshare_policies')
           .select('id')
@@ -92,7 +100,6 @@ export default function GridironDashboardPage() {
           setPolicyId(policyData[0].id);
         }
 
-        // Load snapshots with player info
         const { data: snapshotData } = await supabase
           .from('fb_value_snapshots')
           .select('*')
@@ -101,7 +108,6 @@ export default function GridironDashboardPage() {
           .order('share_pct', { ascending: false });
 
         if (snapshotData && snapshotData.length > 0) {
-          // Get player details
           const playerIds = snapshotData.map((s) => s.player_id);
           const { data: playersData } = await supabase
             .from('fb_players')
@@ -151,6 +157,7 @@ export default function GridironDashboardPage() {
 
       if (!players || players.length === 0) {
         toast.error('No active players found');
+        setRunning(false);
         return;
       }
 
@@ -173,64 +180,37 @@ export default function GridironDashboardPage() {
       const gradesMap = new Map(gradesData?.map((g) => [g.player_id, g]) || []);
       const rolesMap = new Map(rolesData?.map((r) => [r.player_id, r]) || []);
 
-      const weights = policy.weights as any;
-      const posMultipliers = policy.position_multipliers as any;
-
-      // Calculate scores
-      const scores: { playerId: string; score: number; rationale: any }[] = [];
-      let totalScore = 0;
-
-      for (const player of players) {
+      // Build input for value engine
+      const engineInputs: FootballPlayerInput[] = players.map(player => {
         const usage = usageMap.get(player.id);
         const grade = gradesMap.get(player.id);
         const role = rolesMap.get(player.id);
 
-        // Normalize inputs
-        const snapsNorm = (usage?.snaps || 0) / 1000; // Normalize to ~1.0 for 1000 snaps
-        const leverageNorm = (usage?.leverage_snaps || 0) / 300;
-        const gradeNorm = (grade?.overall_grade || 50) / 100;
-
-        const roleValue =
-          role?.role === 'STARTER'
-            ? 1.0
-            : role?.role === 'ROTATION'
-            ? 0.7
-            : role?.role === 'BACKUP'
-            ? 0.4
-            : 0.2;
-
-        const scarcityValue =
-          role?.replacement_risk === 'HIGH'
-            ? 1.0
-            : role?.replacement_risk === 'MED'
-            ? 0.6
-            : 0.3;
-
-        const posMult = posMultipliers[player.position] || 1.0;
-
-        const rawScore =
-          weights.snaps * snapsNorm +
-          weights.leverage_snaps * leverageNorm +
-          weights.grade * gradeNorm +
-          weights.role * roleValue +
-          weights.scarcity * scarcityValue;
-
-        const finalScore = rawScore * posMult;
-        totalScore += finalScore;
-
-        scores.push({
+        return {
           playerId: player.id,
-          score: finalScore,
-          rationale: {
-            snaps: usage?.snaps || 0,
-            leverageSnaps: usage?.leverage_snaps || 0,
-            grade: grade?.overall_grade || 50,
-            role: role?.role || 'ROTATION',
-            scarcity: role?.replacement_risk || 'MED',
-            positionMultiplier: posMult,
-          },
-        });
-      }
+          position: player.position,
+          overallGrade: grade?.overall_grade || 50,
+          snaps: usage?.snaps || 0,
+          leverageSnaps: usage?.leverage_snaps || 0,
+          replacementRisk: (role?.replacement_risk as 'LOW' | 'MED' | 'HIGH') || 'MED',
+        };
+      });
+
+      const poolAmount = pool?.pool_amount || 20000000;
+      const reservedAmount = pool?.reserved_amount || 0;
+      const weights = (policy.weights as unknown as PolicyWeights) || DEFAULT_WEIGHTS;
+      const posMultipliers = (policy.position_multipliers as unknown as PolicyMultipliers) || DEFAULT_POSITION_MULTIPLIERS;
+      const guardrails = (policy.guardrails as unknown as PolicyGuardrails) || DEFAULT_GUARDRAILS;
+
+      // Run value engine
+      const results = runValueEngine(
+        engineInputs,
+        poolAmount,
+        reservedAmount,
+        weights,
+        posMultipliers,
+        guardrails
+      );
 
       // Delete old snapshots
       await supabase
@@ -239,27 +219,20 @@ export default function GridironDashboardPage() {
         .eq('program_id', programId)
         .eq('season_id', seasonId);
 
-      // Calculate percentages and dollars
-      const poolAmount = pool?.pool_amount || 20000000;
-
-      for (const s of scores) {
-        const sharePct = totalScore > 0 ? (s.score / totalScore) * 100 : 0;
-        const dollarsMid = (sharePct / 100) * poolAmount;
-        const dollarsLow = dollarsMid * 0.8;
-        const dollarsHigh = dollarsMid * 1.2;
-
+      // Insert new snapshots
+      for (const result of results) {
         await supabase.from('fb_value_snapshots').insert({
           program_id: programId,
           season_id: seasonId,
           policy_id: policyId,
-          player_id: s.playerId,
-          total_score: s.score,
-          share_pct: sharePct,
-          dollars_low: dollarsLow,
-          dollars_mid: dollarsMid,
-          dollars_high: dollarsHigh,
-          confidence: 75,
-          rationale: s.rationale,
+          player_id: result.playerId,
+          total_score: result.totalScore,
+          share_pct: result.sharePct,
+          dollars_low: result.dollarsLow,
+          dollars_mid: result.dollarsMid,
+          dollars_high: result.dollarsHigh,
+          confidence: result.confidence,
+          rationale: result.rationale,
         });
       }
 
@@ -275,6 +248,7 @@ export default function GridironDashboardPage() {
 
   const totalAllocated = snapshots.reduce((sum, s) => sum + s.dollars_mid, 0);
   const topEarners = snapshots.slice(0, 5);
+  const availablePool = (pool?.pool_amount || 0) - (pool?.reserved_amount || 0);
 
   if (loading) {
     return (
@@ -291,12 +265,16 @@ export default function GridironDashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Gridiron RevShare</h1>
             <p className="text-muted-foreground">
-              Football roster value distribution dashboard
+              Football roster value distribution — run the engine to calculate allocations
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/gridiron/roster/grades')}>
               ← Edit Data
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/gridiron/scenarios')}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Scenarios
             </Button>
             <Button onClick={runEngine} disabled={running}>
               {running ? (
@@ -315,7 +293,7 @@ export default function GridironDashboardPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -331,12 +309,24 @@ export default function GridironDashboardPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Allocated
+                Reserved
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                ${(pool?.reserved_amount || 0).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Available
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                ${availablePool.toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -353,15 +343,14 @@ export default function GridironDashboardPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Avg Share
+                Avg Allocation
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {snapshots.length > 0
-                  ? (100 / snapshots.length).toFixed(1)
+                ${snapshots.length > 0
+                  ? (totalAllocated / snapshots.length).toLocaleString(undefined, { maximumFractionDigits: 0 })
                   : 0}
-                %
               </div>
             </CardContent>
           </Card>
@@ -377,27 +366,27 @@ export default function GridironDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {topEarners.map((s, idx) => (
                   <div key={s.id} className="flex items-center gap-4">
-                    <span className="text-lg font-bold text-muted-foreground w-6">
+                    <span className="text-2xl font-bold text-muted-foreground w-8">
                       {idx + 1}
                     </span>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">
                           {s.player?.first_name} {s.player?.last_name}
                         </span>
                         <Badge variant="outline">{s.player?.position}</Badge>
                       </div>
-                      <Progress value={s.share_pct * 10} className="h-2 mt-1" />
+                      <Progress value={Math.min(s.share_pct * 8, 100)} className="h-2" />
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold">
+                    <div className="text-right min-w-[120px]">
+                      <div className="text-xl font-bold">
                         ${s.dollars_mid.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {s.share_pct.toFixed(2)}%
+                        {s.share_pct.toFixed(2)}% share
                       </div>
                     </div>
                   </div>
@@ -414,10 +403,14 @@ export default function GridironDashboardPage() {
               <DollarSign className="h-5 w-5" />
               All Player Allocations
             </CardTitle>
+            <CardDescription>
+              Ranked by share percentage — click Run Engine to recalculate
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {snapshots.length === 0 ? (
               <div className="text-center py-12">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-4">
                   No allocations yet. Add players, usage, and grades, then run the engine.
                 </p>
@@ -429,7 +422,7 @@ export default function GridironDashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Rank</TableHead>
+                    <TableHead className="w-16">Rank</TableHead>
                     <TableHead>Player</TableHead>
                     <TableHead>Position</TableHead>
                     <TableHead className="text-right">Score</TableHead>
@@ -437,32 +430,38 @@ export default function GridironDashboardPage() {
                     <TableHead className="text-right">$ Low</TableHead>
                     <TableHead className="text-right">$ Mid</TableHead>
                     <TableHead className="text-right">$ High</TableHead>
+                    <TableHead className="text-center">Confidence</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {snapshots.map((s, idx) => (
                     <TableRow key={s.id}>
-                      <TableCell className="font-bold">{idx + 1}</TableCell>
+                      <TableCell className="font-bold text-lg">{idx + 1}</TableCell>
                       <TableCell className="font-medium">
                         {s.player?.first_name} {s.player?.last_name}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{s.player?.position}</Badge>
                       </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {s.total_score.toFixed(3)}
+                      <TableCell className="text-right font-mono text-sm">
+                        {s.total_score.toFixed(4)}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {s.share_pct.toFixed(2)}%
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right text-muted-foreground">
                         ${s.dollars_low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </TableCell>
                       <TableCell className="text-right font-bold">
                         ${s.dollars_mid.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right text-muted-foreground">
                         ${s.dollars_high.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={s.confidence >= 80 ? 'default' : 'secondary'}>
+                          {s.confidence}%
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}

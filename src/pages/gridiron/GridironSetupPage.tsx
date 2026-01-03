@@ -8,38 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, DollarSign, Scale, Sliders } from 'lucide-react';
-
-const DEFAULT_WEIGHTS = {
-  snaps: 0.25,
-  leverage_snaps: 0.20,
-  grade: 0.30,
-  role: 0.15,
-  scarcity: 0.10,
-};
-
-const DEFAULT_GUARDRAILS = {
-  max_pct_per_player: 0.12,
-  min_pct_starter: 0.02,
-  position_cap_pct: 0.25,
-};
-
-const DEFAULT_POSITION_MULTIPLIERS = {
-  QB: 1.4,
-  OT: 1.2,
-  EDGE: 1.2,
-  CB: 1.1,
-  WR: 1.0,
-  RB: 0.9,
-  TE: 0.9,
-  OG: 0.95,
-  C: 0.9,
-  DT: 1.0,
-  LB: 0.95,
-  S: 0.95,
-  K: 0.6,
-  P: 0.5,
-  LS: 0.4,
-};
+import { 
+  DEFAULT_WEIGHTS, 
+  DEFAULT_POSITION_MULTIPLIERS, 
+  DEFAULT_GUARDRAILS 
+} from '@/lib/footballValueEngine';
 
 export default function GridironSetupPage() {
   const navigate = useNavigate();
@@ -47,6 +20,7 @@ export default function GridironSetupPage() {
   const [programName, setProgramName] = useState('');
   const [seasonLabel, setSeasonLabel] = useState('2025-26');
   const [poolAmount, setPoolAmount] = useState('20000000');
+  const [reservedAmount, setReservedAmount] = useState('1000000');
 
   const handleCreateProgram = async () => {
     if (!programName.trim()) {
@@ -81,22 +55,24 @@ export default function GridironSetupPage() {
           program_id: program.id,
           season_id: season.id,
           pool_amount: parseFloat(poolAmount),
+          reserved_amount: parseFloat(reservedAmount),
         });
 
       if (poolError) throw poolError;
 
-      // 4. Create default policy
+      // 4. Create policy with V1 weights
+      const policyRecord = {
+        program_id: program.id,
+        season_id: season.id,
+        name: 'Default FB Policy',
+        weights: DEFAULT_WEIGHTS,
+        guardrails: DEFAULT_GUARDRAILS,
+        position_multipliers: DEFAULT_POSITION_MULTIPLIERS,
+        is_active: true,
+      };
       const { error: policyError } = await supabase
         .from('fb_revshare_policies')
-        .insert({
-          program_id: program.id,
-          season_id: season.id,
-          name: 'Default FB Policy',
-          weights: DEFAULT_WEIGHTS,
-          guardrails: DEFAULT_GUARDRAILS,
-          position_multipliers: DEFAULT_POSITION_MULTIPLIERS,
-          is_active: true,
-        });
+        .insert(policyRecord as any);
 
       if (policyError) throw policyError;
 
@@ -155,18 +131,33 @@ export default function GridironSetupPage() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="pool">Total RevShare Pool ($)</Label>
-              <Input
-                id="pool"
-                type="number"
-                placeholder="20000000"
-                value={poolAmount}
-                onChange={(e) => setPoolAmount(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Formatted: ${Number(poolAmount).toLocaleString()}
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pool">Total Pool ($)</Label>
+                <Input
+                  id="pool"
+                  type="number"
+                  placeholder="20000000"
+                  value={poolAmount}
+                  onChange={(e) => setPoolAmount(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  ${Number(poolAmount).toLocaleString()}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reserved">Reserved ($)</Label>
+                <Input
+                  id="reserved"
+                  type="number"
+                  placeholder="1000000"
+                  value={reservedAmount}
+                  onChange={(e) => setReservedAmount(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  ${Number(reservedAmount).toLocaleString()}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -175,20 +166,30 @@ export default function GridironSetupPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Scale className="h-5 w-5" />
-              Default Policy Weights
+              V1 Formula Weights
             </CardTitle>
             <CardDescription>
-              These defaults will be applied. You can adjust later.
+              Multiplicative formula: (impact^wI) × (availability^wA) × (leverage^wL) × (scarcity^wS) × position_mult
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              {Object.entries(DEFAULT_WEIGHTS).map(([key, value]) => (
-                <div key={key} className="flex justify-between p-2 bg-muted rounded">
-                  <span className="capitalize">{key.replace('_', ' ')}</span>
-                  <span className="font-mono">{(value * 100).toFixed(0)}%</span>
-                </div>
-              ))}
+              <div className="flex justify-between p-3 bg-muted rounded">
+                <span className="font-medium">Impact (Grade)</span>
+                <span className="font-mono">{(DEFAULT_WEIGHTS.impact * 100).toFixed(0)}%</span>
+              </div>
+              <div className="flex justify-between p-3 bg-muted rounded">
+                <span className="font-medium">Availability (Snaps)</span>
+                <span className="font-mono">{(DEFAULT_WEIGHTS.availability * 100).toFixed(0)}%</span>
+              </div>
+              <div className="flex justify-between p-3 bg-muted rounded">
+                <span className="font-medium">Leverage (High-pressure)</span>
+                <span className="font-mono">{(DEFAULT_WEIGHTS.leverage * 100).toFixed(0)}%</span>
+              </div>
+              <div className="flex justify-between p-3 bg-muted rounded">
+                <span className="font-medium">Scarcity (Replace Risk)</span>
+                <span className="font-mono">{(DEFAULT_WEIGHTS.scarcity * 100).toFixed(0)}%</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -204,13 +205,16 @@ export default function GridironSetupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              {Object.entries(DEFAULT_POSITION_MULTIPLIERS).map(([pos, mult]) => (
-                <div key={pos} className="flex justify-between p-2 bg-muted rounded">
-                  <span className="font-medium">{pos}</span>
-                  <span className="font-mono">{mult.toFixed(2)}x</span>
-                </div>
-              ))}
+            <div className="grid grid-cols-4 gap-2 text-sm">
+              {Object.entries(DEFAULT_POSITION_MULTIPLIERS)
+                .filter(([pos]) => ['QB', 'LT', 'RT', 'EDGE', 'CB', 'WR', 'DT', 'S', 'LB', 'RB', 'TE', 'K'].includes(pos))
+                .sort((a, b) => b[1] - a[1])
+                .map(([pos, mult]) => (
+                  <div key={pos} className="flex justify-between p-2 bg-muted rounded">
+                    <span className="font-medium">{pos}</span>
+                    <span className="font-mono">{mult.toFixed(2)}x</span>
+                  </div>
+                ))}
             </div>
           </CardContent>
         </Card>

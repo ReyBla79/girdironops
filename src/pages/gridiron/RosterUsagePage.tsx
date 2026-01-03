@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Activity, Save } from 'lucide-react';
+import { Activity, Save, Upload, Download } from 'lucide-react';
+import { parseUsageGradesCSV, CSV_TEMPLATE_B_HEADER, CSV_TEMPLATE_B_EXAMPLE } from '@/lib/footballValueEngine';
 
 interface PlayerWithUsage {
   id: string;
@@ -15,6 +16,7 @@ interface PlayerWithUsage {
   last_name: string;
   position_group: string;
   position: string;
+  external_ref: string | null;
   usage?: {
     id?: string;
     games_played: number;
@@ -28,6 +30,7 @@ interface PlayerWithUsage {
 
 export default function RosterUsagePage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [players, setPlayers] = useState<PlayerWithUsage[]>([]);
   const [seasonId, setSeasonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +42,6 @@ export default function RosterUsagePage() {
 
   const loadData = async () => {
     try {
-      // Get first program and season
       const { data: programs } = await supabase
         .from('programs')
         .select('id')
@@ -59,16 +61,14 @@ export default function RosterUsagePage() {
       if (seasons && seasons.length > 0) {
         setSeasonId(seasons[0].id);
 
-        // Get players with their usage data
         const { data: playersData } = await supabase
           .from('fb_players')
-          .select('id, first_name, last_name, position_group, position')
+          .select('id, first_name, last_name, position_group, position, external_ref')
           .eq('program_id', programs[0].id)
           .eq('status', 'ACTIVE')
           .order('position_group');
 
         if (playersData) {
-          // Get usage data
           const { data: usageData } = await supabase
             .from('fb_player_season_usage')
             .select('*')
@@ -146,6 +146,70 @@ export default function RosterUsagePage() {
     }
   };
 
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !seasonId) return;
+
+    try {
+      const text = await file.text();
+      const parsed = parseUsageGradesCSV(text);
+
+      if (parsed.length === 0) {
+        toast.error('No valid rows found in CSV');
+        return;
+      }
+
+      // Build external_ref to player_id map
+      const refMap = new Map<string, string>();
+      players.forEach(p => {
+        if (p.external_ref) refMap.set(p.external_ref, p.id);
+      });
+
+      let updated = 0;
+      for (const row of parsed) {
+        const playerId = refMap.get(row.external_ref);
+        if (!playerId) continue;
+
+        // Update usage in state
+        setPlayers(prev => prev.map(p => {
+          if (p.id === playerId) {
+            return {
+              ...p,
+              usage: {
+                ...p.usage,
+                games_played: row.games_played,
+                snaps: row.snaps,
+                snaps_offense: row.snaps_offense,
+                snaps_defense: row.snaps_defense,
+                snaps_st: row.snaps_st,
+                leverage_snaps: row.leverage_snaps,
+              },
+            };
+          }
+          return p;
+        }));
+        updated++;
+      }
+
+      toast.success(`Updated ${updated} player usage records from CSV`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to parse CSV');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const downloadTemplate = () => {
+    const content = CSV_TEMPLATE_B_HEADER + '\n' + CSV_TEMPLATE_B_EXAMPLE;
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'usage_grades_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -161,13 +225,28 @@ export default function RosterUsagePage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Usage Data</h1>
             <p className="text-muted-foreground">
-              Enter snap counts and games played for each player
+              Enter games played, snaps, and leverage snaps for each player
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/gridiron/roster/intake')}>
               ← Back to Roster
             </Button>
+            <Button variant="outline" onClick={downloadTemplate}>
+              <Download className="h-4 w-4 mr-2" />
+              Template
+            </Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save & Continue'}
@@ -182,7 +261,7 @@ export default function RosterUsagePage() {
               Season Usage ({players.length} players)
             </CardTitle>
             <CardDescription>
-              Enter snaps by unit. Leverage snaps = 3rd/4th down, red zone, 1-score, late game.
+              Leverage snaps = 3rd/4th down, red zone, 1-score games, 2-minute drills
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -197,6 +276,7 @@ export default function RosterUsagePage() {
                     <TableRow>
                       <TableHead className="min-w-[150px]">Player</TableHead>
                       <TableHead>Pos</TableHead>
+                      <TableHead>Ref</TableHead>
                       <TableHead className="text-center">GP</TableHead>
                       <TableHead className="text-center">Total Snaps</TableHead>
                       <TableHead className="text-center">OFF</TableHead>
@@ -213,6 +293,9 @@ export default function RosterUsagePage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{player.position}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {player.external_ref || '-'}
                         </TableCell>
                         <TableCell>
                           <Input

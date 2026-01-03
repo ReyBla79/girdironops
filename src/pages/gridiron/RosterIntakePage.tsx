@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Plus, Upload, Trash2 } from 'lucide-react';
+import { Users, Plus, Upload, Trash2, Download, FileText } from 'lucide-react';
+import { parseRosterCSV, CSV_TEMPLATE_A_HEADER, CSV_TEMPLATE_A_EXAMPLE } from '@/lib/footballValueEngine';
 
 const POSITION_GROUPS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'];
 const POSITIONS = {
@@ -24,6 +25,8 @@ const POSITIONS = {
   ST: ['K', 'P', 'LS'],
 };
 const CLASS_YEARS = ['Fr', 'So', 'Jr', 'Sr', 'Gr'];
+const ROLES = ['STARTER', 'ROTATION', 'BACKUP', 'DEVELOPMENTAL'];
+const RISK_LEVELS = ['LOW', 'MED', 'HIGH'];
 
 interface Player {
   id: string;
@@ -35,13 +38,24 @@ interface Player {
   height_inches: number | null;
   weight_lbs: number | null;
   status: string;
+  external_ref: string | null;
+}
+
+interface PlayerRole {
+  player_id: string;
+  role: string;
+  depth_rank: number;
+  replacement_risk: string;
 }
 
 export default function RosterIntakePage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [roles, setRoles] = useState<Map<string, PlayerRole>>(new Map());
   const [loading, setLoading] = useState(true);
   const [programId, setProgramId] = useState<string | null>(null);
+  const [seasonId, setSeasonId] = useState<string | null>(null);
 
   // New player form
   const [firstName, setFirstName] = useState('');
@@ -49,6 +63,12 @@ export default function RosterIntakePage() {
   const [positionGroup, setPositionGroup] = useState('QB');
   const [position, setPosition] = useState('QB');
   const [classYear, setClassYear] = useState('Jr');
+  const [heightInches, setHeightInches] = useState('');
+  const [weightLbs, setWeightLbs] = useState('');
+  const [role, setRole] = useState('ROTATION');
+  const [depthRank, setDepthRank] = useState('2');
+  const [replacementRisk, setReplacementRisk] = useState('MED');
+  const [externalRef, setExternalRef] = useState('');
 
   useEffect(() => {
     loadData();
@@ -56,14 +76,27 @@ export default function RosterIntakePage() {
 
   const loadData = async () => {
     try {
-      // Get first program (demo mode)
       const { data: programs } = await supabase
         .from('programs')
         .select('id')
         .limit(1);
 
-      if (programs && programs.length > 0) {
-        setProgramId(programs[0].id);
+      if (!programs || programs.length === 0) {
+        toast.error('No program found. Please run Setup first.');
+        navigate('/gridiron/setup');
+        return;
+      }
+
+      setProgramId(programs[0].id);
+
+      const { data: seasons } = await supabase
+        .from('seasons')
+        .select('id')
+        .eq('program_id', programs[0].id)
+        .limit(1);
+
+      if (seasons && seasons.length > 0) {
+        setSeasonId(seasons[0].id);
 
         const { data: playersData } = await supabase
           .from('fb_players')
@@ -72,6 +105,16 @@ export default function RosterIntakePage() {
           .order('position_group', { ascending: true });
 
         setPlayers(playersData || []);
+
+        // Load roles
+        const { data: rolesData } = await supabase
+          .from('fb_player_roles')
+          .select('*')
+          .eq('season_id', seasons[0].id);
+
+        const roleMap = new Map<string, PlayerRole>();
+        rolesData?.forEach(r => roleMap.set(r.player_id, r));
+        setRoles(roleMap);
       }
     } catch (error) {
       console.error('Load error:', error);
@@ -86,14 +129,15 @@ export default function RosterIntakePage() {
       return;
     }
 
-    if (!programId) {
+    if (!programId || !seasonId) {
       toast.error('No program found. Please run Setup first.');
       navigate('/gridiron/setup');
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      // Create player
+      const { data: player, error } = await supabase
         .from('fb_players')
         .insert({
           program_id: programId,
@@ -102,16 +146,39 @@ export default function RosterIntakePage() {
           position_group: positionGroup,
           position: position,
           class_year: classYear,
+          height_inches: heightInches ? parseInt(heightInches) : null,
+          weight_lbs: weightLbs ? parseInt(weightLbs) : null,
           status: 'ACTIVE',
+          external_ref: externalRef.trim() || null,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setPlayers([...players, data]);
+      // Create role
+      await supabase.from('fb_player_roles').insert({
+        player_id: player.id,
+        season_id: seasonId,
+        role: role,
+        depth_rank: parseInt(depthRank),
+        replacement_risk: replacementRisk,
+      });
+
+      setPlayers([...players, player]);
+      setRoles(new Map(roles.set(player.id, {
+        player_id: player.id,
+        role,
+        depth_rank: parseInt(depthRank),
+        replacement_risk: replacementRisk,
+      })));
+
+      // Reset form
       setFirstName('');
       setLastName('');
+      setHeightInches('');
+      setWeightLbs('');
+      setExternalRef('');
       toast.success('Player added');
     } catch (error: any) {
       toast.error(error.message || 'Failed to add player');
@@ -126,6 +193,70 @@ export default function RosterIntakePage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove player');
     }
+  };
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !programId || !seasonId) return;
+
+    try {
+      const text = await file.text();
+      const parsed = parseRosterCSV(text);
+
+      if (parsed.length === 0) {
+        toast.error('No valid rows found in CSV');
+        return;
+      }
+
+      let added = 0;
+      for (const row of parsed) {
+        const { data: player, error } = await supabase
+          .from('fb_players')
+          .insert({
+            program_id: programId,
+            first_name: row.first_name,
+            last_name: row.last_name,
+            position_group: row.position_group,
+            position: row.position,
+            class_year: row.class_year,
+            height_inches: row.height_inches,
+            weight_lbs: row.weight_lbs,
+            status: row.status,
+            external_ref: row.external_ref || null,
+          })
+          .select()
+          .single();
+
+        if (!error && player) {
+          await supabase.from('fb_player_roles').insert({
+            player_id: player.id,
+            season_id: seasonId,
+            role: row.role,
+            depth_rank: row.depth_rank,
+            replacement_risk: row.replacement_risk,
+          });
+          added++;
+        }
+      }
+
+      toast.success(`Imported ${added} players`);
+      await loadData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to parse CSV');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const downloadTemplate = () => {
+    const content = CSV_TEMPLATE_A_HEADER + '\n' + CSV_TEMPLATE_A_EXAMPLE;
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'roster_intake_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const groupedPlayers = POSITION_GROUPS.reduce((acc, group) => {
@@ -143,19 +274,30 @@ export default function RosterIntakePage() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Roster Intake</h1>
             <p className="text-muted-foreground">
-              Add players to your roster for RevShare calculations
+              Add players with role, depth rank, and replacement risk
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" disabled>
+            <Button variant="outline" onClick={downloadTemplate}>
+              <Download className="h-4 w-4 mr-2" />
+              Template CSV
+            </Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
             </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
             <Button onClick={() => navigate('/gridiron/roster/usage')}>
               Continue to Usage →
             </Button>
@@ -168,9 +310,12 @@ export default function RosterIntakePage() {
               <Plus className="h-5 w-5" />
               Add Player
             </CardTitle>
+            <CardDescription>
+              Enter player info with role and risk assessment
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <div className="space-y-2">
                 <Label>First Name</Label>
                 <Input
@@ -201,9 +346,7 @@ export default function RosterIntakePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {POSITION_GROUPS.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g}
-                      </SelectItem>
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -216,9 +359,7 @@ export default function RosterIntakePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {POSITIONS[positionGroup as keyof typeof POSITIONS].map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -231,12 +372,72 @@ export default function RosterIntakePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {CLASS_YEARS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Height (in)</Label>
+                <Input
+                  type="number"
+                  placeholder="74"
+                  value={heightInches}
+                  onChange={(e) => setHeightInches(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Weight (lbs)</Label>
+                <Input
+                  type="number"
+                  placeholder="210"
+                  value={weightLbs}
+                  onChange={(e) => setWeightLbs(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={role} onValueChange={setRole}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Depth Rank</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={depthRank}
+                  onChange={(e) => setDepthRank(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Replace Risk</Label>
+                <Select value={replacementRisk} onValueChange={setReplacementRisk}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RISK_LEVELS.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>External Ref</Label>
+                <Input
+                  placeholder="player_001"
+                  value={externalRef}
+                  onChange={(e) => setExternalRef(e.target.value)}
+                />
               </div>
               <div className="flex items-end">
                 <Button onClick={handleAddPlayer} className="w-full">
@@ -257,9 +458,12 @@ export default function RosterIntakePage() {
           </CardHeader>
           <CardContent>
             {players.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No players added yet. Add players above or import from CSV.
-              </p>
+              <div className="text-center py-8 space-y-4">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  No players added yet. Add players above or import from CSV.
+                </p>
+              </div>
             ) : (
               <div className="space-y-6">
                 {POSITION_GROUPS.map((group) => {
@@ -280,40 +484,54 @@ export default function RosterIntakePage() {
                             <TableHead>Name</TableHead>
                             <TableHead>Position</TableHead>
                             <TableHead>Class</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Depth</TableHead>
+                            <TableHead>Risk</TableHead>
+                            <TableHead>Ref</TableHead>
                             <TableHead className="w-12"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {groupPlayers.map((player) => (
-                            <TableRow key={player.id}>
-                              <TableCell className="font-medium">
-                                {player.first_name} {player.last_name}
-                              </TableCell>
-                              <TableCell>{player.position}</TableCell>
-                              <TableCell>{player.class_year}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    player.status === 'ACTIVE'
-                                      ? 'default'
-                                      : 'secondary'
-                                  }
-                                >
-                                  {player.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeletePlayer(player.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {groupPlayers.map((player) => {
+                            const playerRole = roles.get(player.id);
+                            return (
+                              <TableRow key={player.id}>
+                                <TableCell className="font-medium">
+                                  {player.first_name} {player.last_name}
+                                </TableCell>
+                                <TableCell>{player.position}</TableCell>
+                                <TableCell>{player.class_year}</TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary">
+                                    {playerRole?.role || 'ROTATION'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{playerRole?.depth_rank || 2}</TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant={
+                                      playerRole?.replacement_risk === 'HIGH' ? 'destructive' :
+                                      playerRole?.replacement_risk === 'LOW' ? 'default' : 'secondary'
+                                    }
+                                  >
+                                    {playerRole?.replacement_risk || 'MED'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground text-xs">
+                                  {player.external_ref || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeletePlayer(player.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
