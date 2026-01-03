@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Star, Save, Upload, Download } from 'lucide-react';
-import { parseUsageGradesCSV, CSV_TEMPLATE_B_HEADER, CSV_TEMPLATE_B_EXAMPLE } from '@/lib/footballValueEngine';
+import { parseCSV } from '@/lib/csvParser';
+
+const CSV_TEMPLATE_HEADER = 'external_ref,overall_grade,notes';
+const CSV_TEMPLATE_EXAMPLE = 'player_001,85,Excellent pass blocker';
+
+function getCtx() {
+  return {
+    programId: localStorage.getItem("gridiron_programId") || "",
+    seasonId: localStorage.getItem("gridiron_seasonId") || "",
+  };
+}
 
 interface PlayerWithGrades {
   id: string;
@@ -143,9 +153,9 @@ export default function RosterGradesPage() {
 
     try {
       const text = await file.text();
-      const parsed = parseUsageGradesCSV(text);
+      const rows = parseCSV(text);
 
-      if (parsed.length === 0) {
+      if (rows.length === 0) {
         toast.error('No valid rows found in CSV');
         return;
       }
@@ -157,7 +167,7 @@ export default function RosterGradesPage() {
       });
 
       let updated = 0;
-      for (const row of parsed) {
+      for (const row of rows) {
         const playerId = refMap.get(row.external_ref);
         if (!playerId) continue;
 
@@ -167,7 +177,8 @@ export default function RosterGradesPage() {
               ...p,
               grade: {
                 ...p.grade,
-                overall_grade: row.overall_grade,
+                overall_grade: parseInt(row.overall_grade) || 0,
+                notes: row.notes || '',
               },
             };
           }
@@ -185,12 +196,12 @@ export default function RosterGradesPage() {
   };
 
   const downloadTemplate = () => {
-    const content = CSV_TEMPLATE_B_HEADER + '\n' + CSV_TEMPLATE_B_EXAMPLE;
+    const content = CSV_TEMPLATE_HEADER + '\n' + CSV_TEMPLATE_EXAMPLE;
     const blob = new Blob([content], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'usage_grades_template.csv';
+    a.download = 'grades_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
