@@ -1,18 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Star, Save } from 'lucide-react';
-
-const ROLES = ['STARTER', 'ROTATION', 'BACKUP', 'DEVELOPMENT'];
-const RISK_LEVELS = ['LOW', 'MED', 'HIGH'];
+import { Star, Save, Upload, Download } from 'lucide-react';
+import { parseUsageGradesCSV, CSV_TEMPLATE_B_HEADER, CSV_TEMPLATE_B_EXAMPLE } from '@/lib/footballValueEngine';
 
 interface PlayerWithGrades {
   id: string;
@@ -20,22 +16,18 @@ interface PlayerWithGrades {
   last_name: string;
   position_group: string;
   position: string;
+  external_ref: string | null;
   grade?: {
     id?: string;
     overall_grade: number;
     unit_grade: number;
     notes: string;
   };
-  role?: {
-    id?: string;
-    role: string;
-    depth_rank: number;
-    replacement_risk: string;
-  };
 }
 
 export default function RosterGradesPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [players, setPlayers] = useState<PlayerWithGrades[]>([]);
   const [seasonId, setSeasonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +60,7 @@ export default function RosterGradesPage() {
 
         const { data: playersData } = await supabase
           .from('fb_players')
-          .select('id, first_name, last_name, position_group, position')
+          .select('id, first_name, last_name, position_group, position, external_ref')
           .eq('program_id', programs[0].id)
           .eq('status', 'ACTIVE')
           .order('position_group');
@@ -79,13 +71,7 @@ export default function RosterGradesPage() {
             .select('*')
             .eq('season_id', seasons[0].id);
 
-          const { data: rolesData } = await supabase
-            .from('fb_player_roles')
-            .select('*')
-            .eq('season_id', seasons[0].id);
-
           const gradesMap = new Map(gradesData?.map((g) => [g.player_id, g]) || []);
-          const rolesMap = new Map(rolesData?.map((r) => [r.player_id, r]) || []);
 
           const playersWithData = playersData.map((p) => ({
             ...p,
@@ -93,11 +79,6 @@ export default function RosterGradesPage() {
               overall_grade: 70,
               unit_grade: 70,
               notes: '',
-            },
-            role: rolesMap.get(p.id) || {
-              role: 'ROTATION',
-              depth_rank: 2,
-              replacement_risk: 'MED',
             },
           }));
 
@@ -121,70 +102,97 @@ export default function RosterGradesPage() {
     );
   };
 
-  const updateRole = (playerId: string, field: string, value: any) => {
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === playerId
-          ? { ...p, role: { ...p.role!, [field]: value } }
-          : p
-      )
-    );
-  };
-
   const handleSave = async () => {
     if (!seasonId) return;
 
     setSaving(true);
     try {
       for (const player of players) {
-        // Save grades
-        if (player.grade) {
-          const gradeRecord = {
-            player_id: player.id,
-            season_id: seasonId,
-            overall_grade: player.grade.overall_grade,
-            unit_grade: player.grade.unit_grade,
-            notes: player.grade.notes || null,
-          };
+        if (!player.grade) continue;
 
-          if (player.grade.id) {
-            await supabase
-              .from('fb_player_grades')
-              .update(gradeRecord)
-              .eq('id', player.grade.id);
-          } else {
-            await supabase.from('fb_player_grades').insert(gradeRecord);
-          }
-        }
+        const gradeRecord = {
+          player_id: player.id,
+          season_id: seasonId,
+          overall_grade: player.grade.overall_grade,
+          unit_grade: player.grade.unit_grade,
+          notes: player.grade.notes || null,
+        };
 
-        // Save roles
-        if (player.role) {
-          const roleRecord = {
-            player_id: player.id,
-            season_id: seasonId,
-            role: player.role.role,
-            depth_rank: player.role.depth_rank,
-            replacement_risk: player.role.replacement_risk,
-          };
-
-          if (player.role.id) {
-            await supabase
-              .from('fb_player_roles')
-              .update(roleRecord)
-              .eq('id', player.role.id);
-          } else {
-            await supabase.from('fb_player_roles').insert(roleRecord);
-          }
+        if (player.grade.id) {
+          await supabase
+            .from('fb_player_grades')
+            .update(gradeRecord)
+            .eq('id', player.grade.id);
+        } else {
+          await supabase.from('fb_player_grades').insert(gradeRecord);
         }
       }
 
-      toast.success('Grades & roles saved');
+      toast.success('Grades saved');
       navigate('/gridiron/roster');
     } catch (error: any) {
       toast.error(error.message || 'Failed to save');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = parseUsageGradesCSV(text);
+
+      if (parsed.length === 0) {
+        toast.error('No valid rows found in CSV');
+        return;
+      }
+
+      // Build external_ref to player_id map
+      const refMap = new Map<string, string>();
+      players.forEach(p => {
+        if (p.external_ref) refMap.set(p.external_ref, p.id);
+      });
+
+      let updated = 0;
+      for (const row of parsed) {
+        const playerId = refMap.get(row.external_ref);
+        if (!playerId) continue;
+
+        setPlayers(prev => prev.map(p => {
+          if (p.id === playerId) {
+            return {
+              ...p,
+              grade: {
+                ...p.grade,
+                overall_grade: row.overall_grade,
+              },
+            };
+          }
+          return p;
+        }));
+        updated++;
+      }
+
+      toast.success(`Updated ${updated} player grades from CSV`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to parse CSV');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const downloadTemplate = () => {
+    const content = CSV_TEMPLATE_B_HEADER + '\n' + CSV_TEMPLATE_B_EXAMPLE;
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'usage_grades_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const getGradeColor = (grade: number) => {
@@ -206,15 +214,30 @@ export default function RosterGradesPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Grades & Roles</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Impact Grades</h1>
             <p className="text-muted-foreground">
-              Enter performance grades and depth chart positions
+              Enter overall grade (0-100) for each player — this is the secret sauce
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/gridiron/roster/usage')}>
               ← Back to Usage
             </Button>
+            <Button variant="outline" onClick={downloadTemplate}>
+              <Download className="h-4 w-4 mr-2" />
+              Template
+            </Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save & Run Engine'}
@@ -226,10 +249,10 @@ export default function RosterGradesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              Player Grades & Depth ({players.length} players)
+              Player Grades ({players.length} players)
             </CardTitle>
             <CardDescription>
-              Overall grade (0-100), role, depth rank, and replacement risk
+              Staff can enter grades manually, or import from analytics vendors. V1 just needs something consistent.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -243,12 +266,10 @@ export default function RosterGradesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[150px]">Player</TableHead>
-                      <TableHead>Pos</TableHead>
-                      <TableHead className="text-center">Overall</TableHead>
-                      <TableHead className="text-center">Unit</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead className="text-center">Depth</TableHead>
-                      <TableHead>Risk</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Ref</TableHead>
+                      <TableHead className="text-center">Overall Grade</TableHead>
+                      <TableHead className="text-center">Unit Grade</TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -261,12 +282,15 @@ export default function RosterGradesPage() {
                         <TableCell>
                           <Badge variant="outline">{player.position}</Badge>
                         </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {player.external_ref || '-'}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
                             min="0"
                             max="100"
-                            className={`w-20 text-center font-mono ${getGradeColor(
+                            className={`w-24 text-center font-mono text-lg ${getGradeColor(
                               player.grade?.overall_grade || 0
                             )}`}
                             value={player.grade?.overall_grade || 0}
@@ -284,7 +308,7 @@ export default function RosterGradesPage() {
                             type="number"
                             min="0"
                             max="100"
-                            className="w-20 text-center font-mono"
+                            className="w-24 text-center font-mono"
                             value={player.grade?.unit_grade || 0}
                             onChange={(e) =>
                               updateGrade(
@@ -296,61 +320,9 @@ export default function RosterGradesPage() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Select
-                            value={player.role?.role || 'ROTATION'}
-                            onValueChange={(v) => updateRole(player.id, 'role', v)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ROLES.map((r) => (
-                                <SelectItem key={r} value={r}>
-                                  {r}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="1"
-                            max="5"
-                            className="w-16 text-center"
-                            value={player.role?.depth_rank || 2}
-                            onChange={(e) =>
-                              updateRole(
-                                player.id,
-                                'depth_rank',
-                                parseInt(e.target.value) || 1
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={player.role?.replacement_risk || 'MED'}
-                            onValueChange={(v) =>
-                              updateRole(player.id, 'replacement_risk', v)
-                            }
-                          >
-                            <SelectTrigger className="w-24">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {RISK_LEVELS.map((r) => (
-                                <SelectItem key={r} value={r}>
-                                  {r}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
                           <Input
                             placeholder="Notes..."
-                            className="min-w-[120px]"
+                            className="min-w-[200px]"
                             value={player.grade?.notes || ''}
                             onChange={(e) =>
                               updateGrade(player.id, 'notes', e.target.value)
