@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Plus, Upload, Trash2, Download, FileText } from 'lucide-react';
-import { parseRosterCSV, CSV_TEMPLATE_A_HEADER, CSV_TEMPLATE_A_EXAMPLE } from '@/lib/footballValueEngine';
+import { parseCSV } from '@/lib/csvParser';
 
+const CSV_TEMPLATE_HEADER = 'first_name,last_name,position_group,position,class_year,height_inches,weight_lbs,status,role,depth_rank,replacement_risk,external_ref';
+const CSV_TEMPLATE_EXAMPLE = 'John,Doe,QB,QB,Jr,74,210,ACTIVE,STARTER,1,LOW,player_001';
+
+function getCtx() {
+  return {
+    programId: localStorage.getItem("gridiron_programId") || "",
+    seasonId: localStorage.getItem("gridiron_seasonId") || "",
+  };
+}
 const POSITION_GROUPS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'ST'];
 const POSITIONS = {
   QB: ['QB'],
@@ -201,27 +210,27 @@ export default function RosterIntakePage() {
 
     try {
       const text = await file.text();
-      const parsed = parseRosterCSV(text);
+      const rows = parseCSV(text);
 
-      if (parsed.length === 0) {
+      if (rows.length === 0) {
         toast.error('No valid rows found in CSV');
         return;
       }
 
       let added = 0;
-      for (const row of parsed) {
+      for (const row of rows) {
         const { data: player, error } = await supabase
           .from('fb_players')
           .insert({
             program_id: programId,
             first_name: row.first_name,
             last_name: row.last_name,
-            position_group: row.position_group,
-            position: row.position,
-            class_year: row.class_year,
-            height_inches: row.height_inches,
-            weight_lbs: row.weight_lbs,
-            status: row.status,
+            position_group: row.position_group || 'WR',
+            position: row.position || row.position_group || 'WR',
+            class_year: row.class_year || '',
+            height_inches: row.height_inches ? parseInt(row.height_inches) : null,
+            weight_lbs: row.weight_lbs ? parseInt(row.weight_lbs) : null,
+            status: row.status || 'ACTIVE',
             external_ref: row.external_ref || null,
           })
           .select()
@@ -231,9 +240,9 @@ export default function RosterIntakePage() {
           await supabase.from('fb_player_roles').insert({
             player_id: player.id,
             season_id: seasonId,
-            role: row.role,
-            depth_rank: row.depth_rank,
-            replacement_risk: row.replacement_risk,
+            role: (row.role || 'ROTATION').toUpperCase(),
+            depth_rank: row.depth_rank ? parseInt(row.depth_rank) : 2,
+            replacement_risk: (row.replacement_risk || 'MED').toUpperCase(),
           });
           added++;
         }
@@ -249,7 +258,7 @@ export default function RosterIntakePage() {
   };
 
   const downloadTemplate = () => {
-    const content = CSV_TEMPLATE_A_HEADER + '\n' + CSV_TEMPLATE_A_EXAMPLE;
+    const content = CSV_TEMPLATE_HEADER + '\n' + CSV_TEMPLATE_EXAMPLE;
     const blob = new Blob([content], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
