@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Plus, Trash2, Play, FlaskConical } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Play, FlaskConical, UserCog } from "lucide-react";
 
 function getCtx() {
   return {
@@ -28,7 +28,7 @@ export default function ScenarioLab() {
   const [status, setStatus] = useState("");
   const [scenarios, setScenarios] = useState<any[]>([]);
   const [scenarioId, setScenarioId] = useState<string>("");
-  const [scenarioName, setScenarioName] = useState("Portal Add: LT + Nickel");
+  const [scenarioName, setScenarioName] = useState("Scenario: Portal LT + Nickel CB");
   const [notes, setNotes] = useState("");
   const [poolOverride, setPoolOverride] = useState<number | "">("");
   const [reservedOverride, setReservedOverride] = useState<number | "">("");
@@ -37,7 +37,7 @@ export default function ScenarioLab() {
   const [result, setResult] = useState<any>(null);
   const [removePlayerId, setRemovePlayerId] = useState("");
 
-  // Add-player form
+  // Add-player form (scenario-only player)
   const [addFirst, setAddFirst] = useState("Portal");
   const [addLast, setAddLast] = useState("LT");
   const [addPosGroup, setAddPosGroup] = useState("OL");
@@ -48,6 +48,69 @@ export default function ScenarioLab() {
   const [addGrade, setAddGrade] = useState(82);
   const [addRole, setAddRole] = useState("STARTER");
   const [addRisk, setAddRisk] = useState("HIGH");
+
+  // Update selected player
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+
+  // Usage patch
+  const [uGames, setUGames] = useState<number>(12);
+  const [uSnaps, setUSnaps] = useState<number>(500);
+  const [uLev, setULev] = useState<number>(120);
+  const [uOff, setUOff] = useState<number>(0);
+  const [uDef, setUDef] = useState<number>(0);
+  const [uSt, setUSt] = useState<number>(0);
+
+  // Grade patch
+  const [gOverall, setGOverall] = useState<number>(80);
+  const [gNotes, setGNotes] = useState<string>("");
+
+  // Role patch
+  const [rRole, setRRole] = useState<string>("ROTATION");
+  const [rDepth, setRDepth] = useState<number>(2);
+  const [rRisk, setRRisk] = useState<string>("MED");
+
+  // When selecting a player, preload current values from DB
+  async function preloadPlayerInputs(playerId: string) {
+    if (!playerId || !ctx.seasonId) return;
+    setStatus("Loading current player inputs...");
+
+    // usage
+    const { data: usage } = await supabase
+      .from("fb_player_season_usage")
+      .select("*")
+      .eq("player_id", playerId)
+      .eq("season_id", ctx.seasonId)
+      .maybeSingle();
+    setUGames(Number(usage?.games_played ?? 0));
+    setUSnaps(Number(usage?.snaps ?? 0));
+    setUOff(Number(usage?.snaps_offense ?? 0));
+    setUDef(Number(usage?.snaps_defense ?? 0));
+    setUSt(Number(usage?.snaps_st ?? 0));
+    setULev(Number(usage?.leverage_snaps ?? 0));
+
+    // grade
+    const { data: grade } = await supabase
+      .from("fb_player_grades")
+      .select("*")
+      .eq("player_id", playerId)
+      .eq("season_id", ctx.seasonId)
+      .maybeSingle();
+    setGOverall(Number(grade?.overall_grade ?? 0));
+    setGNotes(String(grade?.notes ?? ""));
+
+    // role
+    const { data: role } = await supabase
+      .from("fb_player_roles")
+      .select("*")
+      .eq("player_id", playerId)
+      .eq("season_id", ctx.seasonId)
+      .maybeSingle();
+    setRRole(String(role?.role ?? "ROTATION").toUpperCase());
+    setRDepth(Number(role?.depth_rank ?? 2));
+    setRRisk(String(role?.replacement_risk ?? "MED").toUpperCase());
+
+    setStatus("Player inputs loaded.");
+  }
 
   useEffect(() => {
     (async () => {
@@ -169,11 +232,11 @@ export default function ScenarioLab() {
           <div>
             <h1 className="text-2xl font-bold">Scenario Lab</h1>
             <p className="text-muted-foreground text-sm">
-              Test roster moves and compare baseline vs scenario allocations
+              Simulate roster moves, usage/grade/role changes, and compare baseline vs scenario allocations
             </p>
           </div>
         </div>
-        <Badge variant="secondary">V1.5</Badge>
+        <Badge variant="secondary">V2.0</Badge>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -277,7 +340,7 @@ export default function ScenarioLab() {
           <CardContent className="space-y-4">
             {/* Add Portal Player */}
             <div className="p-4 border rounded-lg space-y-3">
-              <h4 className="font-medium text-sm">Quick Add: Portal Player</h4>
+              <h4 className="font-medium text-sm">Quick Add: Portal Player (Scenario-only)</h4>
               <div className="grid grid-cols-4 gap-2">
                 <Input
                   value={addFirst}
@@ -347,6 +410,9 @@ export default function ScenarioLab() {
                       games_played: addGames,
                       snaps: addSnaps,
                       leverage_snaps: addLev,
+                      snaps_offense: 0,
+                      snaps_defense: 0,
+                      snaps_st: 0,
                     },
                     grade: { overall_grade: addGrade },
                     role: { role: addRole, replacement_risk: addRisk, depth_rank: 1 },
@@ -385,6 +451,120 @@ export default function ScenarioLab() {
                 <Trash2 className="h-4 w-4 mr-1" />
                 Remove Player
               </Button>
+            </div>
+
+            {/* Update Existing Player */}
+            <div className="p-4 border rounded-lg space-y-3">
+              <div className="flex items-center gap-2">
+                <UserCog className="h-4 w-4" />
+                <h4 className="font-medium text-sm">Update Existing Player</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Pick a player, auto-load current inputs, then add mutations.
+              </p>
+              <Select
+                value={selectedPlayerId}
+                onValueChange={(id) => {
+                  setSelectedPlayerId(id);
+                  preloadPlayerInputs(id).catch((err) => setStatus(err.message));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select player..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {players.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.last_name}, {p.first_name} — {p.position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Usage patch */}
+              <div className="p-3 border rounded-lg space-y-2">
+                <span className="font-medium text-xs">Update Usage</span>
+                <div className="grid grid-cols-6 gap-2">
+                  <Input type="number" value={uGames} onChange={(e) => setUGames(Number(e.target.value))} placeholder="Games" />
+                  <Input type="number" value={uSnaps} onChange={(e) => setUSnaps(Number(e.target.value))} placeholder="Snaps" />
+                  <Input type="number" value={uOff} onChange={(e) => setUOff(Number(e.target.value))} placeholder="Off" />
+                  <Input type="number" value={uDef} onChange={(e) => setUDef(Number(e.target.value))} placeholder="Def" />
+                  <Input type="number" value={uSt} onChange={(e) => setUSt(Number(e.target.value))} placeholder="ST" />
+                  <Input type="number" value={uLev} onChange={(e) => setULev(Number(e.target.value))} placeholder="Leverage" />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (!selectedPlayerId) return setStatus("Select a player first.");
+                    addMutation("UPDATE_USAGE", {
+                      player_id: selectedPlayerId,
+                      patch: {
+                        games_played: uGames,
+                        snaps: uSnaps,
+                        snaps_offense: uOff,
+                        snaps_defense: uDef,
+                        snaps_st: uSt,
+                        leverage_snaps: uLev,
+                      },
+                    });
+                  }}
+                >
+                  Add Usage Mutation
+                </Button>
+              </div>
+
+              {/* Grade patch */}
+              <div className="p-3 border rounded-lg space-y-2">
+                <span className="font-medium text-xs">Update Grade</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input type="number" value={gOverall} onChange={(e) => setGOverall(Number(e.target.value))} placeholder="Overall (0-100)" />
+                  <Input className="col-span-2" value={gNotes} onChange={(e) => setGNotes(e.target.value)} placeholder="Notes (optional)" />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (!selectedPlayerId) return setStatus("Select a player first.");
+                    addMutation("UPDATE_GRADE", {
+                      player_id: selectedPlayerId,
+                      patch: {
+                        overall_grade: gOverall,
+                        notes: gNotes || null,
+                      },
+                    });
+                  }}
+                >
+                  Add Grade Mutation
+                </Button>
+              </div>
+
+              {/* Role patch */}
+              <div className="p-3 border rounded-lg space-y-2">
+                <span className="font-medium text-xs">Update Role</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input value={rRole} onChange={(e) => setRRole(e.target.value.toUpperCase())} placeholder="Role" />
+                  <Input type="number" value={rDepth} onChange={(e) => setRDepth(Number(e.target.value))} placeholder="Depth" />
+                  <Input value={rRisk} onChange={(e) => setRRisk(e.target.value.toUpperCase())} placeholder="Risk" />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (!selectedPlayerId) return setStatus("Select a player first.");
+                    addMutation("UPDATE_ROLE", {
+                      player_id: selectedPlayerId,
+                      patch: {
+                        role: rRole,
+                        depth_rank: rDepth,
+                        replacement_risk: rRisk,
+                      },
+                    });
+                  }}
+                >
+                  Add Role Mutation
+                </Button>
+              </div>
             </div>
 
             {/* Current Mutations */}
@@ -473,63 +653,48 @@ export default function ScenarioLab() {
                 </div>
               </div>
 
-              {/* Top Changes Table */}
-              <div>
+              {/* Top Changes */}
+              <div className="overflow-x-auto">
                 <h4 className="font-semibold mb-3">Top Changes (by $ mid delta)</h4>
-                <div className="border rounded-lg overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Player</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Baseline Mid</TableHead>
-                        <TableHead className="text-right">Scenario Mid</TableHead>
-                        <TableHead className="text-right">Δ Mid</TableHead>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-center">Type</TableHead>
+                      <TableHead className="text-right">Baseline Mid</TableHead>
+                      <TableHead className="text-right">Scenario Mid</TableHead>
+                      <TableHead className="text-right">Δ Mid</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.diffs_top.map((d: any) => (
+                      <TableRow key={d.player_id}>
+                        <TableCell>
+                          <span className="font-medium">{d.player_name}</span>{" "}
+                          <span className="text-muted-foreground">({d.position})</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">{d.change_type}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ${Number(d.baseline_mid).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ${Number(d.scenario_mid).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          <span className={d.delta_mid >= 0 ? "text-green-600" : "text-red-600"}>
+                            {d.delta_mid >= 0 ? "+" : "-"}$
+                            {Math.abs(Number(d.delta_mid)).toLocaleString()}
+                          </span>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {result.diffs_top.map((d: any) => (
-                        <TableRow key={d.player_id}>
-                          <TableCell>
-                            <span className="font-medium">{d.player_name}</span>
-                            <span className="text-muted-foreground ml-1">
-                              ({d.position})
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                d.change_type === "ADDED"
-                                  ? "default"
-                                  : d.change_type === "REMOVED"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                            >
-                              {d.change_type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            ${Number(d.baseline_mid).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            ${Number(d.scenario_mid).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            <span
-                              className={
-                                d.delta_mid >= 0 ? "text-green-600" : "text-red-600"
-                              }
-                            >
-                              {d.delta_mid >= 0 ? "+" : "-"}$
-                              {Math.abs(Number(d.delta_mid)).toLocaleString()}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Tip: You can stack mutations (example: remove QB1, then update WR1 usage, then add portal QB).
+                </p>
               </div>
             </div>
           )}
