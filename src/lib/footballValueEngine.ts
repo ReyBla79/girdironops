@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * Football Value Engine V1
  * 
@@ -36,6 +38,8 @@ export interface PolicyGuardrails {
   max_pct_per_player: number;
   min_pct_starter: number;
   position_cap_pct: number;
+  max_share_pct?: number;
+  floor_rotation_usd?: number;
 }
 
 export const DEFAULT_WEIGHTS: PolicyWeights = {
@@ -82,6 +86,8 @@ export const DEFAULT_GUARDRAILS: PolicyGuardrails = {
   max_pct_per_player: 0.12,
   min_pct_starter: 0.02,
   position_cap_pct: 0.25,
+  max_share_pct: 0.25,
+  floor_rotation_usd: 15000,
 };
 
 export const SCARCITY_MULTIPLIERS = {
@@ -125,6 +131,28 @@ export interface ValueResult {
   };
 }
 
+// Helper functions
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function powSafe(base: number, exp: number) {
+  if (base <= 0) return 0;
+  return Math.pow(base, exp);
+}
+
+function scarcityMultiplier(replacementRisk: string): number {
+  const r = (replacementRisk || "MED").toUpperCase();
+  if (r === "LOW") return 0.9;
+  if (r === "HIGH") return 1.15;
+  return 1.0;
+}
+
+function roleIsRotationOrHigher(role: string): boolean {
+  const r = (role || "ROTATION").toUpperCase();
+  return r === "STARTER" || r === "ROTATION";
+}
+
 /**
  * Calculate individual player score using the multiplicative formula
  */
@@ -134,28 +162,16 @@ export function calculatePlayerScore(
   weights: PolicyWeights,
   positionMultipliers: PolicyMultipliers
 ): PlayerScore {
-  // Normalize impact (grade 0-100 to 0-1)
   const impact = Math.min(Math.max(player.overallGrade / 100, 0), 1);
-
-  // Calculate availability (snaps / team_total, clamped 0-1)
   const availability = teamTotalSnaps > 0 
     ? Math.min(Math.max(player.snaps / teamTotalSnaps, 0), 1)
     : 0;
-
-  // Calculate leverage (leverage_snaps / snaps, clamped 0-1)
   const leverage = player.snaps > 0
     ? Math.min(Math.max(player.leverageSnaps / player.snaps, 0), 1)
     : 0;
-
-  // Get scarcity multiplier
   const scarcity = SCARCITY_MULTIPLIERS[player.replacementRisk] || 1.0;
-
-  // Get position multiplier
   const positionMultiplier = positionMultipliers[player.position] || 1.0;
 
-  // Apply multiplicative formula with exponents
-  // total = (impact^wI) * (availability^wA) * (leverage^wL) * (scarcity^wS) * position_multiplier
-  // Using (value + 0.01) to avoid zero issues with exponents
   const rawScore = 
     Math.pow(impact + 0.01, weights.impact) *
     Math.pow(availability + 0.01, weights.availability) *
@@ -177,7 +193,7 @@ export function calculatePlayerScore(
 }
 
 /**
- * Run the full value engine for a roster
+ * Run the full value engine for a roster (local calculation)
  */
 export function runValueEngine(
   players: FootballPlayerInput[],
@@ -189,38 +205,25 @@ export function runValueEngine(
 ): ValueResult[] {
   if (players.length === 0) return [];
 
-  // Calculate team total snaps
   const teamTotalSnaps = players.reduce((sum, p) => sum + p.snaps, 0);
-
-  // Calculate raw scores for all players
   const scores = players.map(player => 
     calculatePlayerScore(player, teamTotalSnaps, weights, positionMultipliers)
   );
-
-  // Sum all scores for percentage calculation
   const totalScore = scores.reduce((sum, s) => sum + s.rawScore, 0);
-
-  // Available pool after reserve
   const availablePool = poolAmount - reservedAmount;
 
-  // Convert to final results with dollars
   const results: ValueResult[] = scores.map(score => {
     const player = players.find(p => p.playerId === score.playerId)!;
-    
-    // Calculate share percentage
     let sharePct = totalScore > 0 ? (score.rawScore / totalScore) : 0;
 
-    // Apply guardrails
     if (sharePct > guardrails.max_pct_per_player) {
       sharePct = guardrails.max_pct_per_player;
     }
 
-    // Calculate dollar amounts
     const dollarsMid = sharePct * availablePool;
     const dollarsLow = dollarsMid * 0.85;
     const dollarsHigh = dollarsMid * 1.15;
 
-    // Confidence based on data completeness
     let confidence = 75;
     if (player.snaps > 0) confidence += 10;
     if (player.overallGrade > 0) confidence += 10;
@@ -229,7 +232,7 @@ export function runValueEngine(
     return {
       playerId: score.playerId,
       totalScore: score.rawScore,
-      sharePct: sharePct * 100, // Store as percentage (e.g., 5.25 for 5.25%)
+      sharePct: sharePct * 100,
       dollarsLow,
       dollarsMid,
       dollarsHigh,
@@ -250,8 +253,264 @@ export function runValueEngine(
     };
   });
 
-  // Sort by share percentage descending
   return results.sort((a, b) => b.sharePct - a.sharePct);
+}
+
+/**
+ * Run full valuation from database and save snapshots
+ */
+export async function runFootballValuation(params: {
+  programId: string;
+  seasonId: string;
+  policyId: string;
+}) {
+  const { programId, seasonId, policyId } = params;
+
+  // 1) Load pool
+  const { data: pool, error: poolErr } = await supabase
+    .from("fb_revshare_pools")
+    .select("*")
+    .eq("program_id", programId)
+    .eq("season_id", seasonId)
+    .maybeSingle();
+
+  if (poolErr) throw poolErr;
+  if (!pool) throw new Error("No pool found for this program/season");
+
+  const poolAmount = Number(pool.pool_amount || 0);
+  const reservedAmount = Number(pool.reserved_amount || 0);
+  const allocatable = Math.max(0, poolAmount - reservedAmount);
+
+  // 2) Load policy
+  const { data: policy, error: polErr } = await supabase
+    .from("fb_revshare_policies")
+    .select("*")
+    .eq("id", policyId)
+    .maybeSingle();
+
+  if (polErr) throw polErr;
+  if (!policy) throw new Error("Policy not found");
+
+  const weights = policy.weights as unknown as PolicyWeights;
+  const guardrails = policy.guardrails as unknown as PolicyGuardrails;
+  const posMult = policy.position_multipliers as unknown as PolicyMultipliers;
+
+  // 3) Load roster + usage + grades + roles
+  const { data: players, error: pErr } = await supabase
+    .from("fb_players")
+    .select("*")
+    .eq("program_id", programId);
+
+  if (pErr) throw pErr;
+  if (!players || players.length === 0) {
+    return { ok: true, inserted: 0, message: "No players found for program." };
+  }
+
+  const playerIds = players.map((p) => p.id);
+
+  const { data: usageRows, error: uErr } = await supabase
+    .from("fb_player_season_usage")
+    .select("*")
+    .in("player_id", playerIds)
+    .eq("season_id", seasonId);
+
+  if (uErr) throw uErr;
+
+  const { data: gradeRows, error: gErr } = await supabase
+    .from("fb_player_grades")
+    .select("*")
+    .in("player_id", playerIds)
+    .eq("season_id", seasonId);
+
+  if (gErr) throw gErr;
+
+  const { data: roleRows, error: rErr } = await supabase
+    .from("fb_player_roles")
+    .select("*")
+    .in("player_id", playerIds)
+    .eq("season_id", seasonId);
+
+  if (rErr) throw rErr;
+
+  const usageById = new Map<string, (typeof usageRows)[0]>();
+  (usageRows || []).forEach((r) => usageById.set(r.player_id!, r));
+
+  const gradeById = new Map<string, (typeof gradeRows)[0]>();
+  (gradeRows || []).forEach((r) => gradeById.set(r.player_id!, r));
+
+  const roleById = new Map<string, (typeof roleRows)[0]>();
+  (roleRows || []).forEach((r) => roleById.set(r.player_id!, r));
+
+  const teamTotalSnaps = (usageRows || []).reduce((sum, r) => sum + Number(r.snaps || 0), 0) || 1;
+
+  // 4) Compute raw totals per player
+  const computed = players.map((p) => {
+    const usage = usageById.get(p.id) || ({} as any);
+    const grade = gradeById.get(p.id) || ({} as any);
+    const role = roleById.get(p.id) || ({} as any);
+
+    const snaps = Number(usage.snaps || 0);
+    const leverageSnaps = Number(usage.leverage_snaps || 0);
+    const games = Number(usage.games_played || 0);
+    const overallGrade = Number(grade.overall_grade || 0);
+
+    const impact = clamp(overallGrade / 100, 0, 1);
+    const availability = clamp(snaps / teamTotalSnaps, 0, 1);
+    const leverage = snaps > 0 ? clamp(leverageSnaps / snaps, 0, 1) : 0;
+    const scarcity = scarcityMultiplier(role.replacement_risk || "MED");
+
+    const posKey = (p.position || "").toUpperCase();
+    const posMultiplier = Number(posMult[posKey] ?? 1.0);
+
+    const snapsFactor = clamp(snaps / 600, 0, 1);
+    const gamesFactor = clamp(games / 12, 0, 1);
+    const confidence = clamp((snapsFactor * 70 + gamesFactor * 30), 0, 100);
+
+    const total =
+      powSafe(impact, weights.impact) *
+      powSafe(availability, weights.availability) *
+      powSafe(leverage, weights.leverage) *
+      powSafe(scarcity, weights.scarcity) *
+      posMultiplier;
+
+    const roleName = (role.role || "ROTATION").toUpperCase();
+
+    return {
+      player: p,
+      total,
+      confidence,
+      rationale: {
+        impact,
+        availability,
+        leverage,
+        scarcity,
+        posMultiplier,
+        overallGrade,
+        snaps,
+        leverageSnaps,
+        games,
+        role: roleName,
+        replacementRisk: (role.replacement_risk || "MED").toUpperCase()
+      },
+      roleName
+    };
+  });
+
+  const teamTotal = computed.reduce((s, x) => s + x.total, 0) || 1;
+
+  // 5) Convert to share % and dollars (pre-guardrails)
+  let rows = computed.map((x) => {
+    const sharePct = clamp(x.total / teamTotal, 0, 1);
+    const baseMid = sharePct * allocatable;
+    const conf = x.confidence;
+    const width = conf >= 75 ? 0.20 : conf >= 50 ? 0.30 : 0.40;
+    const low = baseMid * (1 - width);
+    const high = baseMid * (1 + width);
+
+    return {
+      program_id: programId,
+      season_id: seasonId,
+      policy_id: policyId,
+      player_id: x.player.id,
+      total_score: Number(x.total.toFixed(6)),
+      share_pct: Number(sharePct.toFixed(4)),
+      dollars_low: Number(low.toFixed(2)),
+      dollars_mid: Number(baseMid.toFixed(2)),
+      dollars_high: Number(high.toFixed(2)),
+      confidence: Number(conf.toFixed(2)),
+      rationale: x.rationale,
+      __roleName: x.roleName
+    };
+  });
+
+  // 6) Apply guardrails
+  const maxShare = guardrails.max_share_pct ?? 0.25;
+  const floorRotation = guardrails.floor_rotation_usd ?? 15000;
+
+  // Cap shares
+  rows = rows.map((r) => ({
+    ...r,
+    share_pct: Math.min(r.share_pct, maxShare),
+  }));
+
+  // Recompute dollars after share cap
+  const shareSumAfterCap = rows.reduce((s, r) => s + r.share_pct, 0) || 1;
+  rows = rows.map((r) => {
+    const cappedShareNorm = r.share_pct / shareSumAfterCap;
+    const mid = cappedShareNorm * allocatable;
+    const conf = r.confidence;
+    const width = conf >= 75 ? 0.20 : conf >= 50 ? 0.30 : 0.40;
+    return {
+      ...r,
+      share_pct: Number(cappedShareNorm.toFixed(4)),
+      dollars_mid: Number(mid.toFixed(2)),
+      dollars_low: Number((mid * (1 - width)).toFixed(2)),
+      dollars_high: Number((mid * (1 + width)).toFixed(2)),
+    };
+  });
+
+  // Floors for rotation/starter
+  const floorIds = rows
+    .filter((r) => roleIsRotationOrHigher(r.__roleName))
+    .map((r) => r.player_id);
+
+  const floored = new Set<string>();
+  let floorTotal = 0;
+
+  rows = rows.map((r) => {
+    if (floorIds.includes(r.player_id) && r.dollars_mid < floorRotation) {
+      floored.add(r.player_id);
+      floorTotal += (floorRotation - r.dollars_mid);
+      const mid = floorRotation;
+      const conf = r.confidence;
+      const width = conf >= 75 ? 0.20 : conf >= 50 ? 0.30 : 0.40;
+      return {
+        ...r,
+        dollars_mid: Number(mid.toFixed(2)),
+        dollars_low: Number((mid * (1 - width)).toFixed(2)),
+        dollars_high: Number((mid * (1 + width)).toFixed(2)),
+      };
+    }
+    return r;
+  });
+
+  if (floorTotal > 0) {
+    const adjustable = rows.filter((r) => !floored.has(r.player_id));
+    const adjustableTotal = adjustable.reduce((s, r) => s + r.dollars_mid, 0) || 1;
+    rows = rows.map((r) => {
+      if (floored.has(r.player_id)) return r;
+      const reduction = (r.dollars_mid / adjustableTotal) * floorTotal;
+      const mid = Math.max(0, r.dollars_mid - reduction);
+      const conf = r.confidence;
+      const width = conf >= 75 ? 0.20 : conf >= 50 ? 0.30 : 0.40;
+      return {
+        ...r,
+        dollars_mid: Number(mid.toFixed(2)),
+        dollars_low: Number((mid * (1 - width)).toFixed(2)),
+        dollars_high: Number((mid * (1 + width)).toFixed(2)),
+      };
+    });
+  }
+
+  // Remove temp field
+  const insertRows = rows.map(({ __roleName, ...rest }) => rest);
+
+  // 7) Clear prior snapshots
+  await supabase
+    .from("fb_value_snapshots")
+    .delete()
+    .eq("program_id", programId)
+    .eq("season_id", seasonId)
+    .eq("policy_id", policyId);
+
+  // 8) Insert new snapshots
+  const { error: insErr } = await supabase
+    .from("fb_value_snapshots")
+    .insert(insertRows);
+
+  if (insErr) throw insErr;
+
+  return { ok: true, inserted: insertRows.length };
 }
 
 /**
