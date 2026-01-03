@@ -5,7 +5,7 @@ import { PageMetaComponent } from '@/lib/seo';
 
 const PLANS = [
   { name: 'Starter', price: 'Contact', features: ['Transfer Portal tracking', 'Basic pipeline management', '3 staff seats', 'Email support'] },
-  { name: 'Pro', price: 'Contact', popular: true, features: ['Everything in Starter', 'Film Intelligence', 'NIL budget tools', 'Unlimited staff seats', 'Priority support'] },
+  { name: 'Pro', price: 'Contact', popular: true, features: ['Everything in Starter', 'Film Intelligence', 'RevShare budget tools', 'Unlimited staff seats', 'Priority support'] },
   { name: 'Enterprise', price: 'Custom', features: ['Everything in Pro', 'Custom integrations', 'Dedicated success manager', 'SLA guarantees'] }
 ];
 

@@ -4,7 +4,7 @@ export const CALCULATOR_CONFIG: CalculatorConfig = {
   version: "demo-v1.0",
   currency: "USD",
   asOfYear: 2026,
-  nilBands: {
+  revShareBands: {
     LOW: { min: 5000, mid: 15000, max: 20000 },
     MED: { min: 25000, mid: 45000, max: 60000 },
     HIGH: { min: 75000, mid: 110000, max: 150000 }
@@ -33,7 +33,7 @@ export const CALCULATOR_CONFIG: CalculatorConfig = {
     minRemainingBuffer: 150000
   },
   budgetTotals: {
-    totalNILBudget: 1800000,
+    totalRevShareBudget: 1800000,
     contingencyReserve: 120000,
     treatReserveAsLocked: true
   },

@@ -190,7 +190,7 @@ const CollegeFootballRecruitingPage = () => {
               </h2>
               <p className="text-muted-foreground text-lg mb-8">
                 Recruiting doesn't exist in a vacuum. Gridiron Ops connects your recruiting workflow 
-                to Transfer Portal tracking, film analysis, NIL budgeting, and roster management.
+                to Transfer Portal tracking, film analysis, RevShare budgeting, and roster management.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link to="/ncaa-transfer-portal-ops" className="px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/30 text-sm">

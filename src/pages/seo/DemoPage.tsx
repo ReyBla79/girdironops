@@ -21,7 +21,7 @@ const DemoPage = () => {
             Experience the full platform with simulated data. No account required.
           </p>
           <div className="space-y-4 text-left max-w-md mx-auto mb-8">
-            {['Transfer Portal tracking', 'Recruiting pipeline maps', 'Film intelligence preview', 'NIL budget tools'].map((item) => (
+            {['Transfer Portal tracking', 'Recruiting pipeline maps', 'Film intelligence preview', 'RevShare budget tools'].map((item) => (
               <div key={item} className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-success" />
                 <span className="text-muted-foreground">{item}</span>

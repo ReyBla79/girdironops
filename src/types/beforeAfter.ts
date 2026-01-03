@@ -1,4 +1,4 @@
-import type { PositionGroup, RosterRole, RiskColor, NILBand } from './index';
+import type { PositionGroup, RosterRole, RiskColor, RevShareBand } from './index';
 
 export interface BeforeAfterHeadline {
   title: string;
@@ -14,7 +14,7 @@ export interface RecruitAddedEntity {
   position: string;
   positionGroup: PositionGroup;
   assumedRole: RosterRole;
-  nilBand: NILBand;
+  revShareBand: RevShareBand;
   deterministicCost: number;
 }
 

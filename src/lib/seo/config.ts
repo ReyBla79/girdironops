@@ -38,7 +38,7 @@ export const ROUTE_META: Record<string, PageMeta> = {
       'NCAA college football analytics',
       'college football recruiting technology',
       'NCAA Transfer Portal',
-      'NIL compliance',
+      'RevShare compliance',
       'recruiting software',
       'college football analytics',
       'transfer portal tracker',
@@ -48,11 +48,11 @@ export const ROUTE_META: Record<string, PageMeta> = {
     path: '/',
     ogType: 'website',
     structuredDataType: 'WebApplication',
-    aiSummary: `Gridiron Ops is the all-in-one platform for college football recruiting, film intelligence, Transfer Portal tracking, and NCAA program operations. Built for NCAA programs competing every week, it automates recruiting, film, and roster decisions for modern college football staffs. Core capabilities include: (1) Real-time Transfer Portal tracking, (2) NIL compliance tools with market-rate guidance, (3) Recruiting pipeline management with geographic visualization, (4) Coach network discovery, (5) Film intelligence with AI-powered play tagging, and (6) Budget forecasting. The platform emphasizes compliance-first design with audit trails and role-based access controls.`
+    aiSummary: `Gridiron Ops is the all-in-one platform for college football recruiting, film intelligence, Transfer Portal tracking, and NCAA program operations. Built for NCAA programs competing every week, it automates recruiting, film, and roster decisions for modern college football staffs. Core capabilities include: (1) Real-time Transfer Portal tracking, (2) RevShare compliance tools with market-rate guidance, (3) Recruiting pipeline management with geographic visualization, (4) Coach network discovery, (5) Film intelligence with AI-powered play tagging, and (6) Budget forecasting. The platform emphasizes compliance-first design with audit trails and role-based access controls.`
   },
   '/login': {
     title: 'Sign In | Gridiron Ops - College Football Recruiting Platform',
-    description: 'Access your Gridiron Ops dashboard to manage Transfer Portal tracking, recruiting pipelines, and NIL compliance tools for your college football program.',
+    description: 'Access your Gridiron Ops dashboard to manage Transfer Portal tracking, recruiting pipelines, and RevShare compliance tools for your college football program.',
     keywords: ['login', 'sign in', 'college football recruiting', 'Gridiron Ops'],
     path: '/login',
     noIndex: true,
@@ -161,19 +161,19 @@ export const ROUTE_META: Record<string, PageMeta> = {
     aiSummary: 'Coach relationship mapping tool showing coaching trees, institutional connections, and recruiting territory expertise. Helps identify warm introduction paths for prospect outreach.'
   },
   '/app/budget': {
-    title: 'NIL Budget Planning | College Football Financials | Gridiron Ops',
-    description: 'Plan and track NIL budgets with market-rate guidance. Forecast roster costs, compare offers, and maintain compliance with transparent financial tracking.',
+    title: 'RevShare Budget Planning | College Football Financials | Gridiron Ops',
+    description: 'Plan and track RevShare budgets with market-rate guidance. Forecast roster costs, compare offers, and maintain compliance with transparent financial tracking.',
     keywords: [
-      'NIL budget',
-      'college football NIL',
-      'NIL tracking',
+      'RevShare budget',
+      'college football RevShare',
+      'RevShare tracking',
       'roster budget',
-      'NIL compliance',
+      'RevShare compliance',
       'college sports finances'
     ],
     path: '/app/budget',
     structuredDataType: 'WebPage',
-    aiSummary: 'NIL (Name, Image, Likeness) budget planning tool with position-based market rate guidance, roster cost forecasting, and compliance-focused financial tracking for college football programs.'
+    aiSummary: 'Revenue Sharing budget planning tool with position-based market rate guidance, roster cost forecasting, and compliance-focused financial tracking for college football programs.'
   },
   '/app/forecast': {
     title: 'Roster Forecasting | Multi-Year Planning | Gridiron Ops',
@@ -234,18 +234,18 @@ export const ROUTE_META: Record<string, PageMeta> = {
   },
   '/app/compliance': {
     title: 'NCAA Compliance Dashboard | Gridiron Ops',
-    description: 'Stay NCAA compliant with built-in guardrails. Track contact approvals, audit recruiting activities, and manage NIL disclosures with full transparency.',
+    description: 'Stay NCAA compliant with built-in guardrails. Track contact approvals, audit recruiting activities, and manage RevShare disclosures with full transparency.',
     keywords: [
       'NCAA compliance',
       'recruiting compliance',
-      'NIL compliance',
+      'RevShare compliance',
       'contact approval',
       'audit trail',
       'recruiting rules'
     ],
     path: '/app/compliance',
     structuredDataType: 'WebPage',
-    aiSummary: 'NCAA compliance management dashboard featuring contact approval workflows, activity audit trails, NIL disclosure tracking, and role-based access controls for recruiting operations.'
+    aiSummary: 'NCAA compliance management dashboard featuring contact approval workflows, activity audit trails, RevShare disclosure tracking, and role-based access controls for recruiting operations.'
   },
   '/college-football-operations': {
     title: 'College Football Operations Software for NCAA Programs | Gridiron Ops',
@@ -312,12 +312,12 @@ export const ROUTE_META: Record<string, PageMeta> = {
   },
   '/demo': {
     title: 'Try Gridiron Ops Demo | College Football Recruiting Platform',
-    description: 'Experience Gridiron Ops with a free interactive demo. See Transfer Portal tracking, recruiting pipelines, film intelligence, and NIL tools in action.',
+    description: 'Experience Gridiron Ops with a free interactive demo. See Transfer Portal tracking, recruiting pipelines, film intelligence, and RevShare tools in action.',
     keywords: ['Gridiron Ops demo', 'recruiting software demo', 'transfer portal demo', 'try free', 'college football software trial'],
     path: '/demo',
     ogType: 'website',
     structuredDataType: 'WebPage',
-    aiSummary: 'Interactive demo of Gridiron Ops platform featuring simulated Transfer Portal data, recruiting pipeline visualization, film intelligence preview, and NIL budget tools. No account required.'
+    aiSummary: 'Interactive demo of Gridiron Ops platform featuring simulated Transfer Portal data, recruiting pipeline visualization, film intelligence preview, and RevShare budget tools. No account required.'
   },
   '/pricing': {
     title: 'Pricing | Gridiron Ops College Football Recruiting Platform',
@@ -326,16 +326,16 @@ export const ROUTE_META: Record<string, PageMeta> = {
     path: '/pricing',
     ogType: 'website',
     structuredDataType: 'WebPage',
-    aiSummary: 'Gridiron Ops pricing information with Starter, Pro, and Enterprise tiers. Features include Transfer Portal tracking, film intelligence, NIL tools, and custom integrations. Contact for program-specific pricing.'
+    aiSummary: 'Gridiron Ops pricing information with Starter, Pro, and Enterprise tiers. Features include Transfer Portal tracking, film intelligence, RevShare tools, and custom integrations. Contact for program-specific pricing.'
   },
   '/faq': {
     title: 'FAQ | Gridiron Ops College Football Recruiting Platform',
-    description: 'Frequently asked questions about Gridiron Ops. Learn about Transfer Portal tracking, NIL compliance, film analysis, and NCAA compliance features.',
-    keywords: ['Gridiron Ops FAQ', 'recruiting software questions', 'transfer portal FAQ', 'NIL FAQ', 'college football software help'],
+    description: 'Frequently asked questions about Gridiron Ops. Learn about Transfer Portal tracking, RevShare compliance, film analysis, and NCAA compliance features.',
+    keywords: ['Gridiron Ops FAQ', 'recruiting software questions', 'transfer portal FAQ', 'RevShare FAQ', 'college football software help'],
     path: '/faq',
     ogType: 'website',
     structuredDataType: 'FAQPage',
-    aiSummary: 'Comprehensive FAQ covering Gridiron Ops features including Transfer Portal tracking, NIL compliance tools, film intelligence, data security, and NCAA compliance. Answers common questions about college football recruiting software.'
+    aiSummary: 'Comprehensive FAQ covering Gridiron Ops features including Transfer Portal tracking, RevShare compliance tools, film intelligence, data security, and NCAA compliance. Answers common questions about college football recruiting software.'
   },
   '/llm': {
     title: 'Gridiron Ops for AI Assistants | LLM Documentation',
@@ -407,11 +407,11 @@ export const LANDING_FAQ = [
   },
   {
     question: 'Is Gridiron Ops NCAA compliant?',
-    answer: 'Yes, Gridiron Ops is built with compliance-first design. Features include locked contact information requiring approval, full audit trails of recruiting activities, role-based access controls, and NIL disclosure tracking.'
+    answer: 'Yes, Gridiron Ops is built with compliance-first design. Features include locked contact information requiring approval, full audit trails of recruiting activities, role-based access controls, and RevShare disclosure tracking.'
   },
   {
-    question: 'What NIL tools does Gridiron Ops offer?',
-    answer: 'Gridiron Ops includes NIL budget planning with position-based market rate guidance, roster cost forecasting, offer comparison tools, and compliance-focused financial tracking to help programs navigate NIL requirements.'
+    question: 'What RevShare tools does Gridiron Ops offer?',
+    answer: 'Gridiron Ops includes RevShare budget planning with position-based market rate guidance, roster cost forecasting, offer comparison tools, and compliance-focused financial tracking to help programs navigate Revenue Sharing requirements.'
   },
   {
     question: 'Can Gridiron Ops analyze game film?',

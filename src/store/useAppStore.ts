@@ -365,7 +365,7 @@ export const useAppStore = create<AppStore>()(
           year: 'JR',
           gradYear: 2027,
           eligibilityRemaining: 2,
-          nilBand: 'HIGH',
+          revShareBand: 'HIGH',
           estimatedCost: 127000, // Fixed deterministic cost
           role: 'STARTER',
           snapsShare: 0,

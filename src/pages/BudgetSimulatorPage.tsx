@@ -37,7 +37,7 @@ const BudgetSimulatorPage = () => {
       .filter(p => !removedPlayerIds.includes(p.id))
       .reduce((sum, p) => sum + p.estimatedCost, 0);
     const prospectCost = addedProspects.reduce((sum, p) => {
-      return sum + (p.nilRange?.mid || 50000);
+      return sum + (p.revShareRange?.mid || 50000);
     }, 0);
     return rosterCost + prospectCost;
   }, [simulatedRoster, removedPlayerIds, addedProspects]);
@@ -62,7 +62,7 @@ const BudgetSimulatorPage = () => {
       });
 
     addedProspects.forEach(p => {
-      after[p.positionGroup] = (after[p.positionGroup] || 0) + (p.nilRange?.mid || 50000);
+      after[p.positionGroup] = (after[p.positionGroup] || 0) + (p.revShareRange?.mid || 50000);
     });
 
     return { before, after };
@@ -153,9 +153,9 @@ const BudgetSimulatorPage = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Est. NIL Cost</p>
+                  <p className="text-sm text-muted-foreground">Est. RevShare Cost</p>
                   <p className="font-bold text-lg">
-                    ${selectedProspect.nilRange?.mid?.toLocaleString() || '50,000'}
+                    ${selectedProspect.revShareRange?.mid?.toLocaleString() || '50,000'}
                   </p>
                 </div>
               </div>
@@ -328,7 +328,7 @@ const BudgetSimulatorPage = () => {
                     <span className="font-medium">{prospect.name}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="font-bold">${prospect.nilRange?.mid?.toLocaleString() || '50,000'}</span>
+                    <span className="font-bold">${prospect.revShareRange?.mid?.toLocaleString() || '50,000'}</span>
                     <Button
                       variant="ghost"
                       size="sm"

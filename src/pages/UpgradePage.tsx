@@ -11,7 +11,7 @@ const TOGGLES: { key: keyof FeatureFlags; name: string; description: string }[] 
   { key: 'coach_network_pro', name: 'Coach Network Pro', description: 'Inter-program intel sharing' },
   { key: 'enterprise_institutional', name: 'Enterprise / Institutional', description: 'Multi-sport & institutional analytics' },
   { key: 'film_ai', name: 'Film AI', description: 'AI-powered film tagging & highlights' },
-  { key: 'nil_engine', name: 'NIL Engine', description: 'NIL valuation & market data' },
+  { key: 'revshare_engine', name: 'RevShare Engine', description: 'RevShare valuation & market data' },
 ];
 
 const BASE_FLAGS: (keyof FeatureFlags)[] = [

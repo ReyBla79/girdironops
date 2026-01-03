@@ -6,7 +6,7 @@ export type Pool = "TRANSFER_PORTAL" | "JUCO" | "HS";
 export type PlayerStatus = "NEW" | "UPDATED" | "WITHDRAWN";
 export type Readiness = "HIGH" | "MED" | "LOW";
 export type Risk = "LOW" | "MED" | "HIGH";
-export type NILBand = "HIGH" | "MED" | "LOW";
+export type RevShareBand = "HIGH" | "MED" | "LOW";
 export type NeedPriority = "MUST_REPLACE" | "UPGRADE" | "DEPTH";
 export type VerificationStatus = "VERIFIED_OPT_IN" | "CLAIMED" | "UNVERIFIED";
 export type ContactVisibility = "PUBLIC" | "GATED" | "HIDDEN";
@@ -34,7 +34,7 @@ export interface Player {
   reasons: string[];
   flags: string[];
   filmLinks: { label: string; url: string }[];
-  nilRange?: { low: number; mid: number; high: number; rationale: string };
+  revShareRange?: { low: number; mid: number; high: number; rationale: string };
   reviewed?: boolean;
 }
 
@@ -99,7 +99,7 @@ export interface FeatureFlags {
   enterprise_institutional: boolean;
   api_licensing: boolean;
   film_ai: boolean;
-  nil_engine: boolean;
+  revshare_engine: boolean;
   roster_module: boolean;
   fit_lab: boolean;
   budget_core: boolean;
@@ -162,7 +162,7 @@ export interface RosterPlayer {
   year: ClassYear;
   gradYear: number;
   eligibilityRemaining: number;
-  nilBand: NILBand;
+  revShareBand: RevShareBand;
   estimatedCost: number;
   role: RosterRole;
   snapsShare: number;

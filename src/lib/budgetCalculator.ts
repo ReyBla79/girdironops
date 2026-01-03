@@ -1,12 +1,12 @@
 import { CALCULATOR_CONFIG } from '@/demo/calculatorConfig';
-import type { RosterPlayer, PositionGroup, RiskColor, RosterRole, NILBand, ForecastYear, BudgetForecast, RiskHeatmapRow, Player } from '@/types';
+import type { RosterPlayer, PositionGroup, RiskColor, RosterRole, RevShareBand, ForecastYear, BudgetForecast, RiskHeatmapRow, Player } from '@/types';
 import type { BeforeAfterSummary, BeforeAfterState } from '@/types/beforeAfter';
 
 const config = CALCULATOR_CONFIG;
 
 // A) Player Cost (if estimatedCost missing)
 export function calculatePlayerCost(player: {
-  nilBand: NILBand;
+  revShareBand: RevShareBand;
   role: RosterRole;
   positionGroup: PositionGroup;
   estimatedCost?: number;
@@ -16,7 +16,7 @@ export function calculatePlayerCost(player: {
     return player.estimatedCost;
   }
 
-  const bandMid = config.nilBands[player.nilBand].mid;
+  const bandMid = config.revShareBands[player.revShareBand].mid;
   const roleMult = config.roleCostMultipliers[player.role];
   const posWeight = config.positionGroupBudgetWeights[player.positionGroup];
   
@@ -63,17 +63,17 @@ export function calculateRemainingBudget(roster: RosterPlayer[], excludeSimRemov
   remaining: number;
   contingencyReserve: number;
 } {
-  const { totalNILBudget, contingencyReserve, treatReserveAsLocked } = config.budgetTotals;
+  const { totalRevShareBudget, contingencyReserve, treatReserveAsLocked } = config.budgetTotals;
   const allocated = calculateTotalAllocated(roster, excludeSimRemoved);
   
   const available = treatReserveAsLocked 
-    ? totalNILBudget - contingencyReserve 
-    : totalNILBudget;
+    ? totalRevShareBudget - contingencyReserve 
+    : totalRevShareBudget;
   
   const remaining = available - allocated;
 
   return {
-    totalBudget: totalNILBudget,
+    totalBudget: totalRevShareBudget,
     available,
     allocated,
     remaining,
@@ -475,7 +475,7 @@ export function generateBeforeAfterSummary(input: WowScenarioInput): BeforeAfter
         position: recruit.position,
         positionGroup: recruit.positionGroup,
         assumedRole: wowConfig.assumedRecruitRole,
-        nilBand: 'HIGH',
+        revShareBand: 'HIGH',
         deterministicCost: recruitCost
       },
       replacementSuggested: {

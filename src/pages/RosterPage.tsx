@@ -7,7 +7,7 @@ import { Users, DollarSign, AlertTriangle, Target } from 'lucide-react';
 import { RosterPlayer, RosterNeed, PositionGroup, RosterRole, RiskColor } from '@/types';
 import { ROSTER_META } from '@/demo/rosterData';
 
-const NIL_BAND_COLORS = {
+const REVSHARE_BAND_COLORS = {
   HIGH: 'bg-chart-1 text-primary-foreground',
   MED: 'bg-chart-2 text-primary-foreground',
   LOW: 'bg-muted text-muted-foreground',
@@ -147,7 +147,7 @@ const RosterPage = () => {
                   <TableHead className="text-right">Snaps %</TableHead>
                   <TableHead className="text-right">Grade</TableHead>
                   <TableHead className="text-right">Est. Cost</TableHead>
-                  <TableHead>NIL Band</TableHead>
+                  <TableHead>RevShare Band</TableHead>
                   <TableHead>Risk</TableHead>
                 </TableRow>
               </TableHeader>
@@ -166,7 +166,7 @@ const RosterPage = () => {
                     <TableCell className="text-right">{player.performanceGrade}</TableCell>
                     <TableCell className="text-right">${player.estimatedCost.toLocaleString()}</TableCell>
                     <TableCell>
-                      <Badge className={NIL_BAND_COLORS[player.nilBand]}>{player.nilBand}</Badge>
+                      <Badge className={REVSHARE_BAND_COLORS[player.revShareBand]}>{player.revShareBand}</Badge>
                     </TableCell>
                     <TableCell>
                       <span className={`text-sm font-medium ${RISK_COLOR_CLASSES[player.riskColor]}`}>
