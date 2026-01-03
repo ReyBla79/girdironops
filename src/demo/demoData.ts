@@ -18,7 +18,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   enterprise_institutional: false,
   api_licensing: false,
   film_ai: false,
-  nil_engine: false,
+  revshare_engine: false,
   roster_module: true,
   fit_lab: true,
   budget_core: true,
@@ -86,7 +86,7 @@ export const SEED_PLAYERS: Player[] = [
       { label: "2025 Cutups", url: "/videos/malik-neighbors-2025-cutups.mp4" },
       { label: "Pass Pro Snaps", url: "/videos/malik-neighbors-pass-pro-snaps.mp4" },
     ],
-    nilRange: { low: 150000, mid: 225000, high: 350000, rationale: "P5 starter level tackle, high demand" },
+    revShareRange: { low: 150000, mid: 225000, high: 350000, rationale: "P5 starter level tackle, high demand" },
     reviewed: false,
   },
   {
@@ -112,9 +112,9 @@ export const SEED_PLAYERS: Player[] = [
       "Production trend up last 6 games",
       "Can play EDGE or 5-tech in multiple fronts",
     ],
-    flags: ["Risk: Prior transfer", "NIL expectations unknown (demo)"],
+    flags: ["Risk: Prior transfer", "RevShare expectations unknown (demo)"],
     filmLinks: [{ label: "Sacks/Pressures Reel (placeholder)", url: "#" }],
-    nilRange: { low: 100000, mid: 175000, high: 250000, rationale: "Productive pass rusher, 1 yr remaining" },
+    revShareRange: { low: 100000, mid: 175000, high: 250000, rationale: "Productive pass rusher, 1 yr remaining" },
     reviewed: false,
   },
   {
@@ -142,7 +142,7 @@ export const SEED_PLAYERS: Player[] = [
     ],
     flags: ["Needs: route tree refinement (demo)"],
     filmLinks: [{ label: "JUCO Highlights (placeholder)", url: "#" }],
-    nilRange: { low: 25000, mid: 50000, high: 75000, rationale: "JUCO prospect, development upside" },
+    revShareRange: { low: 25000, mid: 50000, high: 75000, rationale: "JUCO prospect, development upside" },
     reviewed: true,
   },
   {
@@ -166,7 +166,7 @@ export const SEED_PLAYERS: Player[] = [
     reasons: ["Man coverage fit", "Veteran leadership", "Ball production"],
     flags: ["Status: Withdrawn (demo)"],
     filmLinks: [{ label: "Coverage Clips (placeholder)", url: "#" }],
-    nilRange: { low: 80000, mid: 120000, high: 180000, rationale: "Experience cornerback, market rate" },
+    revShareRange: { low: 80000, mid: 120000, high: 180000, rationale: "Experience cornerback, market rate" },
     reviewed: true,
   },
   {
@@ -194,7 +194,7 @@ export const SEED_PLAYERS: Player[] = [
     ],
     flags: ["Step-up competition (demo)"],
     filmLinks: [{ label: "All Throws (placeholder)", url: "#" }],
-    nilRange: { low: 75000, mid: 125000, high: 200000, rationale: "FCS transfer QB, development path" },
+    revShareRange: { low: 75000, mid: 125000, high: 200000, rationale: "FCS transfer QB, development path" },
     reviewed: false,
   },
 ];

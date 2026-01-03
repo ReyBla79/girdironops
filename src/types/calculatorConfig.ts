@@ -1,6 +1,6 @@
-import type { PositionGroup, RosterRole, RiskColor, NILBand } from './index';
+import type { PositionGroup, RosterRole, RiskColor, RevShareBand } from './index';
 
-export interface NILBandRange {
+export interface RevShareBandRange {
   min: number;
   mid: number;
   max: number;
@@ -10,7 +10,7 @@ export interface CalculatorConfig {
   version: string;
   currency: string;
   asOfYear: number;
-  nilBands: Record<NILBand, NILBandRange>;
+  revShareBands: Record<RevShareBand, RevShareBandRange>;
   roleCostMultipliers: Record<RosterRole, number>;
   positionGroupBudgetWeights: Record<PositionGroup, number>;
   budgetGuardrails: {
@@ -20,7 +20,7 @@ export interface CalculatorConfig {
     minRemainingBuffer: number;
   };
   budgetTotals: {
-    totalNILBudget: number;
+    totalRevShareBudget: number;
     contingencyReserve: number;
     treatReserveAsLocked: boolean;
   };

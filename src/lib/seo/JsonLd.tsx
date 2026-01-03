@@ -66,7 +66,7 @@ export function WebApplicationJsonLd() {
     url: SITE_CONFIG.domain,
     applicationCategory: 'Sports Management Software',
     operatingSystem: 'Web Browser',
-    description: 'Real-time NCAA Transfer Portal tracking, NIL compliance tools, and AI-powered recruiting intelligence for college football programs.',
+    description: 'Real-time NCAA Transfer Portal tracking, RevShare compliance tools, and AI-powered recruiting intelligence for college football programs.',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -75,7 +75,7 @@ export function WebApplicationJsonLd() {
     },
     featureList: [
       'Real-time Transfer Portal tracking',
-      'NIL budget planning and compliance',
+      'RevShare budget planning and compliance',
       'Geographic recruiting pipeline visualization',
       'Coach network relationship mapping',
       'AI-powered film analysis',
@@ -181,7 +181,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: 'SportsApplication',
     operatingSystem: 'Web',
     url: SITE_CONFIG.domain,
-    description: 'College football recruiting intelligence platform with Transfer Portal tracking, NIL compliance, and AI-powered analytics.',
+    description: 'College football recruiting intelligence platform with Transfer Portal tracking, RevShare compliance, and AI-powered analytics.',
     offers: {
       '@type': 'Offer',
       price: '0',

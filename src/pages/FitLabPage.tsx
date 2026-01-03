@@ -43,11 +43,11 @@ const computeImpact = (player: Player, need: RosterNeed | null) => {
 
 // Demo budget fit computation
 const computeBudgetFit = (player: Player, allocations: Record<string, number>, guardrails: { maxPerPlayer: number }) => {
-  if (!player.nilRange) return { status: 'UNKNOWN', label: 'Unknown' };
+  if (!player.revShareRange) return { status: 'UNKNOWN', label: 'Unknown' };
   
   const positionBudget = allocations[player.positionGroup] || 100000;
   const maxPlayer = guardrails.maxPerPlayer;
-  const midValue = player.nilRange.mid;
+  const midValue = player.revShareRange.mid;
   
   if (midValue <= Math.min(positionBudget * 0.3, maxPlayer * 0.8)) {
     return { status: 'GOOD', label: 'Within Budget' };

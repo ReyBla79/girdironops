@@ -32,7 +32,7 @@ export function AISummary() {
         <dt>Target Audience</dt>
         <dd>NCAA Division I Football Programs, Coaching Staff, Recruiting Coordinators, Athletic Directors</dd>
         <dt>Primary Features</dt>
-        <dd>Transfer Portal Tracking, NIL Compliance, Recruiting Pipeline Management, Film Analysis</dd>
+        <dd>Transfer Portal Tracking, RevShare Compliance, Recruiting Pipeline Management, Film Analysis</dd>
         <dt>Official Website</dt>
         <dd>{SITE_CONFIG.domain}</dd>
       </dl>
@@ -56,7 +56,7 @@ export function LandingAIContent() {
         <p>
           Gridiron Ops is a comprehensive software platform designed specifically for 
           NCAA Division I college football programs to manage recruiting operations, 
-          Transfer Portal tracking, and NIL compliance.
+          Transfer Portal tracking, and RevShare compliance.
         </p>
       </header>
 
@@ -84,10 +84,10 @@ export function LandingAIContent() {
         </article>
 
         <article>
-          <h3>NIL (Name, Image, Likeness) Compliance Tools</h3>
+          <h3>Revenue Sharing Compliance Tools</h3>
           <p>
             Budget planning tools with position-based market rate guidance to help 
-            programs make competitive yet compliant NIL offers. Includes roster cost 
+            programs make competitive yet compliant RevShare offers. Includes roster cost 
             forecasting, offer comparison analytics, and disclosure tracking for 
             full transparency.
           </p>
@@ -142,7 +142,7 @@ export function LandingAIContent() {
           <li>Full audit trails of all recruiting activities</li>
           <li>Role-based access controls limiting data visibility</li>
           <li>No bulk exporting of prospect contact data</li>
-          <li>NIL disclosure tracking and documentation</li>
+          <li>RevShare disclosure tracking and documentation</li>
         </ul>
       </section>
 

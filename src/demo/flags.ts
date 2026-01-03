@@ -18,7 +18,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   enterprise_institutional: false,
   api_licensing: false,
   film_ai: false,
-  nil_engine: false,
+  revshare_engine: false,
   roster_module: true,
   fit_lab: true,
   budget_core: true,

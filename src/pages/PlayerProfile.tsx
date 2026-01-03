@@ -54,7 +54,7 @@ const PlayerProfile = () => {
     });
   };
 
-  const canSeeNIL = ['HC', 'GM_RC'].includes(demoRole || '') && flags.nil_engine;
+  const canSeeRevShare = ['HC', 'GM_RC'].includes(demoRole || '') && flags.revshare_engine;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -288,28 +288,28 @@ const PlayerProfile = () => {
         )}
       </div>
 
-      {/* NIL Snapshot - Conditional */}
-      {canSeeNIL && player.nilRange && (
+      {/* RevShare Snapshot - Conditional */}
+      {canSeeRevShare && player.revShareRange && (
         <div className="rounded-xl border border-primary/30 bg-card p-5 shadow-glow">
           <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
-            💰 NIL Snapshot
+            💰 RevShare Snapshot
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Low Est.</p>
-              <p className="font-semibold">${player.nilRange.low.toLocaleString()}</p>
+              <p className="font-semibold">${player.revShareRange.low.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Mid Est.</p>
-              <p className="font-semibold">${player.nilRange.mid.toLocaleString()}</p>
+              <p className="font-semibold">${player.revShareRange.mid.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">High Est.</p>
-              <p className="font-semibold">${player.nilRange.high.toLocaleString()}</p>
+              <p className="font-semibold">${player.revShareRange.high.toLocaleString()}</p>
             </div>
             <div className="col-span-2 md:col-span-1">
               <p className="text-xs text-muted-foreground">Rationale</p>
-              <p className="text-sm">{player.nilRange.rationale}</p>
+              <p className="text-sm">{player.revShareRange.rationale}</p>
             </div>
           </div>
         </div>

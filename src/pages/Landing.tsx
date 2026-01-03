@@ -38,8 +38,8 @@ const PROBLEM_SOLUTION_BENEFIT = [
     benefit: "Never miss a player — know what changed overnight in minutes."
   },
   {
-    problem: "NIL confusion & bidding wars — no fair market clarity.",
-    solution: "NIL Range Snapshot (read-only demo)",
+    problem: "RevShare confusion & bidding wars — no fair market clarity.",
+    solution: "RevShare Range Snapshot (read-only demo)",
     benefit: "Smarter offers — avoid overpaying while staying compliant."
   },
   {
@@ -73,8 +73,8 @@ const FEATURES = [
   },
   {
     icon: DollarSign,
-    title: 'NIL Budget Planning',
-    description: 'Position-based market rate guidance and roster cost forecasting for compliant NIL offers.',
+    title: 'RevShare Budget Planning',
+    description: 'Position-based market rate guidance and roster cost forecasting for compliant RevShare offers.',
     link: '/app/budget'
   },
   {
@@ -343,7 +343,7 @@ const Landing = () => {
                       'No bulk exporting of contacts',
                       'Locked contacts (approval required)',
                       'Audit trail for actions',
-                      'NIL visibility restricted by role'
+                      'RevShare visibility restricted by role'
                     ].map((bullet, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Lock className="w-4 h-4 text-success" aria-hidden="true" />

@@ -11,7 +11,7 @@ import { ROSTER_META } from '@/demo/rosterData';
 import LockedCardUpsell from '@/components/LockedCardUpsell';
 import RiskHeatmapTable from '@/components/RiskHeatmapTable';
 
-const NIL_BAND_COLORS = {
+const REVSHARE_BAND_COLORS = {
   HIGH: 'bg-chart-1 text-primary-foreground',
   MED: 'bg-chart-2 text-primary-foreground',
   LOW: 'bg-muted text-muted-foreground',
@@ -241,7 +241,7 @@ const BudgetPage = () => {
       {flags.budget_core && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Roster NIL Commitments</CardTitle>
+            <CardTitle className="text-lg">Roster RevShare Commitments</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -253,7 +253,7 @@ const BudgetPage = () => {
                     <TableHead>Year</TableHead>
                     <TableHead>Grad</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>NIL Band</TableHead>
+                    <TableHead>RevShare Band</TableHead>
                     <TableHead className="text-right">Est. Cost</TableHead>
                     <TableHead>Risk</TableHead>
                   </TableRow>
@@ -271,7 +271,7 @@ const BudgetPage = () => {
                         <Badge variant={ROLE_VARIANTS[player.role]}>{player.role}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={NIL_BAND_COLORS[player.nilBand]}>{player.nilBand}</Badge>
+                        <Badge className={REVSHARE_BAND_COLORS[player.revShareBand]}>{player.revShareBand}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         ${player.estimatedCost.toLocaleString()}

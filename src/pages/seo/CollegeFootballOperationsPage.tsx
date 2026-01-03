@@ -114,7 +114,7 @@ const CollegeFootballOperationsPage = () => {
                   can focus on what they do best: coaching.
                 </p>
                 <p className="text-lg text-muted-foreground mb-6">
-                  In the modern era of the Transfer Portal and NIL, football operations has become 
+                  In the modern era of the Transfer Portal and Revenue Sharing, football operations has become 
                   exponentially more complex. Programs need real-time information, coordinated workflows, 
                   and compliant processes to stay competitive.
                 </p>
