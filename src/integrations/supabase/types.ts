@@ -14,6 +14,376 @@ export type Database = {
   }
   public: {
     Tables: {
+      fb_player_grades: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          overall_grade: number | null
+          player_id: string | null
+          season_id: string | null
+          unit_grade: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          overall_grade?: number | null
+          player_id?: string | null
+          season_id?: string | null
+          unit_grade?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          overall_grade?: number | null
+          player_id?: string | null
+          season_id?: string | null
+          unit_grade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_player_grades_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "fb_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_player_grades_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_player_roles: {
+        Row: {
+          created_at: string | null
+          depth_rank: number | null
+          id: string
+          player_id: string | null
+          replacement_risk: string
+          role: string
+          season_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          depth_rank?: number | null
+          id?: string
+          player_id?: string | null
+          replacement_risk?: string
+          role?: string
+          season_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          depth_rank?: number | null
+          id?: string
+          player_id?: string | null
+          replacement_risk?: string
+          role?: string
+          season_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_player_roles_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "fb_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_player_roles_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_player_season_usage: {
+        Row: {
+          created_at: string | null
+          games_played: number | null
+          id: string
+          leverage_snaps: number | null
+          player_id: string | null
+          season_id: string | null
+          snaps: number | null
+          snaps_defense: number | null
+          snaps_offense: number | null
+          snaps_st: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          games_played?: number | null
+          id?: string
+          leverage_snaps?: number | null
+          player_id?: string | null
+          season_id?: string | null
+          snaps?: number | null
+          snaps_defense?: number | null
+          snaps_offense?: number | null
+          snaps_st?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          games_played?: number | null
+          id?: string
+          leverage_snaps?: number | null
+          player_id?: string | null
+          season_id?: string | null
+          snaps?: number | null
+          snaps_defense?: number | null
+          snaps_offense?: number | null
+          snaps_st?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_player_season_usage_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "fb_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_player_season_usage_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_players: {
+        Row: {
+          class_year: string | null
+          created_at: string | null
+          external_ref: string | null
+          first_name: string
+          height_inches: number | null
+          id: string
+          last_name: string
+          position: string
+          position_group: string
+          program_id: string | null
+          status: string
+          weight_lbs: number | null
+        }
+        Insert: {
+          class_year?: string | null
+          created_at?: string | null
+          external_ref?: string | null
+          first_name: string
+          height_inches?: number | null
+          id?: string
+          last_name: string
+          position: string
+          position_group: string
+          program_id?: string | null
+          status?: string
+          weight_lbs?: number | null
+        }
+        Update: {
+          class_year?: string | null
+          created_at?: string | null
+          external_ref?: string | null
+          first_name?: string
+          height_inches?: number | null
+          id?: string
+          last_name?: string
+          position?: string
+          position_group?: string
+          program_id?: string | null
+          status?: string
+          weight_lbs?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_players_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_revshare_policies: {
+        Row: {
+          created_at: string | null
+          guardrails: Json
+          id: string
+          is_active: boolean
+          name: string
+          position_multipliers: Json
+          program_id: string | null
+          season_id: string | null
+          version: number
+          weights: Json
+        }
+        Insert: {
+          created_at?: string | null
+          guardrails: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          position_multipliers: Json
+          program_id?: string | null
+          season_id?: string | null
+          version?: number
+          weights: Json
+        }
+        Update: {
+          created_at?: string | null
+          guardrails?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          position_multipliers?: Json
+          program_id?: string | null
+          season_id?: string | null
+          version?: number
+          weights?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_revshare_policies_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_revshare_policies_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_revshare_pools: {
+        Row: {
+          created_at: string | null
+          id: string
+          pool_amount: number
+          program_id: string | null
+          reserved_amount: number
+          season_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pool_amount: number
+          program_id?: string | null
+          reserved_amount?: number
+          season_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pool_amount?: number
+          program_id?: string | null
+          reserved_amount?: number
+          season_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_revshare_pools_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_revshare_pools_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_value_snapshots: {
+        Row: {
+          confidence: number
+          created_at: string | null
+          dollars_high: number
+          dollars_low: number
+          dollars_mid: number
+          id: string
+          player_id: string | null
+          policy_id: string | null
+          program_id: string | null
+          rationale: Json
+          season_id: string | null
+          share_pct: number
+          total_score: number
+        }
+        Insert: {
+          confidence: number
+          created_at?: string | null
+          dollars_high: number
+          dollars_low: number
+          dollars_mid: number
+          id?: string
+          player_id?: string | null
+          policy_id?: string | null
+          program_id?: string | null
+          rationale: Json
+          season_id?: string | null
+          share_pct: number
+          total_score: number
+        }
+        Update: {
+          confidence?: number
+          created_at?: string | null
+          dollars_high?: number
+          dollars_low?: number
+          dollars_mid?: number
+          id?: string
+          player_id?: string | null
+          policy_id?: string | null
+          program_id?: string | null
+          rationale?: Json
+          season_id?: string | null
+          share_pct?: number
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_value_snapshots_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "fb_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_value_snapshots_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "fb_revshare_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_value_snapshots_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_value_snapshots_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       film_assets: {
         Row: {
           confidence_score: number | null
@@ -193,6 +563,53 @@ export type Database = {
             columns: ["film_id"]
             isOneToOne: false
             referencedRelation: "film_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      seasons: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          program_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          program_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          program_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
