@@ -342,13 +342,17 @@ function diffBaselineScenario(baselineRows: any[], scenarioRows: any[]) {
         player_id: id,
         player_name: b.player_name,
         position: b.position,
+        position_group: b.position_group,
+        role: b.role,
         change_type: "REMOVED",
         baseline_mid: b.dollars_mid,
         scenario_mid: 0,
-        delta_mid: -b.dollars_mid,
+        delta_mid: Number((-b.dollars_mid).toFixed(2)),
         baseline_share: b.share_pct,
         scenario_share: 0,
-        delta_share: -b.share_pct,
+        delta_share: Number((-b.share_pct).toFixed(4)),
+        baseline_conf: b.confidence,
+        scenario_conf: 0,
       });
       continue;
     }
@@ -358,13 +362,17 @@ function diffBaselineScenario(baselineRows: any[], scenarioRows: any[]) {
         player_id: id,
         player_name: s.player_name,
         position: s.position,
+        position_group: s.position_group,
+        role: s.role,
         change_type: "ADDED",
         baseline_mid: 0,
         scenario_mid: s.dollars_mid,
-        delta_mid: s.dollars_mid,
+        delta_mid: Number(s.dollars_mid.toFixed(2)),
         baseline_share: 0,
         scenario_share: s.share_pct,
-        delta_share: s.share_pct,
+        delta_share: Number(s.share_pct.toFixed(4)),
+        baseline_conf: 0,
+        scenario_conf: s.confidence,
       });
       continue;
     }
@@ -376,6 +384,8 @@ function diffBaselineScenario(baselineRows: any[], scenarioRows: any[]) {
       player_id: id,
       player_name: s.player_name,
       position: s.position,
+      position_group: s.position_group,
+      role: s.role,
       change_type: "CHANGED",
       baseline_mid: b.dollars_mid,
       scenario_mid: s.dollars_mid,
@@ -383,11 +393,68 @@ function diffBaselineScenario(baselineRows: any[], scenarioRows: any[]) {
       baseline_share: b.share_pct,
       scenario_share: s.share_pct,
       delta_share: deltaShare,
+      baseline_conf: b.confidence,
+      scenario_conf: s.confidence,
     });
   }
 
   diffs.sort((a, b) => Math.abs(b.delta_mid) - Math.abs(a.delta_mid));
   return diffs;
+}
+
+function groupBudget(rows: any[]) {
+  const map = new Map<string, { position_group: string; total_mid: number; total_share: number; count: number }>();
+  for (const r of rows) {
+    const key = (r.position_group || "UNK").toUpperCase();
+    const cur = map.get(key) || { position_group: key, total_mid: 0, total_share: 0, count: 0 };
+    cur.total_mid += Number(r.dollars_mid || 0);
+    cur.total_share += Number(r.share_pct || 0);
+    cur.count += 1;
+    map.set(key, cur);
+  }
+  const out = Array.from(map.values()).map((x) => ({
+    ...x,
+    total_mid: Number(x.total_mid.toFixed(2)),
+    total_share: Number(x.total_share.toFixed(4)),
+  }));
+  out.sort((a, b) => b.total_mid - a.total_mid);
+  return out;
+}
+
+function capWarnings(rows: any[], guardrails: any, allocatable: number) {
+  const maxShare = guardrails?.max_share_pct ?? 0.25;
+  const floorRotation = guardrails?.floor_rotation_usd ?? 15000;
+
+  const maxShareHit = rows.filter((r) => Number(r.share_pct) >= (maxShare - 0.0001));
+  const floorHit = rows.filter((r) => (r.role === "STARTER" || r.role === "ROTATION") && Number(r.dollars_mid) <= (floorRotation + 0.01));
+
+  const floorTaxEstimate = Math.max(
+    0,
+    floorRotation * floorHit.length - floorHit.reduce((s, r) => s + Number(r.dollars_mid || 0), 0)
+  );
+  const floorTax = Number(Math.min(floorTaxEstimate, allocatable).toFixed(2));
+
+  return {
+    max_share_pct: maxShare,
+    floor_rotation_usd: floorRotation,
+    max_share_hit_count: maxShareHit.length,
+    floor_hit_count: floorHit.length,
+    floor_tax_estimate: floorTax,
+    max_share_hit: maxShareHit.slice(0, 25).map((r) => ({
+      player_id: r.player_id,
+      player_name: r.player_name,
+      position: r.position,
+      share_pct: r.share_pct,
+      dollars_mid: r.dollars_mid,
+    })),
+    floor_hit: floorHit.slice(0, 25).map((r) => ({
+      player_id: r.player_id,
+      player_name: r.player_name,
+      position: r.position,
+      role: r.role,
+      dollars_mid: r.dollars_mid,
+    })),
+  };
 }
 
 export async function runScenario(params: {
