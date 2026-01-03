@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Activity, Save, Upload, Download } from 'lucide-react';
-import { parseUsageGradesCSV, CSV_TEMPLATE_B_HEADER, CSV_TEMPLATE_B_EXAMPLE } from '@/lib/footballValueEngine';
+import { parseCSV } from '@/lib/csvParser';
+
+const CSV_TEMPLATE_HEADER = 'external_ref,games_played,snaps,snaps_offense,snaps_defense,snaps_st,leverage_snaps';
+const CSV_TEMPLATE_EXAMPLE = 'player_001,12,600,600,0,0,180';
+
+function getCtx() {
+  return {
+    programId: localStorage.getItem("gridiron_programId") || "",
+    seasonId: localStorage.getItem("gridiron_seasonId") || "",
+  };
+}
 
 interface PlayerWithUsage {
   id: string;
@@ -152,9 +162,9 @@ export default function RosterUsagePage() {
 
     try {
       const text = await file.text();
-      const parsed = parseUsageGradesCSV(text);
+      const rows = parseCSV(text);
 
-      if (parsed.length === 0) {
+      if (rows.length === 0) {
         toast.error('No valid rows found in CSV');
         return;
       }
@@ -166,7 +176,7 @@ export default function RosterUsagePage() {
       });
 
       let updated = 0;
-      for (const row of parsed) {
+      for (const row of rows) {
         const playerId = refMap.get(row.external_ref);
         if (!playerId) continue;
 
@@ -177,12 +187,12 @@ export default function RosterUsagePage() {
               ...p,
               usage: {
                 ...p.usage,
-                games_played: row.games_played,
-                snaps: row.snaps,
-                snaps_offense: row.snaps_offense,
-                snaps_defense: row.snaps_defense,
-                snaps_st: row.snaps_st,
-                leverage_snaps: row.leverage_snaps,
+                games_played: parseInt(row.games_played) || 0,
+                snaps: parseInt(row.snaps) || 0,
+                snaps_offense: parseInt(row.snaps_offense) || 0,
+                snaps_defense: parseInt(row.snaps_defense) || 0,
+                snaps_st: parseInt(row.snaps_st) || 0,
+                leverage_snaps: parseInt(row.leverage_snaps) || 0,
               },
             };
           }
@@ -200,12 +210,12 @@ export default function RosterUsagePage() {
   };
 
   const downloadTemplate = () => {
-    const content = CSV_TEMPLATE_B_HEADER + '\n' + CSV_TEMPLATE_B_EXAMPLE;
+    const content = CSV_TEMPLATE_HEADER + '\n' + CSV_TEMPLATE_EXAMPLE;
     const blob = new Blob([content], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'usage_grades_template.csv';
+    a.download = 'usage_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
