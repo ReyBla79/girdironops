@@ -574,14 +574,48 @@ export async function runScenario(params: {
 
   const diffs = diffBaselineScenario(baseline.rows, scenario.rows);
 
+  // Position group budget aggregations
+  const baselineGroup = groupBudget(baseline.rows);
+  const scenarioGroup = groupBudget(scenario.rows);
+  const groupDeltaMap = new Map<string, any>();
+  baselineGroup.forEach((g) => groupDeltaMap.set(g.position_group, { ...g, baseline_mid: g.total_mid, scenario_mid: 0, delta_mid: 0 }));
+  scenarioGroup.forEach((g) => {
+    const cur = groupDeltaMap.get(g.position_group) || {
+      position_group: g.position_group,
+      baseline_mid: 0,
+      scenario_mid: 0,
+      delta_mid: 0,
+      total_share: 0,
+      count: 0,
+    };
+    cur.scenario_mid = g.total_mid;
+    cur.delta_mid = Number((cur.scenario_mid - cur.baseline_mid).toFixed(2));
+    groupDeltaMap.set(g.position_group, cur);
+  });
+  const groupDeltas = Array.from(groupDeltaMap.values()).sort((a, b) => Math.abs(b.delta_mid) - Math.abs(a.delta_mid));
+
+  // Cap warnings
+  const baselineWarnings = capWarnings(baseline.rows, (policyRow as any).guardrails, baseline.summary.allocatable);
+  const scenarioWarnings = capWarnings(scenario.rows, (policyRow as any).guardrails, scenario.summary.allocatable);
+
   const results = {
     generated_at: new Date().toISOString(),
     scenario: { id: scenarioId, name: scenRow.name, notes: scenRow.notes || "" },
     baseline_summary: baseline.summary,
     scenario_summary: scenario.summary,
-    diffs_top: diffs.slice(0, 25),
-    baseline_top: baseline.rows.slice(0, 25),
-    scenario_top: scenario.rows.slice(0, 25),
+    // Full tables for side-by-side rendering
+    baseline_full: baseline.rows,
+    scenario_full: scenario.rows,
+    // Diffs
+    diffs_all: diffs,
+    diffs_top: diffs.slice(0, 50),
+    // Position group budgets + deltas
+    baseline_group_budget: baselineGroup,
+    scenario_group_budget: scenarioGroup,
+    group_budget_deltas: groupDeltas,
+    // Cap warnings
+    baseline_warnings: baselineWarnings,
+    scenario_warnings: scenarioWarnings,
   };
 
   // Save results (upsert) - cast to any to handle new table types
