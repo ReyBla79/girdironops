@@ -617,83 +617,278 @@ export default function ScenarioLab() {
             <p className="text-muted-foreground">Run a scenario to generate results.</p>
           ) : (
             <div className="space-y-6">
-              {/* Summary Comparison */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold mb-2">Baseline</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>
-                      Pool: ${Number(result.baseline_summary.poolAmount).toLocaleString()}
-                    </div>
-                    <div>
-                      Allocatable: $
-                      {Number(result.baseline_summary.allocatable).toLocaleString()}
-                    </div>
-                    <div>
-                      Top: {result.baseline_summary.topPlayer} (
-                      {(Number(result.baseline_summary.topSharePct) * 100).toFixed(2)}%)
+              {/* 1) Summary Comparison */}
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-3">Baseline vs Scenario Summary</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="font-medium mb-1">Baseline</div>
+                    <div className="text-sm space-y-1">
+                      <div>Pool: ${Number(result.baseline_summary?.poolAmount || 0).toLocaleString()}</div>
+                      <div>Allocatable: ${Number(result.baseline_summary?.allocatable || 0).toLocaleString()}</div>
+                      <div>Top: {result.baseline_summary?.topPlayer || "—"} ({(Number(result.baseline_summary?.topSharePct || 0) * 100).toFixed(2)}%)</div>
                     </div>
                   </div>
-                </div>
-                <div className="p-4 border rounded-lg bg-primary/5">
-                  <h4 className="font-semibold mb-2">Scenario</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>
-                      Pool: ${Number(result.scenario_summary.poolAmount).toLocaleString()}
-                    </div>
-                    <div>
-                      Allocatable: $
-                      {Number(result.scenario_summary.allocatable).toLocaleString()}
-                    </div>
-                    <div>
-                      Top: {result.scenario_summary.topPlayer} (
-                      {(Number(result.scenario_summary.topSharePct) * 100).toFixed(2)}%)
+                  <div className="bg-primary/5 p-3 rounded-lg">
+                    <div className="font-medium mb-1">Scenario</div>
+                    <div className="text-sm space-y-1">
+                      <div>Pool: ${Number(result.scenario_summary?.poolAmount || 0).toLocaleString()}</div>
+                      <div>Allocatable: ${Number(result.scenario_summary?.allocatable || 0).toLocaleString()}</div>
+                      <div>Top: {result.scenario_summary?.topPlayer || "—"} ({(Number(result.scenario_summary?.topSharePct || 0) * 100).toFixed(2)}%)</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Top Changes */}
-              <div className="overflow-x-auto">
-                <h4 className="font-semibold mb-3">Top Changes (by $ mid delta)</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Player</TableHead>
-                      <TableHead className="text-center">Type</TableHead>
-                      <TableHead className="text-right">Baseline Mid</TableHead>
-                      <TableHead className="text-right">Scenario Mid</TableHead>
-                      <TableHead className="text-right">Δ Mid</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result.diffs_top.map((d: any) => (
-                      <TableRow key={d.player_id}>
-                        <TableCell>
-                          <span className="font-medium">{d.player_name}</span>{" "}
-                          <span className="text-muted-foreground">({d.position})</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline">{d.change_type}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          ${Number(d.baseline_mid).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          ${Number(d.scenario_mid).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          <span className={d.delta_mid >= 0 ? "text-green-600" : "text-red-600"}>
-                            {d.delta_mid >= 0 ? "+" : "-"}$
-                            {Math.abs(Number(d.delta_mid)).toLocaleString()}
-                          </span>
-                        </TableCell>
+              {/* 2) Position Group Budget View */}
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Position Group Budget View</h4>
+                <p className="text-sm text-muted-foreground mb-3">Total mid allocation by position group and shifts.</p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Group</TableHead>
+                        <TableHead className="text-right">Baseline Mid</TableHead>
+                        <TableHead className="text-right">Scenario Mid</TableHead>
+                        <TableHead className="text-right">Δ Mid</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {(result.group_budget_deltas || []).map((g: any) => (
+                        <TableRow key={g.position_group}>
+                          <TableCell className="font-medium">{g.position_group}</TableCell>
+                          <TableCell className="text-right">${Number(g.baseline_mid || 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">${Number(g.scenario_mid || 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            <span className={Number(g.delta_mid) >= 0 ? "text-green-600" : "text-red-600"}>
+                              {Number(g.delta_mid) >= 0 ? "+" : "-"}${Math.abs(Number(g.delta_mid || 0)).toLocaleString()}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {(!result.group_budget_deltas || result.group_budget_deltas.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-muted-foreground">No group budgets available.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* 3) Cap Warnings */}
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-3">Cap Warnings</h4>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div className="p-3 border rounded-lg">
+                    <div className="font-medium mb-2">Baseline</div>
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <div>Max share: {(Number(result.baseline_warnings?.max_share_pct || 0) * 100).toFixed(1)}% • Hit count: {result.baseline_warnings?.max_share_hit_count || 0}</div>
+                      <div>Rotation floor: ${Number(result.baseline_warnings?.floor_rotation_usd || 0).toLocaleString()} • Floor hits: {result.baseline_warnings?.floor_hit_count || 0}</div>
+                      <div>Floor tax estimate: ${Number(result.baseline_warnings?.floor_tax_estimate || 0).toLocaleString()}</div>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg bg-primary/5">
+                    <div className="font-medium mb-2">Scenario</div>
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <div>Max share: {(Number(result.scenario_warnings?.max_share_pct || 0) * 100).toFixed(1)}% • Hit count: {result.scenario_warnings?.max_share_hit_count || 0}</div>
+                      <div>Rotation floor: ${Number(result.scenario_warnings?.floor_rotation_usd || 0).toLocaleString()} • Floor hits: {result.scenario_warnings?.floor_hit_count || 0}</div>
+                      <div>Floor tax estimate: ${Number(result.scenario_warnings?.floor_tax_estimate || 0).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-3 border rounded-lg">
+                    <div className="font-medium mb-2 text-sm">Max-share hits (Scenario)</div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Player</TableHead>
+                            <TableHead className="text-center">Share</TableHead>
+                            <TableHead className="text-right">Mid</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(result.scenario_warnings?.max_share_hit || []).map((r: any) => (
+                            <TableRow key={r.player_id}>
+                              <TableCell>
+                                <span className="font-medium">{r.player_name}</span>
+                                <span className="text-muted-foreground"> ({r.position})</span>
+                              </TableCell>
+                              <TableCell className="text-center">{(Number(r.share_pct) * 100).toFixed(2)}%</TableCell>
+                              <TableCell className="text-right">${Number(r.dollars_mid).toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))}
+                          {(!result.scenario_warnings?.max_share_hit || result.scenario_warnings.max_share_hit.length === 0) && (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-muted-foreground">None</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <div className="font-medium mb-2 text-sm">Floor hits (Scenario)</div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Player</TableHead>
+                            <TableHead className="text-center">Role</TableHead>
+                            <TableHead className="text-right">Mid</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(result.scenario_warnings?.floor_hit || []).map((r: any) => (
+                            <TableRow key={r.player_id}>
+                              <TableCell>
+                                <span className="font-medium">{r.player_name}</span>
+                                <span className="text-muted-foreground"> ({r.position})</span>
+                              </TableCell>
+                              <TableCell className="text-center">{r.role}</TableCell>
+                              <TableCell className="text-right">${Number(r.dollars_mid).toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))}
+                          {(!result.scenario_warnings?.floor_hit || result.scenario_warnings.floor_hit.length === 0) && (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-muted-foreground">None</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Tip: You can stack mutations (example: remove QB1, then update WR1 usage, then add portal QB).
+                  Max-share hits mean a player is constrained by the policy cap. Floor hits mean your floor rule is binding and can "tax" other players.
+                </p>
+              </div>
+
+              {/* 4) Full Roster Side-by-Side */}
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Full Roster: Baseline vs Scenario</h4>
+                <p className="text-sm text-muted-foreground mb-3">Side-by-side top-to-bottom allocation table (sorted by share).</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-3">
+                    <div className="font-medium mb-2">Baseline</div>
+                    <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Player</TableHead>
+                            <TableHead className="text-center">Pos</TableHead>
+                            <TableHead className="text-center">Share</TableHead>
+                            <TableHead className="text-right">Mid</TableHead>
+                            <TableHead className="text-center">Conf</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(result.baseline_full || []).map((r: any) => (
+                            <TableRow key={r.player_id}>
+                              <TableCell>
+                                <div className="font-medium">{r.player_name}</div>
+                                <div className="text-xs text-muted-foreground">{r.position_group} • {r.role}</div>
+                              </TableCell>
+                              <TableCell className="text-center">{r.position}</TableCell>
+                              <TableCell className="text-center">{(Number(r.share_pct) * 100).toFixed(2)}%</TableCell>
+                              <TableCell className="text-right">${Number(r.dollars_mid).toLocaleString()}</TableCell>
+                              <TableCell className="text-center">{Number(r.confidence).toFixed(0)}</TableCell>
+                            </TableRow>
+                          ))}
+                          {(!result.baseline_full || result.baseline_full.length === 0) && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-muted-foreground">No rows</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                  <div className="border rounded-lg p-3 bg-primary/5">
+                    <div className="font-medium mb-2">Scenario</div>
+                    <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Player</TableHead>
+                            <TableHead className="text-center">Pos</TableHead>
+                            <TableHead className="text-center">Share</TableHead>
+                            <TableHead className="text-right">Mid</TableHead>
+                            <TableHead className="text-center">Conf</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(result.scenario_full || []).map((r: any) => (
+                            <TableRow key={r.player_id}>
+                              <TableCell>
+                                <div className="font-medium">{r.player_name}</div>
+                                <div className="text-xs text-muted-foreground">{r.position_group} • {r.role}</div>
+                              </TableCell>
+                              <TableCell className="text-center">{r.position}</TableCell>
+                              <TableCell className="text-center">{(Number(r.share_pct) * 100).toFixed(2)}%</TableCell>
+                              <TableCell className="text-right">${Number(r.dollars_mid).toLocaleString()}</TableCell>
+                              <TableCell className="text-center">{Number(r.confidence).toFixed(0)}</TableCell>
+                            </TableRow>
+                          ))}
+                          {(!result.scenario_full || result.scenario_full.length === 0) && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-muted-foreground">No rows</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5) Top Changes */}
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-3">Top Changes (by $ mid delta)</h4>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Player</TableHead>
+                        <TableHead className="text-center">Type</TableHead>
+                        <TableHead className="text-right">Baseline Mid</TableHead>
+                        <TableHead className="text-right">Scenario Mid</TableHead>
+                        <TableHead className="text-right">Δ Mid</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(result.diffs_top || []).map((d: any) => (
+                        <TableRow key={d.player_id}>
+                          <TableCell>
+                            <span className="font-medium">{d.player_name}</span>
+                            <span className="text-muted-foreground"> ({d.position})</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline">{d.change_type}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">${Number(d.baseline_mid).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">${Number(d.scenario_mid).toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            <span className={Number(d.delta_mid) >= 0 ? "text-green-600" : "text-red-600"}>
+                              {Number(d.delta_mid) >= 0 ? "+" : "-"}${Math.abs(Number(d.delta_mid)).toLocaleString()}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {(!result.diffs_top || result.diffs_top.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-muted-foreground">No diffs</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  This is now backed by full tables + warnings + group budget deltas, so it reads like a real GM cap room tool.
                 </p>
               </div>
             </div>
