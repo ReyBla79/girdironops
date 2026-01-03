@@ -415,8 +415,8 @@ export async function runScenario(params: {
     .single();
   if (poolErr) throw poolErr;
 
-  // Load scenario
-  const { data: scenRow, error: sErr } = await supabase
+  // Load scenario (cast to any to handle new table types)
+  const { data: scenRow, error: sErr } = await (supabase as any)
     .from("fb_scenarios")
     .select("*")
     .eq("id", scenarioId)
@@ -459,8 +459,8 @@ export async function runScenario(params: {
     .eq("season_id", seasonId);
   if (rErr) throw rErr;
 
-  // Load mutations
-  const { data: muts, error: mErr } = await supabase
+  // Load mutations (cast to any to handle new table types)
+  const { data: muts, error: mErr } = await (supabase as any)
     .from("fb_scenario_mutations")
     .select("*")
     .eq("scenario_id", scenarioId)
@@ -517,8 +517,8 @@ export async function runScenario(params: {
     scenario_top: scenario.rows.slice(0, 25),
   };
 
-  // Save results (upsert)
-  await supabase.from("fb_scenario_results").upsert({
+  // Save results (upsert) - cast to any to handle new table types
+  await (supabase as any).from("fb_scenario_results").upsert({
     scenario_id: scenarioId,
     program_id: programId,
     season_id: seasonId,

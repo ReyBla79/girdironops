@@ -59,7 +59,7 @@ export default function ScenarioLab() {
         .order("last_name");
       setPlayers(ps || []);
 
-      const { data: sc } = await supabase
+      const { data: sc } = await (supabase as any)
         .from("fb_scenarios")
         .select("*")
         .eq("program_id", ctx.programId)
@@ -75,7 +75,7 @@ export default function ScenarioLab() {
       return setStatus("Missing context. Go to Setup first.");
     }
     setStatus("Creating scenario...");
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("fb_scenarios")
       .insert({
         program_id: ctx.programId,
@@ -100,7 +100,7 @@ export default function ScenarioLab() {
     setScenarioId(id);
     setStatus("Loading scenario...");
     setResult(null);
-    const { data: scen, error: sErr } = await supabase
+    const { data: scen, error: sErr } = await (supabase as any)
       .from("fb_scenarios")
       .select("*")
       .eq("id", id)
@@ -111,14 +111,14 @@ export default function ScenarioLab() {
     setPoolOverride(scen.pool_override ?? "");
     setReservedOverride(scen.reserved_override ?? "");
 
-    const { data: muts } = await supabase
+    const { data: muts } = await (supabase as any)
       .from("fb_scenario_mutations")
       .select("*")
       .eq("scenario_id", id)
       .order("created_at", { ascending: true });
     setMutations(muts || []);
 
-    const { data: res } = await supabase
+    const { data: res } = await (supabase as any)
       .from("fb_scenario_results")
       .select("*")
       .eq("scenario_id", id)
@@ -129,7 +129,7 @@ export default function ScenarioLab() {
 
   async function addMutation(type: string, payload: any) {
     if (!scenarioId) return setStatus("Create or select a scenario first.");
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("fb_scenario_mutations")
       .insert({ scenario_id: scenarioId, type, payload })
       .select("*")
@@ -140,7 +140,7 @@ export default function ScenarioLab() {
   }
 
   async function removeMutation(mutationId: string) {
-    await supabase.from("fb_scenario_mutations").delete().eq("id", mutationId);
+    await (supabase as any).from("fb_scenario_mutations").delete().eq("id", mutationId);
     setMutations((prev) => prev.filter((m) => m.id !== mutationId));
   }
 
