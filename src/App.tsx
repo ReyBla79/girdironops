@@ -47,6 +47,13 @@ import DemoPage from "./pages/seo/DemoPage";
 import PricingPage from "./pages/seo/PricingPage";
 import FAQPage from "./pages/seo/FAQPage";
 import LLMPage from "./pages/seo/LLMPage";
+// Gridiron Ops pages
+import GridironSetupPage from "./pages/gridiron/GridironSetupPage";
+import RosterIntakePage from "./pages/gridiron/RosterIntakePage";
+import RosterUsagePage from "./pages/gridiron/RosterUsagePage";
+import RosterGradesPage from "./pages/gridiron/RosterGradesPage";
+import GridironDashboardPage from "./pages/gridiron/GridironDashboardPage";
+import GridironScenariosPage from "./pages/gridiron/GridironScenariosPage";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +78,13 @@ const App = () => (
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/llm" element={<LLMPage />} />
+          {/* Gridiron Ops routes */}
+          <Route path="/gridiron/setup" element={<GridironSetupPage />} />
+          <Route path="/gridiron/roster/intake" element={<RosterIntakePage />} />
+          <Route path="/gridiron/roster/usage" element={<RosterUsagePage />} />
+          <Route path="/gridiron/roster/grades" element={<RosterGradesPage />} />
+          <Route path="/gridiron/roster" element={<GridironDashboardPage />} />
+          <Route path="/gridiron/scenarios" element={<GridironScenariosPage />} />
           <Route
             path="/app"
             element={
