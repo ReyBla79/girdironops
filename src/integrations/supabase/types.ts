@@ -307,6 +307,155 @@ export type Database = {
           },
         ]
       }
+      fb_scenario_mutations: {
+        Row: {
+          created_at: string | null
+          id: string
+          payload: Json
+          scenario_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          payload?: Json
+          scenario_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          payload?: Json
+          scenario_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_scenario_mutations_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "fb_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_scenario_results: {
+        Row: {
+          created_at: string | null
+          id: string
+          policy_id: string | null
+          program_id: string | null
+          results: Json
+          scenario_id: string | null
+          season_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          policy_id?: string | null
+          program_id?: string | null
+          results?: Json
+          scenario_id?: string | null
+          season_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          policy_id?: string | null
+          program_id?: string | null
+          results?: Json
+          scenario_id?: string | null
+          season_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_scenario_results_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "fb_revshare_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_scenario_results_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_scenario_results_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: true
+            referencedRelation: "fb_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_scenario_results_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fb_scenarios: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          policy_id: string | null
+          pool_override: number | null
+          program_id: string | null
+          reserved_override: number | null
+          season_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          policy_id?: string | null
+          pool_override?: number | null
+          program_id?: string | null
+          reserved_override?: number | null
+          season_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          policy_id?: string | null
+          pool_override?: number | null
+          program_id?: string | null
+          reserved_override?: number | null
+          season_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fb_scenarios_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "fb_revshare_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_scenarios_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fb_scenarios_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fb_value_snapshots: {
         Row: {
           confidence: number
