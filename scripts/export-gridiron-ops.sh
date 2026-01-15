@@ -1,7 +1,19 @@
 #!/bin/bash
 
+# ============================================================
 # Gridiron Ops Export Script
-# Creates a ZIP archive ready for download/setup in a new React project
+# ============================================================
+# Creates a complete ZIP archive ready for download and setup
+# in a new React project. Includes all source code, configs,
+# demo data, and setup instructions.
+#
+# USAGE:
+#   chmod +x scripts/export-gridiron-ops.sh
+#   ./scripts/export-gridiron-ops.sh
+#
+# OUTPUT:
+#   gridiron-ops-export_YYYYMMDD_HHMMSS.zip
+# ============================================================
 
 set -e
 
